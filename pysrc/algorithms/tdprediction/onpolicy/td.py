@@ -5,7 +5,6 @@ Created on May 2, 2014
 '''
 
 import numpy as np
-import pylab as pl
 from pysrc.algorithms.tdprediction.tdprediction import TDPrediction
 
 
