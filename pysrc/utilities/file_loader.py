@@ -17,6 +17,9 @@ class FileLoader(object):
             vals = line.rstrip().split(',')              # separate all the values in an observation
             self.data_stream.append(dict([(self.elements[i], float(vals[i])) for i in range(len(vals))]))
 
+    def has_obs(self):
+        return len(self.data_stream)>0
+
     def step(self):
         """If there are still observations, returns the next observation. Else returns None"""
         if len(self.data_stream) > 0:           # while we still have experience
