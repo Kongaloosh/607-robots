@@ -9,6 +9,12 @@ In order to run the experiment on the randomly generated MDP with 10 state and g
 
 In order to run the experiment on the randomly generated MDP with 100 state and generate plot, execute `run-rndmdp-experiments100.sh`.
 
+## Profiling
+
+Use the following to profile the random mdp experiment code:
+
+`python -m cProfile pysrc/experiments/rndmdpexp.py 1000 1 results/rndmdp-experiments/state-10-ftype-binary-profile/ td`
+
 ## Unit tests
 
 Use the following from the root directory:
