@@ -5,6 +5,7 @@ import os
 import sys
 sys.path.insert(0, os.getcwd())
 import argparse
+from pysrc.problems.prosthetic_problem import Experiment
 from pysrc.algorithms.tdprediction.onpolicy import td, tdr, totd, utd, utotd, utdr
 from pysrc.utilities.file_loader import FileLoader
 from pysrc.utilities.tiles import loadTiles, CollisionTable
@@ -15,7 +16,7 @@ def runoneconfig(config, file_loader, alg, prob): #todo: hook up the prob
     # todo: define how we pull out the features we care about.
 
     obs = []                            # where we put the observation
-    while file_loader.hasObs():         # while we still have observations
+    while file_loader.has_obs():         # while we still have observations
         f = file_loader.step()          # get the next observation diction
         for k in f:                     # for all the key values... we'll eventually want to filter this
             obs.append(f[k])            # append to our current obs
@@ -29,21 +30,6 @@ def runoneconfig(config, file_loader, alg, prob): #todo: hook up the prob
         floats                  ; a list of real values making up the input vector
         ints)                   ; list of optional inputs to get different hashings
     """
-
-
-    #
-    # if f['val'] == 1:               # if the joint is active
-    #     parameters['gnext'] = 1     # consider this to be the end of the trial
-    # else:
-    #     parameters['gnext'] = config['gamma']   # otherwise, reg gamma
-    # parameters['R'] = f['target']               # the reward is extracted from our obs
-    # alg.step(parameters)                        # take a step in our environment
-    # val = verifier.update(f, alg.prediction)    # todo: get the prediction value
-    #
-    # # TEAR-DOWN
-    # parameters['phi'] = parameters['phinext']
-    # parameters['g'] = parameters['gnext']
-    #
 
 
 def main():
@@ -65,7 +51,7 @@ def main():
     config_prob = {'gamma':0.99, 'nf':2}
 
     # file_loader = FileLoader('../../results/prosthetic-data/'+data_file)
-    file_loader = FileLoader('../../results/prosthetic-data/EdwardsPOIswitching_s1a1.txt')
+    file_loader = FileLoader('results/prosthetic-data/EdwardsPOIswitching_s1a1.txt')
     # we will only ever need to change the file name; we always navigate to the same spot
 
     # config_alg = picle.load(open('path/to/alg'))
@@ -86,28 +72,17 @@ def main():
     # TODO: get the verifier to calculate the return pre-exp and use that for each run
     # verifier = Verifier()
 
-    for config in config_alg:
-        pass
-        # perf      = mdp.PerformanceMeasure(configprob, prob)
+    for config in config_alg:           # for the parameter sweep we're interested in
+        config.update(config_prob)      # add the problem-specific configs
 
-        # config.update(configprob)
-        # alg                   = algs[args.algname](config)
-        # config['runseed']     = args.runseed
-        # runoneconfig(config, prob, alg, perf)
+        prob = Experiment(config_prob)
+
+        # alg = algs['THING WE GOT FROM CMD LINE'](configprob)
+        alg = algs['td'](config)        # build our instance of an algorithm
+        runoneconfig(config=config, file_loader=file_loader, prob=prob, alg=alg,)
+
         # config['error']      = perf.getNormMSPVE()
         # pickle.dump(config, f, -1)
-
-    # configure the alg
-    # run one alg
-    # add the verifiers NORM MSPVE to the 'error'
-    # dump values
-    '''
-        Config:
-            alpha
-            number of featres
-    '''
-    alg = td()
-
 
 
 if __name__ == '__main__':

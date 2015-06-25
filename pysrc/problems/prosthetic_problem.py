@@ -5,7 +5,7 @@
     You can simply extend this template and over-ride as necessary.
 """
 
-from pysrc.utilities.verifier import Verifier
+# from pysrc.utilities.verifier import Verifier
 
 __author__ = 'alex'
 
@@ -13,13 +13,12 @@ __author__ = 'alex'
 class Experiment(object):
     """" Analagous to the mdp,  """
 
-    def __init__(self):
+    def __init__(self, config):
         self.starting_element = 0
         self.num_tilings = 1
         self.memory_size = 1
         9
         self.gamma = 0.01
-        self.verifier = Verifier(self.gamma)    # What we use to compare predictions with reality
 
     def step(self):
         """ Given a set of features from a file loader, processes the observations
@@ -35,10 +34,10 @@ class Experiment(object):
         # g = gamma
         # gnext = gamma next
         # next state
-        parameters = {'l':config['lambda'],
-                  'lnext':config['lambda'],
-                  'g':config['gamma'],
-                  'gnext':config['gamma']}  # we presume that for the time being, these don't change
+        # parameters = {'l':config['lambda'],
+        #           'lnext':config['lambda'],
+        #           'g':config['gamma'],
+        #           'gnext':config['gamma']}  # we presume that for the time being, these don't change
         # phinext and phi
 
 

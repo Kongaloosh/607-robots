@@ -16,12 +16,13 @@ class FileLoader(object):
         f = open(file_loc, 'r')                 # open the file for reading
         self.data_stream = []                   # this is where we store the stream of experience
         self.elements = f.readline().rstrip().split(',')  # extracts the header of the file
-        print(len(self.elements))
         for line in f:
             vals = line.rstrip().split(',')              # separate all the values in an observation
-            self.data_stream.append(dict([(self.elements[i], float(vals[i])) for i in range(len(vals-1))]))
+
+            self.data_stream.append(dict([(self.elements[i], float(vals[i])) for i in range(len(vals)-1)]))
             # we -1 because there's another comma at the end of every line but the header
-            
+            # todo: generalize this to work with cleaned obs
+
     def has_obs(self):
         return len(self.data_stream) > 0
 
