@@ -20,8 +20,8 @@ def runoneconfig(config, file_loader, alg, prob): #todo: hook up the prob
         f = file_loader.step()          # get the next observation diction
         for k in f:                     # for all the key values... we'll eventually want to filter this
             obs.append(f[k])            # append to our current obs
+        state = prob.step(obs)
 
-    prameters = prob.step()
     """
         tiles                   ; a provided array for the tile indices to go into
         starting-element        ; first element of "tiles" to be changed (typically 0)
