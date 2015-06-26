@@ -8,19 +8,16 @@ import argparse
 from pysrc.problems.prosthetic_problem import Experiment
 from pysrc.algorithms.tdprediction.onpolicy import td, tdr, totd, utd, utotd, utdr
 from pysrc.utilities.file_loader import FileLoader
-from pysrc.utilities.tiles import loadTiles, CollisionTable
 from pysrc.utilities.verifier import Verifier
 
 def runoneconfig(config, file_loader, alg, prob): #todo: hook up the prob
     """for the specific configuration, problem, alg,"""
     # todo: define how we pull out the features we care about.
 
-    obs = []                            # where we put the observation
     while file_loader.has_obs():         # while we still have observations
-        f = file_loader.step()          # get the next observation diction
-        for k in f:                     # for all the key values... we'll eventually want to filter this
-            obs.append(f[k])            # append to our current obs
+        obs = file_loader.step()          # get the next observation diction
         state = prob.step(obs)
+        print(state)
 
     """
         tiles                   ; a provided array for the tile indices to go into
