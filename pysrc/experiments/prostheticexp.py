@@ -17,7 +17,7 @@ def runoneconfig(config, file_loader, alg, prob): #todo: hook up the prob
     while file_loader.has_obs():         # while we still have observations
         obs = file_loader.step()          # get the next observation diction
         state = prob.step(obs)
-        print(state)
+        alg.step(state)
 
     """
         tiles                   ; a provided array for the tile indices to go into
@@ -45,14 +45,14 @@ def main():
     #TODO: actually setup the config files
     # config_prob_path = 'some path to prob'
     # config_prob = pickle.load(open(config_prob_path, 'rb'))   # we load a configuration file with all of the data
-    config_prob = {'gamma':0.99, 'nf':2}
+    config_prob = {'gamma':0.99, 'nf':2**20}
 
     # file_loader = FileLoader('../../results/prosthetic-data/'+data_file)
     file_loader = FileLoader('results/prosthetic-data/EdwardsPOIswitching_s1a1.txt')
     # we will only ever need to change the file name; we always navigate to the same spot
 
     # config_alg = picle.load(open('path/to/alg'))
-    config_alg = [{'alpha':0.5, 'lambda':0.9}]
+    config_alg = [{'alpha':0.01, 'lambda':0.9}]
 
     algs  = {
         'td':td.TD,
@@ -72,7 +72,7 @@ def main():
     for config in config_alg:           # for the parameter sweep we're interested in
         config.update(config_prob)      # add the problem-specific configs
 
-        prob = Experiment(config_prob)
+        prob = Experiment(config)
 
         # alg = algs['THING WE GOT FROM CMD LINE'](configprob)
         alg = algs['td'](config)        # build our instance of an algorithm
