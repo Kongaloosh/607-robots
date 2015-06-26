@@ -6,6 +6,7 @@
 """
 
 # from pysrc.utilities.verifier import Verifier
+from pysrc.utilities.tiles import loadTiles
 
 __author__ = 'alex'
 
@@ -15,46 +16,59 @@ class Experiment(object):
 
     def __init__(self, config):
         self.starting_element = 0
-        self.num_tilings = 1
-        self.memory_size = 1
-        9
-        self.gamma = 0.01
+        self.num_tilings = 4
+        self.memory_size = 2**20
+        self.gamma = config['gamma']
+        self.feature_vector = [0 for item in range(self.num_tilings)]
+        self.last_phi = None
 
-    def step(self):
-        """ Given a set of features from a file loader, processes the observations
+    def step(self, obs):
+        """
+            Given a set of features from a file loader, processes the observations
                into a set of features compatible with the problem we're trying to
                achieve.
+
+            for this example:
+                1 = gripper
+                2 = rotator
+                3 = flexion
+                4 = elbow
+                5 = shoulder
+
+            for each of these:
+                pos = position
+                vel = velocity
+                temp = temperature
+                is_moving = movement
+
+            time
+
+            4 tilings,
+            0.01 alpha / 0.1
+            0.99 lambda
+            0.9 gamma
+
         """
-
-        # no a
-
-        # next state
-        # noise?
-        # R = Reward
-        # g = gamma
-        # gnext = gamma next
-        # next state
-        # parameters = {'l':config['lambda'],
-        #           'lnext':config['lambda'],
-        #           'g':config['gamma'],
-        #           'gnext':config['gamma']}  # we presume that for the time being, these don't change
-        # phinext and phi
+        config = {}
+        config['phi'] = self.feature_vector
 
 
+        state = [obs['pos1'], obs['pos2'], obs['pos4'], obs['pos5'],
+                 obs['vel1'], obs['vel2'], obs['vel4'], obs['vel5'],
+                 obs['load5']]
 
-        """
-          def step(self):
-    a = 0 if self.na==1 else self.getAction(self.bpol, self.s, self.rdrun)
-    snext   = self.getNextState(self.Pssa, self.s, a, self.rdrun)
-    noise   = self.rdrun.normal(0, self.Rstd) if self.Rstd>0 else 0.
-    R       = self.getReward(self.Rssa, self.s, snext, a) + noise
-    phi     = self.Phi[self.s]
-    phinext = self.Phi[snext]
-    g       = self.Gamma[self.s, self.s]
-    gnext   = self.Gamma[snext, snext]
-    stemp   = self.s
-    self.s  = snext
-    return {'s':stemp, 'phi':phi, 'act':a, \
-            'R':R, 'snext':snext, 'phinext':phinext, \
-            'g':g, 'gnext':gnext}
-        """
+
+        loadTiles(self.feature_vector, self.starting_element, self.num_tilings, self.memory_size, state)
+
+        hand_velocity = obs['vel5']
+        if hand_velocity > 0.2:
+            config['R'] = 1
+        else:
+            config['R'] = 0
+
+        config['gnext'] = self.gamma
+        config['g'] = self.gamma
+
+        config['phi'] = self.feature_vector
+
+        return config
