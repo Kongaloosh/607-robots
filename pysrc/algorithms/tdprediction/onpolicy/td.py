@@ -5,6 +5,7 @@ Created on May 2, 2014
 '''
 
 import numpy as np
+import scipy.sparse as sp
 from pysrc.algorithms.tdprediction.tdprediction import TDPrediction
 
 
@@ -28,6 +29,19 @@ class TD(TDPrediction):
         g = params['g']
         l = params['l']
         gnext = params['gnext']
+
         delta = r + gnext*np.dot(phinext, self.th) - np.dot(phi, self.th)
+        self.z = g*l*self.z + phi
+        self.th += self.alpha*delta*self.z
+
+    def quick_step(self, params):
+        phi = params['phi']
+        r = params['R']
+        phinext = params['phinext']
+        g = params['g']
+        l = params['l']
+        gnext = params['gnext']
+
+        delta = r + gnext*sp.dot(phinext, self.th) - sp.dot(phi, self.th)
         self.z = g*l*self.z + phi
         self.th += self.alpha*delta*self.z
