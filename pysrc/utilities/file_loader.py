@@ -23,12 +23,14 @@ class FileLoader(object):
             # we -1 because there's another comma at the end of every line but the header
             # todo: generalize this to work with cleaned obs
 
+        self.i = 0
     def has_obs(self):
-        return len(self.data_stream) > 0
+        return len(self.data_stream) > self.i
 
     def step(self):
         """If there are still observations, returns the next observation. Else returns None"""
-        if len(self.data_stream) > 0:           # while we still have experience
-            return self.data_stream.pop()       # return the next observation
+        if self.has_obs():           # while we still have experience
+            self.i += 1                             # move to the nexr obs
+            return self.data_stream[self.i-1]         # return the next observation
         else:                                   # otherwise we have nothing left
             return None                         # so return None.
