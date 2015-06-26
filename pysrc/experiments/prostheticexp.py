@@ -4,29 +4,25 @@
 import os
 import sys
 sys.path.insert(0, os.getcwd())
+import numpy as np
 import argparse
 from pysrc.problems.prosthetic_problem import Experiment
 from pysrc.algorithms.tdprediction.onpolicy import td, tdr, totd, utd, utotd, utdr
 from pysrc.utilities.file_loader import FileLoader
 from pysrc.utilities.verifier import Verifier
 
-def runoneconfig(config, file_loader, alg, prob): #todo: hook up the prob
+def runoneconfig(config, file_loader, alg, prob, verifier): #todo: hook up the prob
     """for the specific configuration, problem, alg,"""
     # todo: define how we pull out the features we care about.
 
+    obs = file_loader.step()          # get the next observation diction
+    state = prob.step(obs)
     while file_loader.has_obs():         # while we still have observations
         obs = file_loader.step()          # get the next observation diction
         state = prob.step(obs)
-        alg.step(state)
-
-    """
-        tiles                   ; a provided array for the tile indices to go into
-        starting-element        ; first element of "tiles" to be changed (typically 0)
-        num-tilings             ; the number of tilings desired
-        memory-size             ; the number of possible tile indices
-        floats                  ; a list of real values making up the input vector
-        ints)                   ; list of optional inputs to get different hashings
-    """
+        alg.quick_step(state)
+        prediction = np.dot(state['phinext'], alg.estimate())
+        # print verifier.update(state['R'], prediction)
 
 
 def main():
@@ -67,7 +63,7 @@ def main():
     # f = open('where/results/go', 'wb')
 
     # TODO: get the verifier to calculate the return pre-exp and use that for each run
-    # verifier = Verifier()
+    verifier = Verifier(config_prob['gamma'])
 
     for config in config_alg:           # for the parameter sweep we're interested in
         config.update(config_prob)      # add the problem-specific configs
@@ -75,8 +71,8 @@ def main():
         prob = Experiment(config)
 
         # alg = algs['THING WE GOT FROM CMD LINE'](configprob)
-        alg = algs['td'](config)        # build our instance of an algorithm
-        runoneconfig(config=config, file_loader=file_loader, prob=prob, alg=alg,)
+        alg = algs['tdr'](config)        # build our instance of an algorithm
+        runoneconfig(config=config, file_loader=file_loader, prob=prob, alg=alg, verifier=verifier)
 
         # config['error']      = perf.getNormMSPVE()
         # pickle.dump(config, f, -1)

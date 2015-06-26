@@ -7,6 +7,7 @@
 
 # from pysrc.utilities.verifier import Verifier
 from pysrc.utilities.tiles import loadTiles
+import numpy as np
 
 __author__ = 'alex'
 
@@ -19,8 +20,11 @@ class Experiment(object):
         self.num_tilings = 4
         self.memory_size = 2**20
         self.gamma = config['gamma']
-        self.feature_vector = [0 for item in range(self.num_tilings)]
+        self.feature_vector = np.zeros(self.num_tilings)
+        self.phi = np.zeros(self.memory_size)
         self.last_phi = None
+        self.rl_lambda = config['lambda']
+        self.last_switch_value = None
 
     def step(self, obs):
         """
@@ -50,7 +54,7 @@ class Experiment(object):
 
         """
         config = {}
-        config['phi'] = self.feature_vector
+        config['phi'] = self.last_phi
 
 
         state = [obs['pos1'], obs['pos2'], obs['pos4'], obs['pos5'],
@@ -60,15 +64,31 @@ class Experiment(object):
 
         loadTiles(self.feature_vector, self.starting_element, self.num_tilings, self.memory_size, state)
 
+        self.phi.fill(0)
+        for i in self.feature_vector:
+            self.phi[i] = 1
+
         hand_velocity = obs['vel5']
+
         if hand_velocity > 0.2:
             config['R'] = 1
+            print('MOVING')
         else:
             config['R'] = 0
 
+        # if obs['switches'] != self.last_switch_value:
+        #     config['R'] = 1
+        #     print('switch')
+        # else:
+        #     config['R'] = 0
+
+        # print(str(obs['switches']) + " " + str(self.last_switch_value))
+        self.last_switch_value = obs['switches']
+        # print(config['R'])
+
         config['gnext'] = self.gamma
         config['g'] = self.gamma
-
-        config['phi'] = self.feature_vector
-
+        config['l'] = self.rl_lambda
+        config['phinext'] = self.phi
+        self.last_phi = self.phi
         return config
