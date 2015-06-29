@@ -15,6 +15,7 @@ def main():
         # function approximation:
         'num_tilings': 2,
         'memory_size': 2**20,
+        'nf': 2**20,
         'starting_element': 0,
         'gamma': gamma
     }
