@@ -6,7 +6,6 @@ Created on May 2, 2014
 
 import numpy as np
 from scipy.sparse import csc_matrix as sp
-import pylab as pl
 from pysrc.algorithms.tdprediction.tdprediction import TDPrediction
 
 class TDR(TDPrediction):

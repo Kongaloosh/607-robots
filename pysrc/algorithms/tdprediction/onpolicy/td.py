@@ -5,7 +5,7 @@ Created on May 2, 2014
 '''
 
 import numpy as np
-import scipy.sparse as sp
+from scipy.sparse import csc_matrix as sp
 from pysrc.algorithms.tdprediction.tdprediction import TDPrediction
 
 
@@ -35,13 +35,14 @@ class TD(TDPrediction):
         self.th += self.alpha*delta*self.z
 
     def quick_step(self, params):
+        """ STEP WHICH LEVERAGES SPARSITY """
         phi = params['phi']
-        r = params['R']
+        R = params['R']
         phinext = params['phinext']
         g = params['g']
         l = params['l']
         gnext = params['gnext']
 
-        delta = r + gnext*sp.dot(phinext, self.th) - sp.dot(phi, self.th)
-        self.z = g*l*self.z + phi
+        delta = R + gnext*sp.dot(sp(phinext), self.th) - sp.dot(sp(phi), self.th)
+        self.z = g*l*self.z*(phi == 0.) + (phi != 0.)*phi
         self.th += self.alpha*delta*self.z
