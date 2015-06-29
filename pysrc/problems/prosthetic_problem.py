@@ -8,7 +8,6 @@
 # from pysrc.utilities.verifier import Verifier
 from pysrc.utilities.tiles import loadTiles
 import numpy as np
-
 __author__ = 'alex'
 
 
@@ -17,8 +16,8 @@ class Experiment(object):
 
     def __init__(self, config):
         self.starting_element = 0
-        self.num_tilings = 4
-        self.memory_size = 2**20
+        self.num_tilings = config['num_tilings']
+        self.memory_size = config['memory_size']
         self.gamma = config['gamma']
         self.feature_vector = np.zeros(self.num_tilings)
         self.phi = np.zeros(self.memory_size)
@@ -68,7 +67,7 @@ class Experiment(object):
         for i in self.feature_vector:
             self.phi[i] = 1
 
-        hand_velocity = obs['vel5']
+        hand_velocity = obs['vel1']
 
         if hand_velocity > 0.2:
             config['R'] = 1
