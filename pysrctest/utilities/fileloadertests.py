@@ -7,7 +7,8 @@ from pysrc.utilities.file_loader import FileLoader
 
 __author__ = 'alex'
 
-class IsOddTests(unittest.TestCase):
+
+class FileLoaderTests(unittest.TestCase):
 
     def testOne(self):
         """ Uses a small one-observation test file. """
@@ -20,6 +21,14 @@ class IsOddTests(unittest.TestCase):
         truth = dict([(header[i], i) for i in range(len(header))])  # construct the actual obs
         for k in truth:                                             # for all keys in an obs
             self.assertEquals(obs[k], truth[k])                     # ... check compare with truth
+
+    def testTwo(self):
+        """ Use a small sample of ann's data """
+        self.fl = FileLoader('test2.txt')
+        # self.assertEquals('a', 'a')
+        print(self.fl.elements)
+        print(self.fl.step())
+
 
 def main():
     unittest.main()
