@@ -9,8 +9,7 @@
 from pysrc.utilities.tiles import loadTiles
 import numpy as np
 __author__ = 'alex'
-
-
+import scipy.sparse as sp
 class Experiment(object):
     """" Analagous to the mdp,  """
 
@@ -54,16 +53,18 @@ class Experiment(object):
         """
         config = {}
         config['phi'] = self.last_phi
-
-
         state = [obs['pos1'], obs['pos2'], obs['pos4'], obs['pos5'],
                  obs['vel1'], obs['vel2'], obs['vel4'], obs['vel5'],
                  obs['load5']]
 
+        for i in self.feature_vector:
+            self.phi[i] = 0
 
         loadTiles(self.feature_vector, self.starting_element, self.num_tilings, self.memory_size, state)
 
-        self.phi.fill(0)
+        for i in self.feature_vector:
+            self.phi[i] = 1
+
         for i in self.feature_vector:
             self.phi[i] = 1
 
@@ -71,19 +72,10 @@ class Experiment(object):
 
         if hand_velocity > 0.2:
             config['R'] = 1
-            print('MOVING')
         else:
             config['R'] = 0
 
-        # if obs['switches'] != self.last_switch_value:
-        #     config['R'] = 1
-        #     print('switch')
-        # else:
-        #     config['R'] = 0
-
-        # print(str(obs['switches']) + " " + str(self.last_switch_value))
         self.last_switch_value = obs['switches']
-        # print(config['R'])
 
         config['gnext'] = self.gamma
         config['g'] = self.gamma
