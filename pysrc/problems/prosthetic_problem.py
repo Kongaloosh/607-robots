@@ -20,9 +20,12 @@ class Experiment(object):
         self.gamma = config['gamma']
         self.feature_vector = np.zeros(self.num_tilings)
         self.phi = np.zeros(self.memory_size)
+        # self.phi = sp.lil_matrix((self.memory_size,1))
         self.last_phi = None
         self.rl_lambda = config['lambda']
         self.last_switch_value = None
+
+
 
     def step(self, obs):
         """
@@ -53,17 +56,23 @@ class Experiment(object):
         """
         config = {}
         config['phi'] = self.last_phi
-        state = [obs['pos1'], obs['pos2'], obs['pos4'], obs['pos5'],
-                 obs['vel1'], obs['vel2'], obs['vel4'], obs['vel5'],
-                 obs['load5']]
+        state = [obs['pos1']/4, obs['pos2']/4, obs['pos4']/4, obs['pos5']/4,
+                 (obs['vel1']+1.5)/3, (obs['vel2']+2)/4, (obs['vel4']+2)/4, (obs['vel5']+3)/6,
+                 (obs['load5']+2)/4]
+
+        # state_name = ['pos1','pos2','pos4','pos5','vel1','vel2','vel4','vel5','load5']
+        # for i in range(len(state)):
+        #     if state[i] > 1 or state[i] < 0:
+        #         print "INDEX OVER: " + str(state_name[i]) + " STATE " + str(state[i])
+        #         for j in obs:
+        #             print("TAG: " + str(j) + " VALUE: " + str(obs[j]))
+        #         print(state)
+        #         raise BaseException()
 
         for i in self.feature_vector:
             self.phi[i] = 0
 
         loadTiles(self.feature_vector, self.starting_element, self.num_tilings, self.memory_size, state)
-
-        for i in self.feature_vector:
-            self.phi[i] = 1
 
         for i in self.feature_vector:
             self.phi[i] = 1
@@ -76,10 +85,10 @@ class Experiment(object):
             config['R'] = 0
 
         self.last_switch_value = obs['switches']
-
         config['gnext'] = self.gamma
         config['g'] = self.gamma
         config['l'] = self.rl_lambda
         config['phinext'] = self.phi
         self.last_phi = self.phi
+
         return config
