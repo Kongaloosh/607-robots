@@ -12,7 +12,7 @@ from pysrc.utilities.file_loader import FileLoader
 from pysrc.utilities.verifier import Verifier
 import pickle
 from matplotlib import pyplot
-
+import time
 def runoneconfig(config, file_loader, alg, prob, verifier): #todo: hook up the prob
     """for the specific configuration, problem, alg,"""
     # todo: define how we pull out the features we care about.
@@ -20,23 +20,34 @@ def runoneconfig(config, file_loader, alg, prob, verifier): #todo: hook up the p
     state = prob.step(obs)
     l = []
     p = []
+    r = []
+    s = []
     i = 0
+    
     print("start")
+    start = time.time()
     while file_loader.has_obs():         # while we still have observations
-        if i % 1000 == 0:
-            print "."
+        # start = time.time()
         obs = file_loader.step()          # get the next observation diction
-        # todo: tighten up all of this
-        state = prob.step(obs)
-        alg.step(state)
-        # prediction = np.dot(state['phinext'], alg.estimate())
-        # e = verifier.update(state['R'], prediction)
-        # if prediction:
-            # p.append(prediction)
-        # if e:
-            # l.append(e)
-        i += 1
-    return l,p
+        # print ("=> Obs time " + str(time.time()-start))
+        if file_loader.i % 10000 == 0:
+            print(str("num steps: ") + str(file_loader.i))
+
+        if file_loader.i % 14 == 0:
+            # todo: tighten up all of this
+            state = prob.step(obs)
+            alg.step(state)
+            prediction = np.dot(state['phinext'], alg.estimate()) * (1-state['gnext'])
+            e = verifier.update(state['R'], prediction)
+            ret = verifier.calculate_predicted_return()
+            if prediction:
+                p.append(prediction)
+            if e:
+                l.append(e)
+                r.append(ret)
+            s.append(state['R'])
+    print("Finished: " + str(start-time.time()))
+    return l,p,r,s
 
 def main():
     """runs the experiment with commandline args"""
@@ -80,12 +91,17 @@ def main():
         prob = Experiment(config)
 
         alg = algs[args.algname](config)        # build our instance of an algorithm
-        (error,prediction) = runoneconfig(config=config, file_loader=file_loader, prob=prob, alg=alg, verifier=verifier)
+        (error, prediction, ret, signal) = runoneconfig(config=config, file_loader=file_loader, prob=prob, alg=alg, verifier=verifier)
         config['error'] = error
 
         pickle.dump(config, f, -1)
-        pyplot.plot(np.abs(np.array(error)))
+        pickle.dump((error,prediction,ret,signal), open('things','wb'))
+        # pyplot.plot(np.abs(np.array(error)))
+        pyplot.plot(np.array(prediction))
+        # pyplot.plot(np.array(ret))
+        pyplot.plot(np.array(signal))
         pyplot.show()
+        pickle.dump((error,prediction,ret,signal), open('things_a','wb'))
 
 if __name__ == '__main__':
     '''from the command-line'''
