@@ -6,53 +6,45 @@ import sys
 sys.path.insert(0, os.getcwd())
 import numpy as np
 import argparse
-from pysrc.problems.prosthetic_problem import Experiment
+from pysrc.problems.prosthetic_problem import Experiment, Experiment_With_Context
 from pysrc.algorithms.tdprediction.onpolicy import td, tdr, totd, utd, utotd, utdr
-from pysrc.utilities.file_loader import FileLoader
-from pysrc.utilities.verifier import Verifier
+from pysrc.utilities.file_loader import FileLoader, File_Loader_Approx
+from pysrc.utilities.verifier import calculate_return_horizon, calculate_return_total, calculate_discounted_return, calculate_discounted_return_horizon
 import pickle
 from matplotlib import pyplot
 import time
-def runoneconfig(config, file_loader, alg, prob, verifier): #todo: hook up the prob
-    """for the specific configuration, problem, alg,"""
-    # todo: define how we pull out the features we care about.
-    obs = file_loader.step()          # get the next observation diction
-    state = prob.step(obs)
-    l = []
-    p = []
-    r = []
-    s = []
-    i = 0
-    
-    print("start")
-    start = time.time()
-    while file_loader.has_obs():         # while we still have observations
-        # start = time.time()
-        obs = file_loader.step()          # get the next observation diction
-        # print ("=> Obs time " + str(time.time()-start))
-        if file_loader.i % 10000 == 0:
-            print(str("num steps: ") + str(file_loader.i))
 
-        if file_loader.i % 14 == 0:
-            # todo: tighten up all of this
-            state = prob.step(obs)
-            alg.step(state)
-            prediction = np.dot(state['phinext'], alg.estimate()) * (1-state['gnext'])
-            e = verifier.update(state['R'], prediction)
-            ret = verifier.calculate_predicted_return()
-            if prediction:
-                p.append(prediction)
-            if e:
-                l.append(e)
-                r.append(ret)
-            s.append(state['R'])
-    print("Finished: " + str(start-time.time()))
-    return l,p,r,s
+def runoneconfig(file_loader, alg, prob):
+    """for the specific configuration, problem, alg,"""
+    obs = file_loader.step()                                    # get the next observation diction
+    state = prob.step(obs)                                      # initial state
+    p = []                                                      # holds the predictions
+    s = []                                                      # holds all of the rewards
+
+    print("start")
+    start = time.time()                                         # experiment timer
+
+    while file_loader.has_obs():                                # while we still have observations
+        obs = file_loader.step()                                # get the next observation diction
+        state = prob.step(obs)                                  # state from prob
+        alg.step(state)                                         # update based on new state
+        prediction = np.dot(state['phinext'], alg.estimate())   # prediction for this time-step
+        p.append(prediction)                                    # record prediction
+        s.append(state['R'])                                    # record actual reward
+
+        if file_loader.i % 5000 == 0:                           # pretty print
+            print("Step: {s} of {n}".format(file_loader.i, len(file_loader.data_stream)))
+
+    print("Finished: " + str((time.time()-start)/60))           # time taken for experiment
+    return p, s                                                 # return the predictions and rewards
+
 
 def main():
     """runs the experiment with commandline args"""
+
+    ''' Argument parsing from the command line '''
+
     parser = argparse.ArgumentParser()
-    # TODO: get the problem from the command-line
     parser.add_argument("sVal", help="Session. single digit.")
     parser.add_argument("aVal", help="Activity value. Single digit.")
     parser.add_argument("prob", help="Name of the problem to use.")
@@ -65,7 +57,7 @@ def main():
     config_alg_path = 'results/robot-experiments/{prob}/{alg}/configalg.pkl'.format(prob=args.prob, alg=args.algname)
     config_alg = pickle.load(open(config_alg_path, 'rb'))   # we load a configuration file with all of the data
 
-    file_loader = FileLoader('results/prosthetic-data/EdwardsPOIswitching_s{s}a{a}.txt'.format(s=args.sVal, a=args.aVal))
+    file_loader = File_Loader_Approx('results/prosthetic-data/EdwardsPOIswitching_s{s}a{a}.txt'.format(s=args.sVal, a=args.aVal), 14)
 
     algs = {
         'td': td.TD,
@@ -76,32 +68,34 @@ def main():
         'utdr': utdr.UTDR
     }
 
-    # TODO: manage the results so it plugs into plotting nicely
+    ''' search for an unused file-name '''
     i = 0
-    while os.path.isfile('results/robot-experiments/{prob}/{alg}/{i}'.format(prob=args.prob, alg=args.algname, i=i)):
+    while os.path.isfile('results/robot-experiments/{prob}/{alg}/{s}_s{a}_a-{i}'.format(prob=args.prob, alg=args.algname, s=args.sVal, a=args.aVal, i=i)):
         i += 1
-    f = open('results/robot-experiments/{prob}/{alg}/{i}'.format(prob=args.prob, alg=args.algname, i=i), 'wb')
+    f = open('results/robot-experiments/{prob}/{alg}/{s}_s{a}_a-{i}'.format(prob=args.prob, alg=args.algname, s=args.sVal, a=args.aVal, i=i), 'wb')
 
-    # TODO: get the verifier to calculate the return pre-exp and use that for each run
-    verifier = Verifier(config_prob['gamma'])
-    # verifier.
+    ''' calculate return '''
+    print("ver start")
+    calculated_return = calculate_discounted_return_horizon(config_prob, file_loader.data_stream, Experiment)
+    print("ver end")
+    pyplot.plot(calculated_return)
 
-    for config in config_alg:           # for the parameter sweep we're interested in
-        config.update(config_prob)      # add the problem-specific configs
-        prob = Experiment(config)
+    for config in config_alg:                       # for the parameter sweep we're interested in
+        config.update(config_prob)                  # add the problem-specific configs
+        prob = Experiment_With_Context(config)      # construct a problem
+        alg = algs[args.algname](config)            # build our instance of an algorithm
+        (prediction, signal) = \
+            runoneconfig(config=config, file_loader=file_loader, prob=prob, alg=alg)    # grab results of run
 
-        alg = algs[args.algname](config)        # build our instance of an algorithm
-        (error, prediction, ret, signal) = runoneconfig(config=config, file_loader=file_loader, prob=prob, alg=alg, verifier=verifier)
-        config['error'] = error
-
+        config['signal'] = signal                   # adding to the config so we can save results
+        config['return'] = calculated_return
+        config['prediction'] = prediction
         pickle.dump(config, f, -1)
-        pickle.dump((error,prediction,ret,signal), open('things','wb'))
-        # pyplot.plot(np.abs(np.array(error)))
-        pyplot.plot(np.array(prediction))
-        # pyplot.plot(np.array(ret))
-        pyplot.plot(np.array(signal))
+
+        pyplot.plot(signal)                         # ploting for observation
+        pyplot.plot(prediction)
+        pyplot.plot(calculated_return)
         pyplot.show()
-        pickle.dump((error,prediction,ret,signal), open('things_a','wb'))
 
 if __name__ == '__main__':
     '''from the command-line'''
