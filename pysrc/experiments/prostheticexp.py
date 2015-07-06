@@ -32,8 +32,8 @@ def runoneconfig(file_loader, alg, prob):
         p.append(prediction)                                    # record prediction
         s.append(state['R'])                                    # record actual reward
 
-        if file_loader.i % 5000 == 0:                           # pretty print
-            print("Step: {s} of {n}".format(file_loader.i, len(file_loader.data_stream)))
+        if file_loader.i % 1000 == 0:                           # pretty print
+            print("Step: {s} of {n}".format(s=file_loader.i, n=len(file_loader.data_stream)))
 
     print("Finished: " + str((time.time()-start)/60))           # time taken for experiment
     return p, s                                                 # return the predictions and rewards
@@ -85,7 +85,7 @@ def main():
         prob = Experiment_With_Context(config)      # construct a problem
         alg = algs[args.algname](config)            # build our instance of an algorithm
         (prediction, signal) = \
-            runoneconfig(config=config, file_loader=file_loader, prob=prob, alg=alg)    # grab results of run
+            runoneconfig(file_loader=file_loader, prob=prob, alg=alg)    # grab results of run
 
         config['signal'] = signal                   # adding to the config so we can save results
         config['return'] = calculated_return
