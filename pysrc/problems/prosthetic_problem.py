@@ -9,7 +9,8 @@
 from pysrc.utilities.tiles import loadTiles
 import numpy as np
 __author__ = 'alex'
-import scipy.sparse as sp
+
+
 class Experiment(object):
     """" Analagous to the mdp,  """
 
@@ -20,12 +21,11 @@ class Experiment(object):
         self.gamma = config['gamma']
         self.feature_vector = np.zeros(self.num_tilings)
         self.phi = np.zeros(self.memory_size)
-        # self.phi = sp.lil_matrix((self.memory_size,1))
         self.last_phi = None
-        self.rl_lambda = config['lambda']
+        print(config)
+        self.rl_lambda = config['lmbda']
         self.last_switch_value = None
-
-
+        self.num_bins = 6
 
     def step(self, obs):
         """
@@ -52,7 +52,6 @@ class Experiment(object):
             0.01 alpha / 0.1
             0.99 lambda
             0.9 gamma
-
         """
         config = {}
         config['phi'] = self.last_phi
@@ -60,14 +59,8 @@ class Experiment(object):
                  (obs['vel1']+1.5)/3, (obs['vel2']+2)/4, (obs['vel4']+2)/4, (obs['vel5']+3)/6,
                  (obs['load5']+2)/4]
 
-        # state_name = ['pos1','pos2','pos4','pos5','vel1','vel2','vel4','vel5','load5']
-        # for i in range(len(state)):
-        #     if state[i] > 1 or state[i] < 0:
-        #         print "INDEX OVER: " + str(state_name[i]) + " STATE " + str(state[i])
-        #         for j in obs:
-        #             print("TAG: " + str(j) + " VALUE: " + str(obs[j]))
-        #         print(state)
-        #         raise BaseException()
+        for i in range(len(state)):
+            state[i] *= self.num_bins
 
         for i in self.feature_vector:
             self.phi[i] = 0
@@ -90,5 +83,97 @@ class Experiment(object):
         config['l'] = self.rl_lambda
         config['phinext'] = self.phi
         self.last_phi = self.phi
+        return config
 
+    @staticmethod
+    def get_reward(obs):
+        hand_velocity = obs['vel1']
+
+        if hand_velocity > 0.2:
+            return 1
+        else:
+            return 0
+
+
+class Experiment_With_Context(Experiment):
+
+    def __init__(self, config):
+        self.starting_element = 0
+        self.num_tilings = config['num_tilings']
+        self.memory_size = config['memory_size']
+        self.gamma = config['gamma']
+        self.feature_vector = np.zeros(self.num_tilings)
+        self.phi = np.zeros(self.memory_size)
+        self.last_phi = None
+        print(config)
+        self.rl_lambda = config['lmbda']
+        self.last_switch_value = None
+        self.num_bins = 6
+
+        self.velocity_1 = 0
+        self.velocity_2 = 0
+        self.velocity_4 = 0
+        self.velocity_5 = 0
+
+        self.pos_1 = 0
+        self.pos_2 = 0
+        self.pos_4 = 0
+        self.pos_5 = 0
+
+    def step(self, obs):
+        decay = 0.9
+        config = {}
+        config['phi'] = self.last_phi
+
+        self.velocity_1 = self.velocity_1*decay + (1-decay) * obs['vel1']
+        self.velocity_2 = self.velocity_2*decay + (1-decay) * obs['vel2']
+        self.velocity_4 = self.velocity_4*decay + (1-decay) * obs['vel4']
+        self.velocity_5 = self.velocity_5*decay + (1-decay) * obs['vel5']
+
+        self.pos_1 = self.pos_1*decay + (1-decay) * obs['pos1']
+        self.pos_2 = self.pos_2*decay + (1-decay) * obs['pos2']
+        self.pos_4 = self.pos_4*decay + (1-decay) * obs['pos4']
+        self.pos_5 = self.pos_5*decay + (1-decay) * obs['pos5']
+        state = [
+            obs['pos1']/4,
+            obs['pos2']/4,
+            obs['pos4']/4,
+            obs['pos5']/4,
+            (obs['vel1']+1.5)/3,
+            (obs['vel2']+2)/4,
+            (obs['vel4']+2)/4,
+            (obs['vel5']+3)/6,
+            (self.pos_1+1.5)/3,
+            (self.pos_2+2)/4,
+            (self.pos_4+2)/4,
+            (self.pos_5+3)/6,
+            # (self.velocity_1+1.5)/3,
+            # (self.velocity_2+2)/4,
+            # (self.velocity_4+2)/4,
+            # (self.velocity_5+3)/6,
+            (obs['load5']+2)/4]
+
+        for i in range(len(state)):
+            state[i] *= self.num_bins
+
+        for i in self.feature_vector:
+            self.phi[i] = 0
+        loadTiles(self.feature_vector, self.starting_element, self.num_tilings, self.memory_size, state)
+
+        for i in self.feature_vector:
+            self.phi[i] = 1
+
+        hand_velocity = obs['vel1']
+
+        if hand_velocity > 0.2:
+            config['R'] = 1
+        else:
+            config['R'] = 0
+
+        self.last_switch_value = obs['switches']
+        config['gnext'] = self.gamma
+        config['g'] = self.gamma
+        config['l'] = self.rl_lambda
+        config['phinext'] = self.phi
+        self.last_phi = self.phi
         return config
