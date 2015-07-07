@@ -27,8 +27,7 @@ def calculate_discounted_return_backwards(config, obs, reward_calculator):
         except:                                             # if there was no ret[i+1]
             pass                                            # should only occur for first element
         i -= 1                                              # move to the next element
-
-    return ret
+    return ret[:len(ret)-1000]                              # slice the last 1000 elements
 
 
 def calculate_discounted_return(config, obs, reward_calculator):

@@ -9,7 +9,7 @@ import argparse
 from pysrc.problems.prosthetic_problem import Experiment, Experiment_With_Context
 from pysrc.algorithms.tdprediction.onpolicy import td, tdr, totd, utd, utotd, utdr
 from pysrc.utilities.file_loader import FileLoader, FileLoaderApprox
-from pysrc.utilities.verifier import calculate_return_horizon, calculate_return_total, calculate_discounted_return, calculate_discounted_return_horizon
+from pysrc.utilities.verifier import *
 import pickle
 from matplotlib import pyplot
 import time
@@ -58,7 +58,7 @@ def main():
     config_alg_path = 'results/robot-experiments/{prob}/{alg}/configalg.pkl'.format(prob=args.prob, alg=args.algname)
     config_alg = pickle.load(open(config_alg_path, 'rb'))   # we load a configuration file with all of the data
 
-    file_loader = FileLoaderApprox('results/prosthetic-data/EdwardsPOIswitching_s{s}a{a}.txt'.format(s=args.sVal, a=args.aVal), 14)
+    file_loader = FileLoaderApprox('results/prosthetic-data/EdwardsPOIswitching_{s}{a}.txt'.format(s=args.sVal, a=args.aVal), 14)
 
     algs = {
         'td': td.TD,
@@ -71,15 +71,18 @@ def main():
 
     ''' search for an unused file-name '''
     i = 0
-    while os.path.isfile('results/robot-experiments/{prob}/{alg}/s{s}_a{a}-{i}.dat'.format(prob=args.prob, alg=args.algname, s=args.sVal, a=args.aVal, i=i)):
+    while os.path.isfile('results/robot-experiments/{prob}/{alg}/{s}_{a}-{i}.dat'.format(prob=args.prob, alg=args.algname, s=args.sVal, a=args.aVal, i=i)):
         i += 1
-    f = open('results/robot-experiments/{prob}/{alg}/s{s}_a{a}-{i}.dat'.format(prob=args.prob, alg=args.algname, s=args.sVal, a=args.aVal, i=i), 'wb')
+    f = open('results/robot-experiments/{prob}/{alg}/{s}_{a}-{i}.dat'.format(prob=args.prob, alg=args.algname, s=args.sVal, a=args.aVal, i=i), 'wb')
 
     ''' calculate return '''
+
     print("ver start")
+    timer = time.time()
     print(len(file_loader.data_stream))
-    calculated_return = calculate_discounted_return(config_prob, file_loader.data_stream, Experiment)
-    print("ver end")
+    calculated_return = calculate_discounted_return_backwards(config_prob, file_loader.data_stream, Experiment)
+    config_prob['return'] = calculated_return
+    print("ver end: {time}".format(time=(time.time()-timer)))
     pyplot.plot(calculated_return)
 
     for config in config_alg:                       # for the parameter sweep we're interested in
@@ -90,7 +93,6 @@ def main():
             runoneconfig(file_loader=file_loader, prob=prob, alg=alg)    # grab results of run
 
         config['signal'] = signal                   # adding to the config so we can save results
-        config['return'] = calculated_return
         config['prediction'] = prediction
         pickle.dump(config, f, -1)
 

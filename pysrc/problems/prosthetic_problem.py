@@ -147,10 +147,10 @@ class Experiment_With_Context(Experiment):
             # (self.pos_2+2)/4,
             # (self.pos_4+2)/4,
             # (self.pos_5+3)/6,
-            # (self.velocity_1+1.5)/3,
-            # (self.velocity_2+2)/4,
-            # (self.velocity_4+2)/4,
-            # (self.velocity_5+3)/6,
+            (self.velocity_1+1.5)/3,
+            (self.velocity_2+2)/4,
+            (self.velocity_4+2)/4,
+            (self.velocity_5+3)/6,
             (obs['load5']+2)/4]
 
         for i in range(len(state)):
