@@ -9,6 +9,7 @@ do
 for alg in tdr utdr td totd utd utotd
 do
 
+# note: I can't run all of these at once.
 # time python pysrc/experiments/prostheticexp.py $s $a anns_experiment $alg &
 time python pysrc/experiments/prostheticexp.py $s $a anns_experiment $alg
 
@@ -18,6 +19,7 @@ done
 
 done
 
-echo "Invoking matplotlib plot for the experiment ..."
-python ./pysrc/plot/plotrndmdpexp10.py
+# todo: add some plotting functionality
+#echo "Invoking matplotlib plot for the experiment ..."
+#python ./pysrc/plot/plotrndmdpexp10.py
 
