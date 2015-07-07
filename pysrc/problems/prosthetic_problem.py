@@ -121,7 +121,7 @@ class Experiment_With_Context(Experiment):
         self.pos_5 = 0
 
     def step(self, obs):
-        decay = 0.9
+        decay = 0.99
         config = {}
         config['phi'] = self.last_phi
 
