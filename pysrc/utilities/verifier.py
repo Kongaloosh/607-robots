@@ -5,6 +5,30 @@ A collection of methods which post-hoc calculate return for a particular experim
 import math
 import pickle
 from matplotlib import pyplot
+import numpy as np
+
+def calculate_discounted_return_backwards(config, obs, reward_calculator):
+    """
+        provided a config containing a dictionary with the experiments
+        gamma, all the observations, and some class with a reward calc,
+        finds the discounted return for all states within a safe range
+        of the end of perception.
+
+        What your should be using
+    """
+
+    gamma = config['gamma']                                 # find our gamma for convenience
+    ret = np.zeros(len(obs))                                # initialize the array we hold our values in
+    i = len(obs)-1                                          # starting at the end, heading backwards
+    while i >= 0:                                            # until we reach the start of the array
+        ret[i] += reward_calculator.get_reward(obs[i])      # add the
+        try:                                                # we surround in a try catch in case we are at the start
+            ret[i] += ret[i+1] * gamma                      # we add the previous return with a decay
+        except:                                             # if there was no ret[i+1]
+            pass                                            # should only occur for first element
+        i -= 1                                              # move to the next element
+
+    return ret
 
 
 def calculate_discounted_return(config, obs, reward_calculator):
@@ -14,6 +38,34 @@ def calculate_discounted_return(config, obs, reward_calculator):
         finds the discounted return for all states within a safe range
         of the end of perception.
     """
+    gamma = config['gamma']
+    safe_horizon = int(math.floor(2*(1/(1-gamma))))     # abstract out the '2' to some config (experiment?)
+    terminal = len(obs)-safe_horizon                    # we only compute the return to a specific safe point
+    ret = []
+    for i in range(terminal):                           # for each time-step to our terminal
+        j = i                                           # inner loop start index
+        ret_i = 0                                       # set the value for the current time step's return
+
+        if i % 1000 == 0 and i > 0:                     # pretty print
+            print("{i} of {n}".format(i=i, n=terminal))
+
+        while j < len(obs):                             # for all the received rewards from i onwards
+            # add the reward of a time step discounted by gamma relative to where it is in relation to i
+            ret_i += reward_calculator.get_reward(obs[j]) * (gamma**(j-i))
+            j += 1
+
+        ret.append(ret_i)                               # append the calculated value
+    return ret                                          # the calculated return for all time steps within safe range
+
+
+def calculate_discounted_return(config, obs, reward_calculator):
+    """
+        provided a config containing a dictionary with the experiments
+        gamma, all the observations, and some class with a reward calc,
+        finds the discounted return for all states within a safe range
+        of the end of perception.
+    """
+    np.array
     gamma = config['gamma']
     safe_horizon = int(math.floor(2*(1/(1-gamma))))     # abstract out the '2' to some config (experiment?)
     terminal = len(obs)-safe_horizon                    # we only compute the return to a specific safe point
