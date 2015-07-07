@@ -7,7 +7,7 @@ import cPickle as pickle
 # configs = [{'alpha': alpha, 'lmbda': lm} for alpha in alphas for lm in lms]
 # f = open('configalg.pkl', 'wb')
 
-configs = [{'alpha': 0.1/4, 'lambda': 0.9}]  # should pull the alpha normalizing out eventually
+configs = [{'alpha': 0.01/4, 'lmbda': 0.9}]  # should pull the alpha normalizing out eventually
 f = open('configalg.pkl', 'wb')
 
 pickle.dump(configs, f)

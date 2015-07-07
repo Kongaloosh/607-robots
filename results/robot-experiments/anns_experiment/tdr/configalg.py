@@ -6,8 +6,6 @@ import cPickle as pickle
 # lambdas = np.concatenate((np.arange(0, .9, .1), np.arange(.9, 1.01, .01)))    #values of lambda to sweep over
 #
 # configs = [{'alpha': alpha, 'lmbda': lm} for alpha in alphas for lm in lambdas]
-configs = [{'alpha': 0.1/4, 'lambda': 0.5}]
-
+configs = [{'alpha': 0.1/4, 'lmbda': 0.9}]
 f = open('configalg.pkl', 'wb')
-
 pickle.dump(configs, f)

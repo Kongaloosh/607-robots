@@ -8,12 +8,10 @@ from math import gamma
 
 
 def main():
-    number_of_features = 100
-    N = 1000
-    gamma = 0.99
+    gamma = 0.97
     configs = {
         # function approximation:
-        'num_tilings': 2,
+        'num_tilings': 4,
         'memory_size': 2**20,
         'nf': 2**20,
         'starting_element': 0,
