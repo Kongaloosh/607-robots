@@ -34,16 +34,34 @@ class Max_Min_Finder(object):
         for e in self.elements:
             print('{e}: max: {max}, min: {min}'.format(e=e, max=self.max_v[e], min=self.min_v[e]))
 
+
 def main():
     print('starting')
     file = 'results/prosthetic-data/EdwardsPOIswitching_s1a1.txt'
     m = Max_Min_Finder(file)
 
-def find_invalid(state,obs):
-    state_name = ['pos1','pos2','pos4','pos5','vel1','vel2','vel4','vel5','load5']
+
+def generate_normalizer(datastream, prob):
+    """ given a problem and a data stream finds the values to normalize the feature-vectors """
+    for obs in datastream:
+        state = prob.get_state(obs)
+
+        try:                                    # Check if the current state is higher or lower than max/min
+            for i in range(len(state)):
+                (high, low) = normalizer[i]
+                if state[i] > high:
+                    high = state[i]
+                if state[i] < low:
+                    low = state[i]
+                normalizer[i] = (high, low)     # Re-assign vals
+        except:                                 # if we haven't made a max/min, instantiate
+            normalizer = [(val, val) for val in state]
+    return normalizer
+
+def find_invalid(state, obs):
     for i in range(len(state)):
         if state[i] > 1 or state[i] < 0:
-            print "INDEX OVER: " + str(state_name[i]) + " STATE " + str(state[i])
+            print "INDEX OVER: " + str(i) + " STATE " + str(state[i])
             for j in obs:
                 print("TAG: " + str(j) + " VALUE: " + str(obs[j]))
             print(state)
