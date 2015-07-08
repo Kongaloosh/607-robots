@@ -65,7 +65,7 @@ def find_invalid(state, obs):
             for j in obs:
                 print("TAG: " + str(j) + " VALUE: " + str(obs[j]))
             print(state)
-            raise BaseException()
+            raise ValueError
 
 if __name__ == "__main__":
     main()

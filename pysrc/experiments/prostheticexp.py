@@ -10,6 +10,7 @@ from pysrc.problems.prosthetic_problem import Experiment, Experiment_With_Contex
 from pysrc.algorithms.tdprediction.onpolicy import td, tdr, totd, utd, utotd, utdr
 from pysrc.utilities.file_loader import FileLoader, FileLoaderApprox
 from pysrc.utilities.verifier import *
+from pysrc.utilities.max_min_finder import *
 import pickle
 from matplotlib import pyplot
 import time
@@ -75,18 +76,32 @@ def main():
         i += 1
     f = open('results/robot-experiments/{prob}/{alg}/{s}_{a}-{i}.dat'.format(prob=args.prob, alg=args.algname, s=args.sVal, a=args.aVal, i=i), 'wb')
 
-    ''' calculate return '''
-
+    # calculate the return
     print("ver start")
     timer = time.time()
     print(len(file_loader.data_stream))
     calculated_return = calculate_discounted_return_backwards(config_prob, file_loader.data_stream, Experiment)
     config_prob['return'] = calculated_return
     print("ver end: {time}".format(time=(time.time()-timer)))
-    pyplot.plot(calculated_return)
 
+    # calculate normalizer
+    print("normalizer start")
+    timer = time.time()
+    c = reduce(lambda x,y: dict(x, **y), (config_alg[0], config_prob))
+    print(c)
+    prob = Experiment_With_Context(c)
+    config_prob['normalizer'] = generate_normalizer(
+        file_loader.data_stream, prob=prob)
+    print config_prob['normalizer']
+    print("normalizer end: {time}".format(time=(time.time()-timer)))
+
+    # run the experiment
     for config in config_alg:                       # for the parameter sweep we're interested in
         config.update(config_prob)                  # add the problem-specific configs
+        try:
+            config['alpha'] /= config['num_tilings']    # divide alpha
+        except:
+            pass                                        # we're using an alg with different config
         prob = Experiment_With_Context(config)      # construct a problem
         alg = algs[args.algname](config)            # build our instance of an algorithm
         (prediction, signal) = \
@@ -104,6 +119,7 @@ def main():
         pyplot.plot(np.array(signal))
         pyplot.plot(np.array(prediction)*(1-config['gamma']))
         pyplot.show()
+
 if __name__ == '__main__':
     '''from the command-line'''
     main()
