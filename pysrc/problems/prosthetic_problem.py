@@ -15,7 +15,6 @@ class Prosthetic_Experiment(object):
     """" Analagous to the mdp,  """
 
     def __init__(self, config):
-        print(config)
         self.starting_element = 0
         self.num_tilings = config['num_tilings']
         self.memory_size = config['memory_size']
