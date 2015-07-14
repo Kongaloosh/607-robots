@@ -16,11 +16,10 @@ def calculate_discounted_return_backwards(config, obs, reward_calculator):
 
         What your should be using
     """
-
     gamma = config['gamma']                                 # find our gamma for convenience
     ret = np.zeros(len(obs))                                # initialize the array we hold our values in
     i = len(obs)-1                                          # starting at the end, heading backwards
-    while i >= 0:                                            # until we reach the start of the array
+    while i >= 0:                                           # until we reach the start of the array
         ret[i] += reward_calculator.get_reward(obs[i])      # add the
         try:                                                # we surround in a try catch in case we are at the start
             ret[i] += ret[i+1] * gamma                      # we add the previous return with a decay

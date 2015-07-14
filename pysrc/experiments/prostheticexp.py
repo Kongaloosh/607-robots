@@ -6,7 +6,7 @@ import sys
 sys.path.insert(0, os.getcwd())
 import numpy as np
 import argparse
-from pysrc.problems.prosthetic_problem import Experiment, Experiment_With_Context
+from pysrc.problems.prosthetic_problem import Prosthetic_Experiment, Prosthetic_Experiment_With_Context
 from pysrc.algorithms.tdprediction.onpolicy import td, tdr, totd, utd, utotd, utdr
 from pysrc.utilities.file_loader import FileLoader, FileLoaderApprox
 from pysrc.utilities.verifier import *
@@ -25,18 +25,16 @@ def runoneconfig(file_loader, alg, prob):
 
     print("start")
     start = time.time()                                         # experiment timer
-
     while file_loader.has_obs():                                # while we still have observations
         obs = file_loader.step()                                # get the next observation diction
-        state = prob.step(obs)                                  # state from prob
-        alg.step(state)                                         # update based on new state
-        prediction = np.dot(state['phinext'], alg.estimate())   # prediction for this time-step
+        vals = prob.step(obs)                                  # state from prob
+        alg.step(vals)                                         # update based on new state
+        prediction = np.dot(vals['phinext'], alg.estimate())   # prediction for this time-step
         p.append(prediction)                                    # record prediction
-        s.append(state['R'])                                    # record actual reward
+        s.append(vals['R'])                                    # record actual reward
 
         if file_loader.i % 1000 == 0:                           # pretty print
             print("Step: {s} of {n}".format(s=file_loader.i, n=len(file_loader.data_stream)))
-
     print("Finished: " + str((time.time()-start)/60))           # time taken for experiment
     return p, s                                                 # return the predictions and rewards
 
@@ -51,15 +49,18 @@ def main():
     parser.add_argument("aVal", help="Activity value. Single digit.")
     parser.add_argument("prob", help="Name of the problem to use.")
     parser.add_argument("algname", help="name of the algorithm.")
+    parser.add_argument("filename", help="name you want to add to the file")
     args = parser.parse_args()
 
     config_prob_path = 'results/robot-experiments/{prob}/configprob.pkl'.format(prob=args.prob)
+    print(config_prob_path)
     config_prob = pickle.load(open(config_prob_path, 'rb'))   # we load a configuration file with all of the data
 
     config_alg_path = 'results/robot-experiments/{prob}/{alg}/configalg.pkl'.format(prob=args.prob, alg=args.algname)
     config_alg = pickle.load(open(config_alg_path, 'rb'))   # we load a configuration file with all of the data
 
     file_loader = FileLoaderApprox('results/prosthetic-data/EdwardsPOIswitching_{s}{a}.txt'.format(s=args.sVal, a=args.aVal), 14)
+    # file_loader = FileLoader('results/prosthetic-data/EdwardsPOIswitching_{s}{a}.txt'.format(s=args.sVal, a=args.aVal))
 
     algs = {
         'td': td.TD,
@@ -70,29 +71,30 @@ def main():
         'utdr': utdr.UTDR
     }
 
+    problems = {
+        'prosthetic_experiment': Prosthetic_Experiment,
+        'prosthetic_experiment_with_context': Prosthetic_Experiment_With_Context,
+    }
+
     ''' search for an unused file-name '''
-    i = 0
-    while os.path.isfile('results/robot-experiments/{prob}/{alg}/{s}_{a}-{i}.dat'.format(prob=args.prob, alg=args.algname, s=args.sVal, a=args.aVal, i=i)):
-        i += 1
-    f = open('results/robot-experiments/{prob}/{alg}/{s}_{a}-{i}.dat'.format(prob=args.prob, alg=args.algname, s=args.sVal, a=args.aVal, i=i), 'wb')
+    f = open('results/robot-experiments/{prob}/{alg}/{name}_{s}_{a}.dat'.format(prob=args.prob, alg=args.algname, s=args.sVal, a=args.aVal, name=args.filename), 'wb')
 
     # calculate the return
-    print("ver start")
-    timer = time.time()
-    print(len(file_loader.data_stream))
-    calculated_return = calculate_discounted_return_backwards(config_prob, file_loader.data_stream, Experiment)
+    calculated_return = \
+        calculate_discounted_return_backwards(
+            config_prob,
+            file_loader.data_stream,
+            Prosthetic_Experiment)
     config_prob['return'] = calculated_return
-    print("ver end: {time}".format(time=(time.time()-timer)))
 
     # calculate normalizer
     print("normalizer start")
     timer = time.time()
-    c = reduce(lambda x,y: dict(x, **y), (config_alg[0], config_prob))
-    print(c)
-    prob = Experiment_With_Context(c)
+    # todo: make it so that we don't need the alg config to do this
+    c = reduce(lambda x, y: dict(x, **y), (config_alg[0], config_prob)) # concat the dicts
+    prob = problems[args.prob](c)                                       # construct a representative config
     config_prob['normalizer'] = generate_normalizer(
-        file_loader.data_stream, prob=prob)
-    print config_prob['normalizer']
+        file_loader.data_stream, prob=prob)                             # get constants for normalizing states
     print("normalizer end: {time}".format(time=(time.time()-timer)))
 
     # run the experiment
@@ -102,7 +104,7 @@ def main():
             config['alpha'] /= config['num_tilings']    # divide alpha
         except:
             pass                                        # we're using an alg with different config
-        prob = Experiment_With_Context(config)      # construct a problem
+        prob = problems[args.prob](config)                      # construct a problem
         alg = algs[args.algname](config)            # build our instance of an algorithm
         (prediction, signal) = \
             runoneconfig(file_loader=file_loader, prob=prob, alg=alg)    # grab results of run
@@ -111,14 +113,8 @@ def main():
         config['prediction'] = prediction
         pickle.dump(config, f, -1)
 
-        pyplot.plot(prediction)
-        pyplot.plot(np.array(signal)*33.3333)                         # ploting for observation
-        pyplot.plot(calculated_return)
-        pyplot.show()
-
-        pyplot.plot(np.array(signal))
-        pyplot.plot(np.array(prediction)*(1-config['gamma']))
-        pyplot.show()
+    pyplot.plot(calculated_return)
+    pyplot.show()
 
 if __name__ == '__main__':
     '''from the command-line'''

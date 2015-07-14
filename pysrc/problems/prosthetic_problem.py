@@ -4,8 +4,6 @@
     feature-processing, changing of gamma, .etc should be done here.
     You can simply extend this template and over-ride as necessary.
 """
-
-# from pysrc.utilities.verifier import Verifier
 from pysrc.utilities.tiles import loadTiles
 import numpy as np
 from pysrc.utilities.max_min_finder import *
@@ -13,10 +11,11 @@ from pysrc.utilities.max_min_finder import *
 __author__ = 'alex'
 
 
-class Experiment(object):
+class Prosthetic_Experiment(object):
     """" Analagous to the mdp,  """
 
     def __init__(self, config):
+        print(config)
         self.starting_element = 0
         self.num_tilings = config['num_tilings']
         self.memory_size = config['memory_size']
@@ -24,19 +23,16 @@ class Experiment(object):
         self.feature_vector = np.zeros(self.num_tilings)
         self.phi = np.zeros(self.memory_size)
         self.last_phi = None
-        print(config)
-        self.rl_lambda = config['lmbda']
         self.last_switch_value = None
         self.num_bins = 20
-        try:
-            self.normalizer = config['normalizer']
-        except:
-            pass
+        try: self.rl_lambda = config['lmbda']       # Lambda-less setups are different
+        except: pass
+        try: self.normalizer = config['normalizer']
+        except: pass
 
     def step(self, obs):
         config = {}
         config['phi'] = self.last_phi
-
         state = self.get_state(obs)
         state = self.normalize_state(self.normalizer, state)
         find_invalid(state, obs)
@@ -46,29 +42,28 @@ class Experiment(object):
 
         for i in self.feature_vector:
             self.phi[i] = 0
+
         loadTiles(self.feature_vector, self.starting_element, self.num_tilings, self.memory_size, state)
+
         for i in self.feature_vector:
             self.phi[i] = 1
 
-        hand_velocity = obs['vel1']
-        if hand_velocity > 0.2:
-            config['R'] = 1
-        else:
-            config['R'] = 0
+        config['R'] = self.get_state(obs)
 
         self.last_switch_value = obs['switches']
         config['gnext'] = self.gamma
         config['g'] = self.gamma
-        config['l'] = self.rl_lambda
+        try: config['l'] = self.rl_lambda   # not every algorithm requires a lambda, so we try
+        except: pass
         config['phinext'] = self.phi
         self.last_phi = self.phi
         return config
 
     @staticmethod
     def get_reward(obs):
-        hand_velocity = obs['vel1']
+        elbow_velocity = obs['vel3']
 
-        if hand_velocity > 0.2:
+        if elbow_velocity > 0.2:
             return 1
         else:
             return 0
@@ -88,7 +83,7 @@ class Experiment(object):
         return state
 
 
-class Experiment_With_Context(Experiment):
+class Prosthetic_Experiment_With_Context(Prosthetic_Experiment):
 
     def __init__(self, config):
         self.starting_element = 0
@@ -103,8 +98,8 @@ class Experiment_With_Context(Experiment):
         self.last_switch_value = None
         self.num_bins = 6
 
-        self.alphas = [.1, .001]  # .01,
-        self.decay = 0.99
+        self.alphas = [0.95]  #
+        self.decay = 0.95
 
         self.velocity_1 = np.zeros(len(self.alphas))
         self.velocity_2 = np.zeros(len(self.alphas))
@@ -144,21 +139,64 @@ class Experiment_With_Context(Experiment):
         self.pos_5 = self.pos_5*self.decay + (1-self.decay) * obs['pos5']
 
         state = np.array([
-            obs['pos1']/4,
-            obs['pos2']/4,
-            obs['pos4']/4,
-            obs['pos5']/4,
-            (obs['vel1']+1.5)/3,
-            (obs['vel2']+2)/4,
-            (obs['vel4']+2)/4,
-            (obs['vel5']+3)/6,
-            (obs['load5']+2)/4])
+            obs['pos1'],
+            obs['pos2'],
+            obs['pos4'],
+            obs['pos5'],
+            obs['vel1'],
+            obs['vel2'],
+            obs['vel4'],
+            obs['vel5'],
+            obs['load5'],
+        ])
 
         state = np.concatenate((
             state,
             self.velocity_1,
             self.velocity_2,
             self.velocity_4,
-            self.velocity_5))
+            self.velocity_5,
+            [self.pos_1, self.pos_2, self.pos_4, self.pos_5]
+        ))
 
         return state
+
+    def step(self, obs):
+        config = {}
+        config['phi'] = self.last_phi
+
+        state = self.get_state(obs)
+        state = self.normalize_state(self.normalizer, state)
+        find_invalid(state, obs)
+
+        for i in range(len(state)):
+            state[i] *= self.num_bins
+
+        for i in self.feature_vector:
+            self.phi[i] = 0
+
+        '''
+            Multiple tile-coders used. We load the first half of the states in during the first load
+        '''
+
+        loadTiles(self.feature_vector, 0, self.num_tilings, self.memory_size, state[:len(state)/2], [0])
+        for i in self.feature_vector:
+            self.phi[i] = 1
+
+        loadTiles(self.feature_vector, 0, self.num_tilings, self.memory_size, state[len(state)/2:], [1])
+        for i in self.feature_vector:
+            self.phi[i] = 1
+
+        hand_velocity = obs['vel1']
+        if hand_velocity > 0.2:
+            config['R'] = 1
+        else:
+            config['R'] = 0
+
+        self.last_switch_value = obs['switches']
+        config['gnext'] = self.gamma
+        config['g'] = self.gamma
+        config['l'] = self.rl_lambda
+        config['phinext'] = self.phi
+        self.last_phi = self.phi
+        return config

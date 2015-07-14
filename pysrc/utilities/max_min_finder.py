@@ -18,7 +18,6 @@ class Max_Min_Finder(object):
             vals = line.rstrip().split(',')              # separate all the values in an observation
             self.data_stream.append(dict([(self.elements[i], float(vals[i])) for i in range(len(vals)-1)]))
             # we -1 because there's another comma at the end of every line but the header
-            # todo: generalize this to work with cleaned obs
         self.i = 0
 
         self.max_v = dict([(k, 0) for k in self.elements])
@@ -57,6 +56,7 @@ def generate_normalizer(datastream, prob):
         except:                                 # if we haven't made a max/min, instantiate
             normalizer = [(val, val) for val in state]
     return normalizer
+
 
 def find_invalid(state, obs):
     for i in range(len(state)):
