@@ -1,48 +1,39 @@
-"""
-Created on May 12, 2015
-
-@author: A. Rupam Mahmood
-"""
-
 import os
 import sys
-sys.path.insert(0, os.getcwd())
+os.chdir(os.path.dirname(os.getcwd()))
 import matplotlib.pyplot as ppl
 from pysrc.plot import plotdataprocess
 import cPickle as pickle
 
 def plotperfvslmbda(pathfileprefix, label, params):
-    """ sets the cmd line arg vals and then runs the plot data process """
     plotfilename = pathfileprefix+"perfvs"+params[-1]+".plot.pkl"
     if not os.path.isfile(plotfilename):
         sys.argv = params
         plotdataprocess.main()
     plotfile = file(plotfilename, "rb")
     data = pickle.load(plotfile)
-    ppl.errorbar(data[:, 0], data[:, 1], data[:, 2], label=label)
-
+    ppl.errorbar(data[:,0], data[:,1], data[:,2], label=label)
 
 def main():
-    """ Preps a bunch of files for use with the plot data process """
-    path = "./results/rndmdp-experiments/state-10-ftype-binary/"
+    path = "./results/robot-experiments/anns_experiment/"
     if not os.path.exists(path):
-        path = "../."+path
+        path = "../." + path
 
-    pathfileprefix = path+"td/mdpseed_1000_runseed_"
+    pathfileprefix = path+"td/s1_a1"
     plotperfvslmbda(pathfileprefix, "TD", ["", "50", pathfileprefix, "2", "alpha", "lmbda", "1", "lmbda"])
-    pathfileprefix  = path+"utd/mdpseed_1000_runseed_"
+    pathfileprefix = path+"utd/s1_a1"
     plotperfvslmbda(pathfileprefix, "UTD", ["", "50", pathfileprefix, "3", "eta", "initd", "lmbda", "1", "lmbda"])
-    pathfileprefix = path+"totd/mdpseed_1000_runseed_"
+    pathfileprefix = path+"totd/s1_a1"
     plotperfvslmbda(pathfileprefix, "TOTD", ["", "50", pathfileprefix, "2", "alpha", "lmbda", "1", "lmbda"])
-    pathfileprefix = path+"utotd/mdpseed_1000_runseed_"
+    pathfileprefix = path+"utotd/s1_a1"
     plotperfvslmbda(pathfileprefix, "UTOTD", ["", "50", pathfileprefix, "3", "eta", "initd", "lmbda", "1", "lmbda"])
-    pathfileprefix = path+"tdr/mdpseed_1000_runseed_"
+    pathfileprefix = path+"tdr/s1_a1"
     plotperfvslmbda(pathfileprefix, "TDR", ["", "50", pathfileprefix, "2", "alpha", "lmbda", "1", "lmbda"])
-    pathfileprefix = path+"utdr/mdpseed_1000_runseed_"
+    pathfileprefix = path+"utdr/s1_a1"
     plotperfvslmbda(pathfileprefix, "UTDR", ["", "50", pathfileprefix, "3", "eta", "initd", "lmbda", "1", "lmbda"])
-    ppl.ylim([.1, 0.8])
-    #  ppl.yscale('log')
-    #  ppl.legend()
+    ppl.ylim([.0, 0.8])
+    #ppl.yscale('log')
+    #ppl.legend()
 
 if __name__ == '__main__':
     main()

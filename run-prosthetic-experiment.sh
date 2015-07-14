@@ -10,8 +10,8 @@ for alg in tdr utdr td totd utd utotd
 do
 
 # note: I can't run all of these at once.
-# time python pysrc/experiments/prostheticexp.py $s $a anns_experiment $alg &
-time python pysrc/experiments/prostheticexp.py $s $a anns_experiment $alg
+# time python pysrc/experiments/prostheticexp.py $s $a experiment $alg &
+time python pysrc/experiments/prostheticexp.py $s $a prosthetic_experiment $alg sweep
 
 done
 

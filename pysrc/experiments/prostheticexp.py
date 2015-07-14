@@ -23,7 +23,6 @@ def runoneconfig(file_loader, alg, prob):
     p = []                                                      # holds the predictions
     s = []                                                      # holds all of the rewards
 
-    print("start")
     start = time.time()                                         # experiment timer
     while file_loader.has_obs():                                # while we still have observations
         obs = file_loader.step()                                # get the next observation diction
@@ -32,10 +31,6 @@ def runoneconfig(file_loader, alg, prob):
         prediction = np.dot(vals['phinext'], alg.estimate())   # prediction for this time-step
         p.append(prediction)                                    # record prediction
         s.append(vals['R'])                                    # record actual reward
-
-        if file_loader.i % 1000 == 0:                           # pretty print
-            print("Step: {s} of {n}".format(s=file_loader.i, n=len(file_loader.data_stream)))
-    print("Finished: " + str((time.time()-start)/60))           # time taken for experiment
     return p, s                                                 # return the predictions and rewards
 
 
@@ -53,7 +48,6 @@ def main():
     args = parser.parse_args()
 
     config_prob_path = 'results/robot-experiments/{prob}/configprob.pkl'.format(prob=args.prob)
-    print(config_prob_path)
     config_prob = pickle.load(open(config_prob_path, 'rb'))   # we load a configuration file with all of the data
 
     config_alg_path = 'results/robot-experiments/{prob}/{alg}/configalg.pkl'.format(prob=args.prob, alg=args.algname)
@@ -88,14 +82,12 @@ def main():
     config_prob['return'] = calculated_return
 
     # calculate normalizer
-    print("normalizer start")
     timer = time.time()
     # todo: make it so that we don't need the alg config to do this
     c = reduce(lambda x, y: dict(x, **y), (config_alg[0], config_prob)) # concat the dicts
     prob = problems[args.prob](c)                                       # construct a representative config
     config_prob['normalizer'] = generate_normalizer(
         file_loader.data_stream, prob=prob)                             # get constants for normalizing states
-    print("normalizer end: {time}".format(time=(time.time()-timer)))
 
     # run the experiment
     for config in config_alg:                       # for the parameter sweep we're interested in

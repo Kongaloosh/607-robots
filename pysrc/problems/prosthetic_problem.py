@@ -48,7 +48,7 @@ class Prosthetic_Experiment(object):
         for i in self.feature_vector:
             self.phi[i] = 1
 
-        config['R'] = self.get_state(obs)
+        config['R'] = self.get_reward(obs)
 
         self.last_switch_value = obs['switches']
         config['gnext'] = self.gamma
@@ -93,7 +93,6 @@ class Prosthetic_Experiment_With_Context(Prosthetic_Experiment):
         self.feature_vector = np.zeros(self.num_tilings)
         self.phi = np.zeros(self.memory_size)
         self.last_phi = None
-        print(config)
         self.rl_lambda = config['lmbda']
         self.last_switch_value = None
         self.num_bins = 6
