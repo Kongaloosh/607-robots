@@ -112,7 +112,7 @@ def main():
     for p in processes:
         run_result = output.get()
         pickle.dump(run_result, f, -1)
-    print('Finished: {a}'.format(a=args.algname))
+    print('Finished: {alg} {s} {a}'.format(alg=args.algname, s=args.sVal, a=args.aVal))
 
 if __name__ == '__main__':
     '''from the command-line'''
