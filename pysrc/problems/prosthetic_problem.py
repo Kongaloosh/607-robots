@@ -4,7 +4,7 @@
     feature-processing, changing of gamma, .etc should be done here.
     You can simply extend this template and over-ride as necessary.
 """
-from pysrc.utilities.tiles import loadTiles
+from pysrc.utilities.tiles import loadTiles, getTiles
 import numpy as np
 from pysrc.utilities.max_min_finder import *
 
@@ -194,3 +194,103 @@ class Prosthetic_Experiment_With_Context(Prosthetic_Experiment):
         config['phinext'] = self.phi
         self.last_phi = self.phi
         return config
+
+
+class Biorob2012Experiment(Prosthetic_Experiment):
+
+    def __init__(self, config):
+        self.starting_element = 0
+        self.num_tilings = config['num_tilings']
+        self.memory_size = config['memory_size']
+        self.gamma = config['gamma']
+        self.feature_vector = np.zeros(self.num_tilings)
+        self.phi = np.zeros(self.memory_size)
+        self.last_phi = None
+        self.rl_lambda = config['lmbda']
+        self.last_switch_value = None
+        self.num_bins = 6
+        self.alphas = [0.95]
+        self.decay = 0.95
+        self.velocity_1 = np.zeros(len(self.alphas))
+        self.velocity_2 = np.zeros(len(self.alphas))
+        self.velocity_4 = np.zeros(len(self.alphas))
+        self.velocity_5 = np.zeros(len(self.alphas))
+        self.pos_1 = 0
+        self.pos_2 = 0
+        self.pos_4 = 0
+        self.pos_5 = 0
+
+        try:
+            self.normalizer = config['normalizer']
+        except:
+            pass
+
+    def get_state(self, obs):
+        self.pos_1 = self.pos_1*self.decay + (1-self.decay) * obs['pos1']
+        self.pos_2 = self.pos_2*self.decay + (1-self.decay) * obs['pos2']
+        self.pos_4 = self.pos_4*self.decay + (1-self.decay) * obs['pos4']
+        self.pos_5 = self.pos_5*self.decay + (1-self.decay) * obs['pos5']
+
+        state = np.array([
+            obs['pos1'],
+            obs['pos2'],
+            obs['pos4'],
+            obs['pos5'],
+            obs['vel1'],
+            obs['vel2'],
+            obs['vel4'],
+            obs['vel5'],
+            obs['load1'],
+            obs['load2'],
+            obs['load4'],
+            obs['load5'],
+            self.pos_1,
+            self.pos_2,
+            self.pos_4,
+            self.pos_5,
+        ])
+
+        return state
+
+    def step(self, obs):
+        config = {}
+        config['phi'] = self.last_phi
+
+        state = self.get_state(obs)
+        state = self.normalize_state(self.normalizer, state)
+        find_invalid(state, obs)
+
+        for i in range(len(state)):
+            state[i] *= self.num_bins
+
+        for i in self.feature_vector:
+            self.phi[i] = 0
+
+        '''
+            Multiple tile-coders used. We load the first half of the states in during the first load
+        '''
+        shift_factor = self.memory_size / (len(state) - 4)
+        for i in range(len(state) - 4):
+            perception = np.concatenate((state[:4], [state[i]]))
+            f = np.array(getTiles(
+                numtilings=self.num_tilings,
+                memctable=self.memory_size,
+                floats=perception)
+            ) + i * shift_factor
+
+                # (i * )
+            # np.concatenate((self.feature_vector, f))
+
+        for i in self.feature_vector:
+            self.phi[i] = 1
+
+        config['R'] = self.get_reward(obs)
+
+        self.last_switch_value = obs['switches']
+        config['gnext'] = self.gamma
+        config['g'] = self.gamma
+        config['l'] = self.rl_lambda
+        config['phinext'] = self.phi
+        self.last_phi = self.phi
+        return config
+
