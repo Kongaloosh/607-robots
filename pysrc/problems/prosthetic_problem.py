@@ -185,11 +185,7 @@ class Prosthetic_Experiment_With_Context(Prosthetic_Experiment):
         for i in self.feature_vector:
             self.phi[i] = 1
 
-        hand_velocity = obs['vel1']
-        if hand_velocity > 0.2:
-            config['R'] = 1
-        else:
-            config['R'] = 0
+        config['R'] = self.get_reward(obs)
 
         self.last_switch_value = obs['switches']
         config['gnext'] = self.gamma

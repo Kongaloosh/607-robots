@@ -37,6 +37,8 @@ class FileLoader(object):
         else:                                               # otherwise we have nothing left
             return None                                     # so return None.
 
+    def reset(self):
+        self.i = 0
 
 class FileLoaderApprox(FileLoader):
 
