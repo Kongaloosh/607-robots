@@ -21,7 +21,7 @@ def runoneconfig(file_loader, alg, prob, config, out):
     obs = file_loader.step()                                    # get the next observation diction
     state = prob.step(obs)                                      # initial state
     p = []                                                      # holds the predictions
-    s = []                 =
+    s = []                 
     while file_loader.has_obs():                                # while we still have observations
         obs = file_loader.step()                                # get the next observation diction
         vals = prob.step(obs)                                   # state from prob
