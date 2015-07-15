@@ -21,8 +21,7 @@ def runoneconfig(file_loader, alg, prob, config, out):
     obs = file_loader.step()                                    # get the next observation diction
     state = prob.step(obs)                                      # initial state
     p = []                                                      # holds the predictions
-    s = []                                                      # holds all of the rewards
-    print ("fight the man")
+    s = []                 =
     while file_loader.has_obs():                                # while we still have observations
         obs = file_loader.step()                                # get the next observation diction
         vals = prob.step(obs)                                   # state from prob
@@ -113,7 +112,7 @@ def main():
     for p in processes:
         run_result = output.get()
         pickle.dump(run_result, f, -1)
-
+    print('Finished: {a}'.format(a=args.algname))
 
 if __name__ == '__main__':
     '''from the command-line'''
