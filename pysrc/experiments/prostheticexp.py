@@ -29,16 +29,16 @@ def runoneconfig(file_loader, alg, prob, config, out):
         prediction = np.dot(vals['phinext'], alg.estimate())    # prediction for this time-step
         p.append(prediction)                                    # record prediction
         s.append(vals['R'])                                     # record actual reward
-        if file_loader.i % 1000 == 0:                           # pretty print
-            print("Step: {s} of {n}".format(s=file_loader.i, n=len(file_loader.data_stream)))
-    print('finito')
+    #     if file_loader.i % 1000 == 0:                           # pretty print
+    #         print("Step: {s} of {n}".format(s=file_loader.i, n=len(file_loader.data_stream)))
+    # print('finito')
     config['prediction'] = np.array(p)
     config['signal'] = np.array(s)
     config['error'] = np.array(config['return']) - \
                       config['prediction'][:len(config['return'])]
-    print('config\'d')
+    # print('config\'d')
     out.put(config)                                             # return the predictions and rewards
-    print('outputed')
+    # print('outputed')
 
 def main():
     """runs the experiment with commandline args"""
