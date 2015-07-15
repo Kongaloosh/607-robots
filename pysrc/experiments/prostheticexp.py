@@ -6,7 +6,7 @@ import os
 import sys
 sys.path.insert(0, os.getcwd())
 import argparse
-from pysrc.problems.prosthetic_problem import Prosthetic_Experiment, Prosthetic_Experiment_With_Context
+from pysrc.problems.prosthetic_problem import Prosthetic_Experiment, Prosthetic_Experiment_With_Context, Biorob2012Experiment
 from pysrc.algorithms.tdprediction.onpolicy import td, tdr, totd, utd, utotd, utdr
 from pysrc.utilities.file_loader import FileLoader, FileLoaderApprox
 from pysrc.utilities.verifier import *
@@ -21,7 +21,7 @@ def runoneconfig(file_loader, alg, prob, config, out):
     obs = file_loader.step()                                    # get the next observation diction
     state = prob.step(obs)                                      # initial state
     p = []                                                      # holds the predictions
-    s = []                 
+    s = []
     while file_loader.has_obs():                                # while we still have observations
         obs = file_loader.step()                                # get the next observation diction
         vals = prob.step(obs)                                   # state from prob
@@ -29,16 +29,16 @@ def runoneconfig(file_loader, alg, prob, config, out):
         prediction = np.dot(vals['phinext'], alg.estimate())    # prediction for this time-step
         p.append(prediction)                                    # record prediction
         s.append(vals['R'])                                     # record actual reward
-    #     if file_loader.i % 1000 == 0:                           # pretty print
-    #         print("Step: {s} of {n}".format(s=file_loader.i, n=len(file_loader.data_stream)))
-    # print("Finished: " + str((time.time()-start)/60))           # time taken for experiment
-    file_loader.reset()                                          # reset the file-loader for the next exp
+        if file_loader.i % 1000 == 0:                           # pretty print
+            print("Step: {s} of {n}".format(s=file_loader.i, n=len(file_loader.data_stream)))
+    print('finito')
     config['prediction'] = np.array(p)
     config['signal'] = np.array(s)
     config['error'] = np.array(config['return']) - \
                       config['prediction'][:len(config['return'])]
+    print('config\'d')
     out.put(config)                                             # return the predictions and rewards
-
+    print('outputed')
 
 def main():
     """runs the experiment with commandline args"""
@@ -55,7 +55,7 @@ def main():
     config_alg_path = 'results/robot-experiments/{prob}/{alg}/configalg.pkl'.format(prob=args.prob, alg=args.algname)
     config_alg = pickle.load(open(config_alg_path, 'rb'))   # we load a configuration file with all of the data
 
-    file_loader = FileLoaderApprox('results/prosthetic-data/EdwardsPOIswitching_{s}{a}.txt'.format(s=args.sVal, a=args.aVal), 14)
+    file_loader = FileLoaderApprox('results/prosthetic-data/EdwardsPOIswitching_{s}{a}.txt'.format(s=args.sVal, a=args.aVal), 100)
     # file_loader = FileLoader('results/prosthetic-data/EdwardsPOIswitching_{s}{a}.txt'.format(s=args.sVal, a=args.aVal))
 
     algs = {
@@ -70,6 +70,7 @@ def main():
     problems = {
         'prosthetic_experiment': Prosthetic_Experiment,
         'prosthetic_experiment_with_context': Prosthetic_Experiment_With_Context,
+        'biorob': Biorob2012Experiment
         }
 
     f = open('results/robot-experiments/{prob}/{alg}/{name}_{s}_{a}.dat'.format(prob=args.prob, alg=args.algname, s=args.sVal, a=args.aVal, name=args.filename), 'wb')
@@ -98,21 +99,22 @@ def main():
             pass                                        # we're using an alg with different config
         fl = FileLoaderApprox(
             'results/prosthetic-data/EdwardsPOIswitching_{s}{a}.txt'.format(
-                s=args.sVal, a=args.aVal), 14)
+                s=args.sVal, a=args.aVal), 100)
         a = algs[args.algname](config)
         p = problems[args.prob](config)
         processes.append(mp.Process(target=runoneconfig, args=(fl, a, p, config, output)))
+
+    print("processes: " + str(len(processes)))
 
     for p in processes:
         p.start()
 
     for p in processes:
-        p.join()
+        print('Finished: {alg} {s} {a}'.format(alg=args.algname, s=args.sVal, a=args.aVal))
+        pickle.dump(output.get(), f, -1)
 
     for p in processes:
-        run_result = output.get()
-        pickle.dump(run_result, f, -1)
-    print('Finished: {alg} {s} {a}'.format(alg=args.algname, s=args.sVal, a=args.aVal))
+        p.join()
 
 if __name__ == '__main__':
     '''from the command-line'''
