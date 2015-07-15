@@ -33,6 +33,7 @@ def loaddata(nruns, pathfileprefix):
     data = []
     for run in range(1, nruns + 1):                         # for all the possible runs
         filepathname = pathfileprefix + str(run) + ".dat"   # load the file results are stored in
+        filepathname = pathfileprefix + str(run) + ".dat"   # load the file results are stored in
         f = open(filepathname, 'rb')
         try:                                                # While we still have sweep results in a given file
             while True:                                     # load and append the data to our array

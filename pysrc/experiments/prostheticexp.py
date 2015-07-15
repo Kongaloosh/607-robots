@@ -31,10 +31,9 @@ def runoneconfig(file_loader, alg, prob):
         prediction = np.dot(vals['phinext'], alg.estimate())   # prediction for this time-step
         p.append(prediction)                                    # record prediction
         s.append(vals['R'])                                    # record actual reward
-
-        if file_loader.i % 1000 == 0:                           # pretty print
-            print("Step: {s} of {n}".format(s=file_loader.i, n=len(file_loader.data_stream)))
-    print("Finished: " + str((time.time()-start)/60))           # time taken for experiment
+    #     if file_loader.i % 1000 == 0:                           # pretty print
+    #         print("Step: {s} of {n}".format(s=file_loader.i, n=len(file_loader.data_stream)))
+    # print("Finished: " + str((time.time()-start)/60))           # time taken for experiment
     return p, s                                                 # return the predictions and rewards
 
 
@@ -86,14 +85,12 @@ def main():
     config_prob['return'] = calculated_return
 
     # calculate normalizer
-    print("normalizer start")
     timer = time.time()
     # todo: make it so that we don't need the alg config to do this
     c = reduce(lambda x, y: dict(x, **y), (config_alg[0], config_prob)) # concat the dicts
     prob = problems[args.prob](c)                                       # construct a representative config
     config_prob['normalizer'] = generate_normalizer(
         file_loader.data_stream, prob=prob)                             # get constants for normalizing states
-    print("normalizer end: {time}".format(time=(time.time()-timer)))
 
     # run the experiment
     for config in config_alg:                       # for the parameter sweep we're interested in
@@ -109,6 +106,7 @@ def main():
 
         config['signal'] = signal                   # adding to the config so we can save results
         config['prediction'] = prediction
+        config['error'] = np.array(['return']) - prediction
         pickle.dump(config, f, -1)
 
     pyplot.plot(calculated_return)
