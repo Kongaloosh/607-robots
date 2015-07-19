@@ -62,8 +62,8 @@ def createtable(data, params, neps):
 
 def createtablelearningcurves(table, nruns, neps):
     (tablerows, tablecols)      = np.shape(table)
-    tableavgrows                = tablerows/nruns
-    nparams                     = tablecols-neps
+    tableavgrows                = tablerows / nruns
+    nparams                     = tablecols - neps
     tableavg                    = np.zeros((tableavgrows, tablecols))
     tablestd                    = np.zeros((tableavgrows, tablecols))
     tabletemp                   = np.zeros((tableavgrows, neps))
