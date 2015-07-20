@@ -6,39 +6,47 @@ import cPickle as pickle
 from itertools import chain
 import numpy
 
+
 def plot_performance_vs_lambda(path_prefix, label, parameters):
     plot_file_name = path_prefix + "perf_vs_lambda" + ".plot.pkl"
     if not os.path.isfile(plot_file_name):  # if we haven't made a plot file yet
-        plot_data_process_prosthetic(parameters, path_prefix)
-    # plotfile = file(plot_file_name, "rb")
-    # data = pickle.load(plotfile)
-    # # print(data[:, 2])
-    # ppl.plot(data[:, 2])
-    # ppl.errorbar(data[:,0], data[:,1], data[:,2], label=label)
+        plot_data_process_prosthetic(parameters, path_prefix, label)
+        # plotfile = file(plot_file_name, "rb")
+        # data = pickle.load(plotfile)
+        # # print(data[:, 2])
+        # ppl.plot(data[:, 2])
+        # ppl.errorbar(data[:,0], data[:,1], data[:,2], label=label)
 
 
-def plot_data_process_prosthetic(parameters, path_prefix):
+def plot_data_process_prosthetic(parameters, path_prefix, label):
     """
     We construct a table against a particular parameter
     :param parameters: a dictionary as seen in main()
     :param path_prefix: where the path goes to
     """
-                                                                    # the different values we compare performance across
-    comparison_val = parameters['compare']                          # the name of the key for the variable we compare across
+    # the different values we compare performance across
+    comparison_val = parameters['compare']                          # the name of the variable we compare across
     data = loaddata(path_prefix)                                    # we load all the runs from a trial
     comparison_values = set([run[comparison_val] for run in data])  # we find the values we wish to vary over
 
     plot_points = []
-    for run_parameter in comparison_values:
+    for run_parameter in comparison_values:                                     # over all of our runs
         best = None
         best_error = numpy.infty
-        for run in data:
-            new_error = sum(abs(run['error']))
-            if run[comparison_val] == run_parameter and new_error < best_error:
-                best_error = new_error
-                best = run
-        print(best_error)
-        plot_points.append(best)
+        for run in data:                                                        # for each run we perform
+            new_error = sum(abs(run['error']))                                  # we determine the absolute error
+            if run[comparison_val] == run_parameter and new_error < best_error: # if it's the current best
+                best_error = new_error                                          # update our error tracker
+                best = run                                                      # update our run tracker
+        plot_points.append(best)                                                # append the best
+    plot_points = sorted(plot_points, key=lambda k: k[comparison_val])          # sort the points by comparator var
+
+    pyplot.plot(
+        [i[comparison_val] for i in plot_points],
+        [sum(abs(i['error'])) for i in plot_points],
+        marker='o',
+        label=label
+    )
 
 
 def loaddata(path, nruns = 1):
@@ -78,103 +86,49 @@ def main():
     # if not os.path.exists(path):
     #     path = "../." + path
 
-    pathfileprefix = path+"td/"+postfix
+    pathfileprefix = path + "td/" + postfix
     print("TD")
     plot_performance_vs_lambda(
-        pathfileprefix,
-        "TD",
-        {
-            'number_of_runs': 1 ,
-            'path_prefix': pathfileprefix,
-            'number_of_parameters': 2,
-            'param_1': 'alpha',
-            'param_2': 'lmbda',
-            'compare': 'lmbda'
-        }
+        pathfileprefix, "TD", {'path_prefix': pathfileprefix, 'compare': 'lmbda'}
     )
 
-    pathfileprefix = path+"utd/"+postfix
+    pathfileprefix = path + "utd/" + postfix
     print("UTD")
     plot_performance_vs_lambda(
         pathfileprefix,
         "UTD",
-        {
-            'number_of_runs':1 ,
-            'path_prefix':pathfileprefix,
-            'number_of_parameters':3,
-            'param_1':'eta',
-            'param_2':'initd',
-            'param_3':'lmbda',
-            'compare': 'lmbda'
-        }
+        {'path_prefix': pathfileprefix, 'compare': 'lmbda'}
     )
 
-    pathfileprefix = path+"totd/"+postfix
+    pathfileprefix = path + "totd/" + postfix
     print("TOTD")
     plot_performance_vs_lambda(
         pathfileprefix,
-        "TOTD",
-        {
-            'number_of_runs':1 ,
-            'path_prefix':pathfileprefix,
-            'number_of_parameters':2,
-            'param_1':'alpha',
-            'param_2':'lmbda',
-            'compare': 'lmbda'
-        }
+        "TOTD", {'path_prefix':pathfileprefix, 'compare': 'lmbda'}
     )
 
-    pathfileprefix = path+"utotd/"+postfix
+    pathfileprefix = path + "utotd/" + postfix
     print("UTOTD")
     plot_performance_vs_lambda(
-        pathfileprefix,
-        "UTOTD",
-        {
-            'number_of_runs':1,             # the number of runs in a file
-            'path_prefix':pathfileprefix,   # the prefix we use to find the data
-            'number_of_parameters':3,       # the number of parameters we compare over
-            'param_1':'eta',                # all the parameters
-            'param_2':'initd',
-            'param_3':'lmbda',
-            'compare': 'lmbda'             # the parameter we wish to compare agains
-        }
+        pathfileprefix, "UTOTD", {'path_prefix':pathfileprefix, 'compare': 'lmbda'}
     )
 
-    pathfileprefix = path+"tdr/"+postfix
+    pathfileprefix = path + "tdr/" + postfix
     print("TDR")
     plot_performance_vs_lambda(
-        pathfileprefix,
-        "TDR",
-        {
-            'number_of_runs':1 ,
-            'path_prefix':pathfileprefix,
-            'number_of_parameters':2,
-            'param_1':'alpha',
-            'param_2':'lmbda',
-            'compare': 'lmbda'
-        }
+        pathfileprefix, "TDR", {'path_prefix':pathfileprefix, 'compare': 'lmbda'}
     )
 
-    pathfileprefix = path+"utdr/"+postfix
+    pathfileprefix = path + "utdr/" + postfix
     print("UTDR")
     plot_performance_vs_lambda(
-        pathfileprefix,
-        "UTDR",
-        {
-            'number_of_runs':1 ,
-            'path_prefix':pathfileprefix,
-            'number_of_parameters':3,
-            'param_1':'eta',
-            'param_2':'initd',
-            'param_3':'lmbda',
-            'compare': 'lmbda'
-        }
+        pathfileprefix, "UTDR", {'path_prefix': pathfileprefix, 'compare': 'lmbda'}
     )
 
-    ppl.ylim([.0, 0.8])
+    # ppl.ylim([.0, 0.8])
     # ppl.yscale('log')
-    ppl.legend()
-
+    # ppl.legend()
+    pyplot.show()
 
 if __name__ == '__main__':
     main()
