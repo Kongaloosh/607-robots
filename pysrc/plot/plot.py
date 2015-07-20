@@ -3,14 +3,16 @@ import sys
 sys.path.insert(0, os.getcwd())
 from matplotlib import pyplot
 import cPickle as pickle
-from itertools import chain
 import numpy
 
+subjects = ['s{i}'.format(i=i) for i in range(1, 5)]
+actions = numpy.concatenate(['a{i}' for i in range(1, 4)], ['a{i}' for i in range(1, 4)])
 
-def plot_performance_vs_lambda(path_prefix, label, parameters):
-    plot_file_name = path_prefix + "perf_vs_lambda" + ".plot.pkl"
+
+def plot_performance_vs_lambda(parameters):
+    plot_file_name = parameters['path_prefix'] + "perf_vs_lambda" + ".plot.pkl"
     if not os.path.isfile(plot_file_name):  # if we haven't made a plot file yet
-        plot_data_process_prosthetic(parameters, path_prefix, label)
+        plot_data_process_prosthetic(parameters)
         # plotfile = file(plot_file_name, "rb")
         # data = pickle.load(plotfile)
         # # print(data[:, 2])
@@ -18,7 +20,7 @@ def plot_performance_vs_lambda(path_prefix, label, parameters):
         # ppl.errorbar(data[:,0], data[:,1], data[:,2], label=label)
 
 
-def plot_data_process_prosthetic(parameters, path_prefix, label):
+def plot_data_process_prosthetic(parameters):
     """
     We construct a table against a particular parameter
     :param parameters: a dictionary as seen in main()
@@ -26,7 +28,7 @@ def plot_data_process_prosthetic(parameters, path_prefix, label):
     """
     # the different values we compare performance across
     comparison_val = parameters['compare']                          # the name of the variable we compare across
-    data = loaddata(path_prefix)                                    # we load all the runs from a trial
+    data = loaddata(parameters['path_prefix'])                                    # we load all the runs from a trial
     comparison_values = set([run[comparison_val] for run in data])  # we find the values we wish to vary over
 
     plot_points = []
@@ -45,7 +47,7 @@ def plot_data_process_prosthetic(parameters, path_prefix, label):
         [i[comparison_val] for i in plot_points],
         [sum(abs(i['error'])) for i in plot_points],
         marker='o',
-        label=label
+        label=parameters['label']
     )
 
 
@@ -80,7 +82,6 @@ def main():
     Constructs a file comparing the algs across for each alpha
     :returns none:
     """
-    # todo: factor all of the stuff out. we should be able to tell parameters by algs
     path = "results/robot-experiments/biorob/"          # the path to the experiments
     postfix = 'sweep_pool_2_s1_na1'                     # the name of the experiment run
     # if not os.path.exists(path):
@@ -89,45 +90,38 @@ def main():
     pathfileprefix = path + "td/" + postfix
     print("TD")
     plot_performance_vs_lambda(
-        pathfileprefix, "TD", {'path_prefix': pathfileprefix, 'compare': 'lmbda'}
+        {'path_prefix': pathfileprefix, 'compare': 'lmbda', 'label': 'TD'}
     )
 
     pathfileprefix = path + "utd/" + postfix
     print("UTD")
     plot_performance_vs_lambda(
-        pathfileprefix,
-        "UTD",
-        {'path_prefix': pathfileprefix, 'compare': 'lmbda'}
+        {'path_prefix': pathfileprefix, 'compare': 'lmbda', 'label': 'UTD'}
     )
 
     pathfileprefix = path + "totd/" + postfix
     print("TOTD")
     plot_performance_vs_lambda(
-        pathfileprefix,
-        "TOTD", {'path_prefix':pathfileprefix, 'compare': 'lmbda'}
+        "TOTD", {'path_prefix': pathfileprefix, 'compare': 'lmbda', 'label': 'TOTD'}
     )
 
     pathfileprefix = path + "utotd/" + postfix
     print("UTOTD")
     plot_performance_vs_lambda(
-        pathfileprefix, "UTOTD", {'path_prefix':pathfileprefix, 'compare': 'lmbda'}
+        {'path_prefix':pathfileprefix, 'compare': 'lmbda', 'label': 'UTOTD'}
     )
 
     pathfileprefix = path + "tdr/" + postfix
     print("TDR")
     plot_performance_vs_lambda(
-        pathfileprefix, "TDR", {'path_prefix':pathfileprefix, 'compare': 'lmbda'}
+        {'path_prefix':pathfileprefix, 'compare': 'lmbda', 'label': 'TDR'}
     )
 
     pathfileprefix = path + "utdr/" + postfix
-    print("UTDR")
     plot_performance_vs_lambda(
-        pathfileprefix, "UTDR", {'path_prefix': pathfileprefix, 'compare': 'lmbda'}
+        {'path_prefix': pathfileprefix, 'compare': 'lmbda', 'label':'UTDR'}
     )
 
-    # ppl.ylim([.0, 0.8])
-    # ppl.yscale('log')
-    # ppl.legend()
     pyplot.show()
 
 if __name__ == '__main__':

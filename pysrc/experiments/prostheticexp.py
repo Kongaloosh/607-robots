@@ -6,7 +6,7 @@ import sys
 sys.path.insert(0, os.getcwd())
 import argparse
 from pysrc.problems.prosthetic_problem import Prosthetic_Experiment, Prosthetic_Experiment_With_Context, Biorob2012Experiment
-from pysrc.algorithms.tdprediction.onpolicy import td, tdr, totd, utd, utotd, utdr
+from pysrc.algorithms.tdprediction.onpolicy import td, tdr, totd, utd, utotd, utdr, autotd
 from pysrc.utilities.file_loader import FileLoader, FileLoaderApprox
 from pysrc.utilities.verifier import *
 from pysrc.utilities.max_min_finder import *
@@ -28,9 +28,9 @@ def runoneconfig(file_loader, alg, prob):
         prediction = np.dot(vals['phinext'], alg.estimate())    # prediction for this time-step
         p.append(prediction)                                    # record prediction
         s.append(vals['R'])                                     # record actual reward
-    #     if file_loader.i % 1000 == 0:                           # pretty print
-    #         print("Step: {s} of {n}".format(s=file_loader.i, n=len(file_loader.data_stream)))
-    # print("Finished: " + str((time.time()-start)/60))           # time taken for experiment
+        if file_loader.i % 1000 == 0:                           # pretty print
+            print("Step: {s} of {n}".format(s=file_loader.i, n=len(file_loader.data_stream)))
+    print("Finished: " + str((time.time()-start)/60))           # time taken for experiment
     file_loader.reset()
     return p, s                                                 # return the predictions and rewards
 
@@ -55,6 +55,7 @@ def main():
     # file_loader = FileLoader('results/prosthetic-data/EdwardsPOIswitching_{s}{a}.txt'.format(s=args.sVal, a=args.aVal))
 
     algs = {
+        'autotd': autotd.AutoTD,
         'td': td.TD,
         'totd': totd.TOTD,
         'tdr': tdr.TDR,
@@ -72,9 +73,11 @@ def main():
     f = open('results/robot-experiments/{prob}/{alg}/{name}_{s}_{a}.dat'.format(prob=args.prob, alg=args.algname, s=args.sVal, a=args.aVal, name=args.filename), 'wb')
 
     # calculate the return
-    calculated_return = calculate_discounted_return_backwards(config_prob,
-            file_loader.data_stream,
-            Prosthetic_Experiment)
+    calculated_return = calculate_discounted_return_backwards(
+        config_prob,
+        file_loader.data_stream,
+        Prosthetic_Experiment
+    )
     config_prob['return'] = calculated_return
 
     # calculate normalizer

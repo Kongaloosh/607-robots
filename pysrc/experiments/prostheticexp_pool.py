@@ -7,7 +7,7 @@ import sys
 sys.path.insert(0, os.getcwd())
 import argparse
 from pysrc.problems.prosthetic_problem import Prosthetic_Experiment, Prosthetic_Experiment_With_Context, Biorob2012Experiment
-from pysrc.algorithms.tdprediction.onpolicy import td, tdr, totd, utd, utotd, utdr
+from pysrc.algorithms.tdprediction.onpolicy import td, tdr, totd, utd, utotd, utdr, autotd
 from pysrc.utilities.file_loader import FileLoader, FileLoaderApprox
 from pysrc.utilities.verifier import *
 from pysrc.utilities.max_min_finder import *
@@ -29,16 +29,15 @@ def runoneconfig(file_loader, alg, prob, config):
         prediction = np.dot(vals['phinext'], alg.estimate())    # prediction for this time-step
         p.append(prediction)                                    # record prediction
         s.append(vals['R'])                                     # record actual reward
-    #     if file_loader.i % 1000 == 0:                           # pretty print
-    #         print("Step: {s} of {n}".format(s=file_loader.i, n=len(file_loader.data_stream)))
-    # print('finito')
+        if file_loader.i % 1000 == 0:                           # pretty print
+            print("Step: {s} of {n}".format(s=file_loader.i, n=len(file_loader.data_stream)))
+    print('finito')
     config['prediction'] = np.array(p)
     config['signal'] = np.array(s)
     config['error'] = np.array(config['return']) - \
                       config['prediction'][:len(config['return'])]
-    # print('config\'d')
-    return config                                             # return the predictions and rewards
-    # print('outputed')
+    return config
+
 
 def main():
     """runs the experiment with commandline args"""
@@ -59,6 +58,7 @@ def main():
     # file_loader = FileLoader('results/prosthetic-data/EdwardsPOIswitching_{s}{a}.txt'.format(s=args.sVal, a=args.aVal))
 
     algs = {
+        'autotd': autotd.AutoTD,
         'td': td.TD,
         'totd': totd.TOTD,
         'tdr': tdr.TDR,
@@ -90,7 +90,7 @@ def main():
 
     # run the experimenti
     results = []                                  # where we define each sweep member
-    pool = mp.Pool(processes=3)
+    pool = mp.Pool(processes=1)
     for config in config_alg:                       # for the parameter sweep we're interested in
         config.update(config_prob)                  # add the problem-specific configs
         try:
