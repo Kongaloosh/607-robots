@@ -56,35 +56,34 @@ def createtable(data, params, neps):
     for i in range(len(data)):                              # for i->data
         for j in range(nparams):                            # for all the parameters (alpha/lambda)
             table[i, j] = data[i][params[j]]                # for a data entry get alpha or lambda
-        print(sum(abs(data[i]['error'])))
         table[i, nparams:] = sum(abs(data[i]['error']))     # for a run get the error and put it in the table
-    print(table)
     return table                                            # return the data structure
 
-
-def createtablelearningcurves(table, num_runs, num_eps):
+# TODO check
+def createtablelearningcurves(table, num_runs, num_eps=1):
     """
-
+    :param table: parameter combination by
+    :param num_runs: the number of runs in the file
+    :param num_eps: the number of episodes. For prosthetics this is always 1
     """
     (tablerows, tablecols)      = np.shape(table)                       # create matrix from table shape
     tableavgrows                = tablerows / num_runs
-    nparams                     = tablecols - num_eps                   #
+    nparams                     = tablecols - num_eps                   # the number of parameters we compare over
     tableavg                    = np.zeros((tableavgrows, tablecols))   #
     tablestd                    = np.zeros((tableavgrows, tablecols))   #
     tabletemp                   = np.zeros((tableavgrows, num_eps))     #
     tableavg[:, :nparams]       = table[:tableavgrows, :nparams]        #
     tablestd[:, :nparams]       = table[:tableavgrows, :nparams]        #
-    tabletemp[:, :num_eps]          = table[:tableavgrows, nparams:]    #
+    tabletemp[:, :num_eps]      = table[:tableavgrows, nparams:]        #
 
     for i in range(1, num_runs):                                        #
-        tabletemp = np.concatenate(                                     #
-                                                                        (
-                                                                            tabletemp,                                              #
-                                                                            table[i * tableavgrows: (i + 1) * tableavgrows, nparams:]
-                                                                        ),
-                                                                        )
+        tabletemp = np.concatenate(
+            (
+                tabletemp,                                                  #
+                table[i * tableavgrows: (i + 1) * tableavgrows, nparams:]   #
+            ),
+            )
     #print np.shape(table[(i)*tableavgrows:(i+1)*tableavgrows, nparams:])
-
     tableavg[:, nparams:] = np.mean(np.reshape(tabletemp, (tableavgrows, num_runs, num_eps)), 1)
     tablestd[:, nparams:] = np.std(np.reshape(tabletemp, (tableavgrows, num_runs, num_eps)), 1) / np.sqrt(num_runs)
 
@@ -92,86 +91,78 @@ def createtablelearningcurves(table, num_runs, num_eps):
 
 
 def createtableavg(table, nruns, neps, startstep=0):
-    (tablerows, tablecols)      = np.shape(table)                       # tuple which matches the rows and columns in table
-    tableavgrows                = tablerows/nruns
-    nparams                     = tablecols-neps
-    tableavgcols                = nparams+2
-    tableavgstd                 = np.zeros((tableavgrows, tableavgcols))
-    tableavgstd[:, :nparams]    = table[:tableavgrows, :nparams]
-    tabletemp                   = table[:tableavgrows, (nparams + startstep):]
-
-    for i in range(1, nruns):
-        tabletemp = np.concatenate((tabletemp, \
-                                    table[i * tableavgrows:(i + 1) * tableavgrows, (nparams + startstep):]), 1)
-
-    r, c                        = np.shape(tabletemp)
-    tabletemp2                  = np.mean(np.reshape(tabletemp, (r, c/nruns, nruns),1), 1)
-    tableavgstd[:, nparams]     = np.mean(tabletemp2, 1)
-    tableavgstd[:, nparams + 1] = np.std(tabletemp2, 1) / np.sqrt(nruns)
+    """
+    Returns the table with the mean error and the deviation of the error over the sqrt of the runs
+    :param table: a table which contains the error and the parameters for a sweep element
+    :param nruns: the number of run
+    :param neps: the number of episodes for a particular sweep
+    :param startstep: for our purposes this will always be 0
+    """
+    (tablerows, tablecols) = np.shape(table)                    # tuple which matches data
+    tableavgrows = tablerows / nruns                            # average over the runs
+    nparams = tablecols - neps                                  # the number of compared parameters
+    tableavgcols = nparams + 2                                  # ???
+    tableavgstd = np.zeros((tableavgrows, tableavgcols))        # the table we put our averages into
+    tableavgstd[:, :nparams] = table[:tableavgrows, :nparams]   # add the parameter values
+    tabletemp = table[:tableavgrows, (nparams + startstep):]    # the error for each run
+    for i in range(1, nruns):                                   # since the number of runs is one it will
+        tabletemp = np.concatenate(                             # never evaluate
+            (
+                tabletemp,
+                table[i * tableavgrows:(i + 1) * tableavgrows, (nparams + startstep):]
+            ),
+            1
+        )
+    r, c = np.shape(tabletemp)
+    tabletemp2 = np.mean(np.reshape(tabletemp, (r, c / nruns, nruns), 1), 1)    #
+    tableavgstd[:, nparams] = np.mean(tabletemp2, 1)                            # the mean of one element
+    tableavgstd[:, nparams + 1] = np.std(tabletemp2, 1) / np.sqrt(nruns)        #
     return tableavgstd
 
-
+# todo: check
 def performancevsparams(tableavgstd, params, paramssub):
+    """
 
-    (tableavgrows, tableavgcols)    = np.shape(tableavgstd)
-    paramvals = {}
-    nparamssubvals = 1.
-
-    for param in params:
-        paramvals[param]   = np.unique(tableavgstd[:, param==params])
-        if (param==paramssub).any():
-            nparamssubvals *= len(paramvals[param])
+    :param tableavgstd: the averaged table
+    :param params: the parameters we vary over. Ex param
+    :param paramssub: the parameter we compare against. Ex. Lambda
+    """
+    (tableavgrows, tableavgcols) = np.shape(tableavgstd)                # The dimensions of the avg'd table
+    paramvals = {}                                                      # where we put our parameter values
+    nparamssubvals = 1.                                                 # number of parameters we compare about
+    for param in params:                                                #
+        paramvals[param] = np.unique(tableavgstd[:, param == params])   #
+        print paramvals[param]
+        if (param == paramssub).any():                                  #
+            nparamssubvals *= len(paramvals[param])                     #
 
     paramsubvalcomblist = list(
-        itertools.product( *[paramvals[param] for param in paramssub ])
+        itertools.product(*[paramvals[param] for param in paramssub])
     )
 
-    perftable           = np.zeros((len(paramsubvalcomblist), \
-                                    tableavgcols - len(params)+len(paramssub)))
+    perftable = np.zeros(
+        (
+            len(paramsubvalcomblist),
+            tableavgcols - len(params) + len(paramssub)
+        )
+    )
     row = 0
+    # print(paramsubvalcomblist)
     for paramsubvalcomb in paramsubvalcomblist:
         paramsubvalcomb = np.array(paramsubvalcomb)
         condition = np.array(np.repeat(True, tableavgrows))
+        # print(paramsubvalcomb)
         for param in params:
-            if (param==paramssub).any():
-                condition = condition * \
-                            (tableavgstd[:,param==params] == paramsubvalcomb[param==paramssub]) \
-                                .reshape(tableavgrows)
-        perftable[row,:len(paramssub)] = paramsubvalcomb
-        perftable[row,len(paramssub)] = np.nanmin(tableavgstd[condition,len(params)])
-        perftable[row,len(paramssub)+1] = np.nanmin(tableavgstd[condition,len(params)+1])
+            # Todo: figure out what this is
+            if (param == paramssub).any():
+                condition = condition * (
+                    tableavgstd[:, param == params] == paramsubvalcomb[param == paramssub]).reshape(tableavgrows)
 
+        perftable[row, :len(paramssub)] = paramsubvalcomb
+        perftable[row, len(paramssub)] = np.nanmin(tableavgstd[condition, len(params)])
+        perftable[row, len(paramssub) + 1] = np.nanmin(tableavgstd[condition, len(params) + 1])
         row += 1
-
     return perftable
-
-''' same as main, but provides an option to average out
-    only the last part of a run
-'''
-
-
-def main2(nruns, pathfileprefix, nparams, params, nparamssub, paramssub, startstep):
-    params            = np.array(params)                        # the number of parameters we compare over
-    paramssub         = np.array(paramssub)                     # ????
-    tablefilename     = pathfileprefix + "perftable.plot.pkl"   #
-    if not os.path.isfile(tablefilename):                       # if the sweep hasn't been done
-        data        = loaddata(nruns, pathfileprefix)           # Produce and dump the averaged table first
-        neps        = data[0]['N']                              # number of data points
-        table       = createtable(data, params, neps)
-        tableavgstd = createtableavg(table, nruns, neps, startstep)
-
-        fs           = open(tablefilename, "wb")
-        pickle.dump(tableavgstd, fs)
-    else:
-        tableavgstd = pickle.load(open(tablefilename, "rb"))
-
-    perftable = performancevsparams(tableavgstd, params, paramssub)
-
-    fsname    = pathfileprefix+'perfvs'
-    for i in range(len(paramssub)): fsname += paramssub[i]
-    fsname    += ".plot.pkl"
-    fs           = open(fsname, "wb")
-    pickle.dump(perftable, fs)
 
 
 def main():
@@ -201,8 +192,7 @@ def main():
     nparamssub = int(sys.argv[4 + num_params])
     paramssub = np.array([sys.argv[4 + num_params + 1 + i] for i in range(nparamssub)])
     perf_table = performancevsparams(tableavgstd, params, paramssub)    # records the performance across all runs
-
-    fsname = pathfile_prefix+'perfvs'                                   # where calculated performance goes
+    fsname = pathfile_prefix + 'perfvs'                                   # where calculated performance goes
     for i in range(len(paramssub)):
         fsname += paramssub[i]
 

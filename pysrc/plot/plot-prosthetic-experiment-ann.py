@@ -12,7 +12,9 @@ def plotperfvslmbda(pathfileprefix, label, params):
         plot_data_process_prosthetic.main()
     plotfile = file(plotfilename, "rb")
     data = pickle.load(plotfile)
-    ppl.plot(data[:,2])
+    # for i in data:
+    #     print i
+    ppl.plot(data[:, 2])
     # ppl.errorbar(data[:,0], data[:,1], data[:,2], label=label)
 
 def main():
