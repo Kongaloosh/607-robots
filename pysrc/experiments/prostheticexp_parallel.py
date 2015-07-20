@@ -36,9 +36,7 @@ def runoneconfig(file_loader, alg, prob, config, out):
     config['signal'] = np.array(s)
     config['error'] = np.array(config['return']) - \
                       config['prediction'][:len(config['return'])]
-    # print('config\'d')
-    out.put(config)                                             # return the predictions and rewards
-    # print('outputed')
+    out.put(config)
 
 def main():
     """runs the experiment with commandline args"""

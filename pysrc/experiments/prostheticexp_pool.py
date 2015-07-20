@@ -55,7 +55,7 @@ def main():
     config_alg_path = 'results/robot-experiments/{prob}/{alg}/configalg.pkl'.format(prob=args.prob, alg=args.algname)
     config_alg = pickle.load(open(config_alg_path, 'rb'))   # we load a configuration file with all of the data
 
-    file_loader = FileLoaderApprox('results/prosthetic-data/EdwardsPOIswitching_{s}{a}.txt'.format(s=args.sVal, a=args.aVal), 100)
+    file_loader = FileLoaderApprox('results/prosthetic-data/EdwardsPOIswitching_{s}{a}.txt'.format(s=args.sVal, a=args.aVal), 14)
     # file_loader = FileLoader('results/prosthetic-data/EdwardsPOIswitching_{s}{a}.txt'.format(s=args.sVal, a=args.aVal))
 
     algs = {
@@ -102,16 +102,13 @@ def main():
             config['alpha'] /= config['num_tilings']    # divide alpha
         except:
             pass                                        # we're using an alg with different config
-
         fl = FileLoaderApprox(
             'results/prosthetic-data/EdwardsPOIswitching_{s}{a}.txt'.format(
-                s=args.sVal, a=args.aVal), 100)
+                s=args.sVal, a=args.aVal), 14)
         a = algs[args.algname](config)
         p = problems[args.prob](config)
         results.append(pool.apply_async(runoneconfig, (fl, a, p, config)))
-
     print("processes: " + str(len(config_alg)))
-
     for r in results:
         print('Finished: {alg} {s} {a}'.format(alg=args.algname, s=args.sVal, a=args.aVal))
         pickle.dump(r.get(), f, -1)
