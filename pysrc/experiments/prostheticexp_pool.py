@@ -89,14 +89,9 @@ def main():
     config_prob['normalizer'] = generate_normalizer(file_loader.data_stream, prob=prob)                             # get constants for normalizing states
 
     # run the experimenti
-    i = 0
     results = []                                  # where we define each sweep member
-    pool = mp.Pool(processes=4)
+    pool = mp.Pool(processes=3)
     for config in config_alg:                       # for the parameter sweep we're interested in
-        print(i)
-        if i > 5:
-            break
-        i += 1
         config.update(config_prob)                  # add the problem-specific configs
         try:
             config['alpha'] /= config['num_tilings']    # divide alpha
