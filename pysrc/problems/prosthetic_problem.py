@@ -206,8 +206,8 @@ class Biorob2012Experiment(Prosthetic_Experiment):
         self.feature_vector = np.zeros(self.num_tilings)
         self.phi = np.zeros(self.memory_size)
         self.last_phi = None
-        self.rl_lambda = config['lmbda']
         self.last_switch_value = None
+        self.rl_lambda = config['lmbda']
         self.num_bins = 6
         self.alphas = [0.95]
         self.decay = 0.95

@@ -29,7 +29,7 @@ def runoneconfig(file_loader, alg, prob, config):
         prediction = np.dot(vals['phinext'], alg.estimate())    # prediction for this time-step
         p.append(prediction)                                    # record prediction
         s.append(vals['R'])                                     # record actual reward
-        if file_loader.i % 1000 == 0:                           # pretty print
+        if file_loader.i % 100 == 0:                           # pretty print
             print("Step: {s} of {n}".format(s=file_loader.i, n=len(file_loader.data_stream)))
     print('finito')
     config['prediction'] = np.array(p)
@@ -92,18 +92,22 @@ def main():
     results = []                                  # where we define each sweep member
     pool = mp.Pool(processes=1)
     for config in config_alg:                       # for the parameter sweep we're interested in
+        print("startconfig")
         config.update(config_prob)                  # add the problem-specific configs
-        try:
-            config['alpha'] /= config['num_tilings']    # divide alpha
-        except:
-            pass                                        # we're using an alg with different config
+
+        try: config['alpha'] /= config['num_tilings']    # divide alpha
+        except: pass                                        # we're using an alg with different config
+
         fl = FileLoaderApprox(
             'results/prosthetic-data/EdwardsPOIswitching_{s}{a}.txt'.format(
                 s=args.sVal, a=args.aVal), 14)
         a = algs[args.algname](config)
         p = problems[args.prob](config)
+
         results.append(pool.apply_async(runoneconfig, (fl, a, p, config)))
+
     print("processes: " + str(len(config_alg)))
+
     for r in results:
         print('Finished: {alg} {s} {a}'.format(alg=args.algname, s=args.sVal, a=args.aVal))
         pickle.dump(r.get(), f, -1)

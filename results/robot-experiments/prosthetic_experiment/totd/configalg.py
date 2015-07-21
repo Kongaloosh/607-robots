@@ -9,5 +9,5 @@ f = open('configalg.pkl', 'wb')
 
 # configs = [{'alpha': 0.01, 'lmbda': 0.97}]  # should pull the alpha normalizing out eventually
 f = open('configalg.pkl', 'wb')
-
+print len(configs)
 pickle.dump(configs, f)
