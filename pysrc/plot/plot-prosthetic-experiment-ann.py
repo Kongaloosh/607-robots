@@ -12,28 +12,33 @@ def plotperfvslmbda(pathfileprefix, label, params):
         plot_data_process_prosthetic.main()
     plotfile = file(plotfilename, "rb")
     data = pickle.load(plotfile)
-    # for i in data:
-    #     print i
+    # print(data[:, 2])
     ppl.plot(data[:, 2])
-    # ppl.errorbar(data[:,0], data[:,1], data[:,2], label=label)
+    ppl.errorbar(data[:,0], data[:,1], data[:,2], label=label)
 
 def main():
     path = "results/robot-experiments/biorob/"
-    postfix = 'sweep_pool_s1_na1'
+    postfix = 'sweep_pool_2_s1_na1'
     if not os.path.exists(path):
         path = "../." + path
 
     pathfileprefix = path+"td/"+postfix
+    print("TD")
     plotperfvslmbda(pathfileprefix, "TD", ["", "1", pathfileprefix, "2", "alpha", "lmbda", "1", "lmbda"])
     pathfileprefix = path+"utd/"+postfix
+    print("UTD")
     plotperfvslmbda(pathfileprefix, "UTD", ["", "1", pathfileprefix, "3", "eta", "initd", "lmbda", "1", "lmbda"])
     pathfileprefix = path+"totd/"+postfix
+    print("TOTD")
     plotperfvslmbda(pathfileprefix, "TOTD", ["", "1", pathfileprefix, "2", "alpha", "lmbda", "1", "lmbda"])
     pathfileprefix = path+"utotd/"+postfix
+    print("UTOTD")
     plotperfvslmbda(pathfileprefix, "UTOTD", ["", "1", pathfileprefix, "3", "eta", "initd", "lmbda", "1", "lmbda"])
     pathfileprefix = path+"tdr/"+postfix
+    print("TDR")
     plotperfvslmbda(pathfileprefix, "TDR", ["", "1", pathfileprefix, "2", "alpha", "lmbda", "1", "lmbda"])
     pathfileprefix = path+"utdr/"+postfix
+    print("UTDR")
     plotperfvslmbda(pathfileprefix, "UTDR", ["", "1", pathfileprefix, "3", "eta", "initd", "lmbda", "1", "lmbda"])
     ppl.ylim([.0, 0.8])
     # ppl.yscale('log')

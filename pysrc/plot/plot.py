@@ -6,7 +6,7 @@ import cPickle as pickle
 import numpy
 
 subjects = ['s{i}'.format(i=i) for i in range(1, 5)]
-actions = numpy.concatenate(['a{i}' for i in range(1, 4)], ['a{i}' for i in range(1, 4)])
+actions = numpy.concatenate((['a{i}'.format(i=i) for i in range(1, 4)], ['na{i}'.format(i=i) for i in range(1, 4)]))
 
 
 def plot_performance_vs_lambda(parameters):
@@ -50,10 +50,11 @@ def plot_data_process_prosthetic(parameters):
         label=parameters['label']
     )
 
+    pyplot.legend()
 
 def loaddata(path, nruns = 1):
     """
-    Takes in the number of runs---or, files we have---and looks for all the files
+     Takes in the number of runs---or, files we have---and looks for all the files
     for any given file, we load all of the results and find.
 
     Remember, the results are going to be a collection of pickled items, each
@@ -102,7 +103,7 @@ def main():
     pathfileprefix = path + "totd/" + postfix
     print("TOTD")
     plot_performance_vs_lambda(
-        "TOTD", {'path_prefix': pathfileprefix, 'compare': 'lmbda', 'label': 'TOTD'}
+        {'path_prefix': pathfileprefix, 'compare': 'lmbda', 'label': 'TOTD'}
     )
 
     pathfileprefix = path + "utotd/" + postfix

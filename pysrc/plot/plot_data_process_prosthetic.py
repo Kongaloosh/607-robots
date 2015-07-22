@@ -86,7 +86,7 @@ def createtablelearningcurves(table, num_runs, num_eps=1):
     #print np.shape(table[(i)*tableavgrows:(i+1)*tableavgrows, nparams:])
     tableavg[:, nparams:] = np.mean(np.reshape(tabletemp, (tableavgrows, num_runs, num_eps)), 1)
     tablestd[:, nparams:] = np.std(np.reshape(tabletemp, (tableavgrows, num_runs, num_eps)), 1) / np.sqrt(num_runs)
-
+    print(tablestd)
     return (tableavg, tablestd)
 
 
@@ -127,12 +127,13 @@ def performancevsparams(tableavgstd, params, paramssub):
     :param params: the parameters we vary over. Ex param
     :param paramssub: the parameter we compare against. Ex. Lambda
     """
+
+    params = ['alpha','lambda']
     (tableavgrows, tableavgcols) = np.shape(tableavgstd)                # The dimensions of the avg'd table
     paramvals = {}                                                      # where we put our parameter values
     nparamssubvals = 1.                                                 # number of parameters we compare about
     for param in params:                                                #
         paramvals[param] = np.unique(tableavgstd[:, param == params])   #
-        print paramvals[param]
         if (param == paramssub).any():                                  #
             nparamssubvals *= len(paramvals[param])                     #
 
@@ -147,11 +148,10 @@ def performancevsparams(tableavgstd, params, paramssub):
         )
     )
     row = 0
-    # print(paramsubvalcomblist)
     for paramsubvalcomb in paramsubvalcomblist:
         paramsubvalcomb = np.array(paramsubvalcomb)
         condition = np.array(np.repeat(True, tableavgrows))
-        # print(paramsubvalcomb)
+        print(str(param) + " " + str(paramssub))
         for param in params:
             # Todo: figure out what this is
             if (param == paramssub).any():
@@ -160,7 +160,7 @@ def performancevsparams(tableavgstd, params, paramssub):
 
         perftable[row, :len(paramssub)] = paramsubvalcomb
         perftable[row, len(paramssub)] = np.nanmin(tableavgstd[condition, len(params)])
-        perftable[row, len(paramssub) + 1] = np.nanmin(tableavgstd[condition, len(params) + 1])
+        perftable[row, len(paramssub) + 1] = np.nanmin(tableavgstd[condition, len(params)])
         row += 1
     return perftable
 

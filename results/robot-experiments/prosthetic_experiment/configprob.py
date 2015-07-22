@@ -8,7 +8,7 @@ from math import gamma
 
 
 def main():
-    gamma = 0.99
+    gamma = 0.97
     configs = {
         # function approximation:
         'num_tilings': 6,

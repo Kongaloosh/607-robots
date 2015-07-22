@@ -8,17 +8,15 @@ from math import gamma
 
 
 def main():
-    gamma = 0.99
+    gamma = 0.97
     configs = {
         # function approximation:
         'num_tilings': 6,
-        'memory_size': 2**20,
-        'nf': 2**20,
+        'memory_size': 2 ** 20,
+        'nf': 2 ** 20,
         'starting_element': 0,
         'gamma': gamma
     }
-
-
     f = open('configprob.pkl', 'wb')
     pickle.dump(configs, f)
   

@@ -4,7 +4,12 @@ import cPickle as pickle
 
 alphas = [0.05, 0.1, 0.2, 0.3, 0.6, 1.0, 1.5, 2.0]
 lambdas = [0, 0.2, 0.4, 0.6, 0.8, 0.9, 0.95, 0.98, 0.99, 0.995, 0.998, 0.999, 1]
-configs =[{'alpha': alpha, 'lmbda': lm} for alpha in alphas for lm in lambdas]
+truncate = [False]
+
+configs = [{'initalpha': alpha, 'truncate': t, 'lmbda': lm}
+           for alpha in alphas for lm in lambdas for t in truncate]
+# configs = [{'alpha': 0.01, 'lambda': 0.9}]
 print len(configs)
 f = open('configalg.pkl', 'wb')
+
 pickle.dump(configs, f)
