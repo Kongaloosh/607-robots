@@ -60,17 +60,17 @@ class Prosthetic_Experiment(object):
 
     @staticmethod
     def get_reward(obs):
-        elbow_velocity = obs['vel3']
+        elbow_velocity = obs['vel4']
 
-        if elbow_velocity > 0.2:
+        if abs(elbow_velocity) > 0.2:
             return 1
         else:
             return 0
 
     @staticmethod
     def get_state(obs):
-        return [obs['pos1']/4, obs['pos2']/4, obs['pos4']/4, obs['pos5']/4,
-                (obs['vel1']+1.5)/3, (obs['vel2']+2)/4, (obs['vel4']+2)/4, (obs['vel5']+3)/6,
+        return [obs['pos1']/4, obs['pos2']/4, obs['pos3']/4, obs['pos5']/4,
+                (obs['vel1']+1.5)/3, (obs['vel2']+2)/4, (obs['vel3']+2)/4, (obs['vel5']+3)/6,
                 (obs['load5']+2)/4]
 
     @staticmethod
@@ -101,12 +101,12 @@ class Prosthetic_Experiment_With_Context(Prosthetic_Experiment):
 
         self.velocity_1 = np.zeros(len(self.alphas))
         self.velocity_2 = np.zeros(len(self.alphas))
-        self.velocity_4 = np.zeros(len(self.alphas))
+        self.velocity_3 = np.zeros(len(self.alphas))
         self.velocity_5 = np.zeros(len(self.alphas))
 
         self.pos_1 = 0
         self.pos_2 = 0
-        self.pos_4 = 0
+        self.pos_3 = 0
         self.pos_5 = 0
 
         try:
@@ -124,8 +124,8 @@ class Prosthetic_Experiment_With_Context(Prosthetic_Experiment):
             for i in range(len(self.velocity_2))]
 
         self.velocity_4 = [
-            (self.velocity_4[i]*self.alphas[i] + ((1-self.alphas[i])*obs['vel4']))
-            for i in range(len(self.velocity_4))]
+            (self.velocity_3[i] * self.alphas[i] + ((1 - self.alphas[i]) * obs['vel3']))
+            for i in range(len(self.velocity_3))]
 
         self.velocity_5 = [
             (self.velocity_5[i]*self.alphas[i] +((1-self.alphas[i])*obs['vel5']))
@@ -133,13 +133,13 @@ class Prosthetic_Experiment_With_Context(Prosthetic_Experiment):
 
         self.pos_1 = self.pos_1*self.decay + (1-self.decay) * obs['pos1']
         self.pos_2 = self.pos_2*self.decay + (1-self.decay) * obs['pos2']
-        self.pos_4 = self.pos_4*self.decay + (1-self.decay) * obs['pos4']
+        self.pos_3 = self.pos_3*self.decay + (1-self.decay) * obs['pos3']
         self.pos_5 = self.pos_5*self.decay + (1-self.decay) * obs['pos5']
 
         state = np.array([
             obs['pos1'],
             obs['pos2'],
-            obs['pos4'],
+            obs['pos3'],
             obs['pos5'],
             obs['vel1'],
             obs['vel2'],
@@ -152,9 +152,9 @@ class Prosthetic_Experiment_With_Context(Prosthetic_Experiment):
             state,
             self.velocity_1,
             self.velocity_2,
-            self.velocity_4,
+            self.velocity_3,
             self.velocity_5,
-            [self.pos_1, self.pos_2, self.pos_4, self.pos_5]
+            [self.pos_1, self.pos_2, self.pos_3, self.pos_5]
         ))
 
         return state
@@ -269,17 +269,15 @@ class Biorob2012Experiment(Prosthetic_Experiment):
         '''
             Multiple tile-coders used. We load the first half of the states in during the first load
         '''
-        shift_factor = self.memory_size / (len(state) - 4)
-        for i in range(len(state) - 4):
-            perception = np.concatenate((state[:4], [state[i]]))
+        shift_factor = self.memory_size / (len(state) - 4)          # the amount of memory we alot for each tilecoder
+        for i in range(len(state) - 4):                             # for all the other perceptions
+            perception = np.concatenate((state[:4], [state[i]]))    # add the extra obs to the position obs
             f = np.array(getTiles(
                 numtilings=self.num_tilings,
-                memctable=self.memory_size,
+                memctable=shift_factor,                             # the amount of memory we alot for each tilecoder
                 floats=perception)
-            ) + i * shift_factor
-
-                # (i * )
-            # np.concatenate((self.feature_vector, f))
+            ) + i * shift_factor                                    # shift the tiles by the amount we've added on
+            np.concatenate((self.feature_vector, f))
 
         for i in self.feature_vector:
             self.phi[i] = 1

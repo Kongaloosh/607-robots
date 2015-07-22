@@ -53,7 +53,7 @@ def main():
     config_prob = pickle.load(open(config_prob_path, 'rb'))   # we load a configuration file with all of the data
     config_alg_path = 'results/robot-experiments/{prob}/{alg}/configalg.pkl'.format(prob=args.prob, alg=args.algname)
     config_alg = pickle.load(open(config_alg_path, 'rb'))   # we load a configuration file with all of the data
-
+    print(config_alg)
     file_loader = FileLoaderApprox('results/prosthetic-data/EdwardsPOIswitching_{s}{a}.txt'.format(s=args.sVal, a=args.aVal), 14)
     # file_loader = FileLoader('results/prosthetic-data/EdwardsPOIswitching_{s}{a}.txt'.format(s=args.sVal, a=args.aVal))
 
