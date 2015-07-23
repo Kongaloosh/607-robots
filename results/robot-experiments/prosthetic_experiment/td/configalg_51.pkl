@@ -1,0 +1,8 @@
+(dp1
+S'lmbda'
+p2
+I1
+sS'initalpha'
+p3
+F0.29999999999999999
+s.
