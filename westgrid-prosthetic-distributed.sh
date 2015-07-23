@@ -18,9 +18,9 @@ echo '
 cd $PBS_O_WORKDIR
 echo "Current working directory is `pwd`"
 module load application/python/2.7.3
-time python pysrc/experiments/prostheticexp.py '$s' '$a' prosthetic_experiment '$alg' plotter > '$alg'-'$s'-'$a'.txt
-' > $alg-$s-$a.pbs              # make a script to run as a process on westgrid
-qsub $alg-$s-$a.pbs             # add the process to the queue on westgrid
+time python pysrc/experiments/prostheticexp.py '$s' '$a' prosthetic_experiment '$alg' plotter '$var' > '$alg'-'$s'-'$a'-'$var'.txt
+' > $alg-$s-$a-$var.pbs              # make a script to run as a process on westgrid
+qsub $alg-$s-$a-$var.pbs             # add the process to the queue on westgrid
 ((var++))                       # increment the config number to move to the next file
 done                            # end test if file exists while
 done                            # end algorithms
