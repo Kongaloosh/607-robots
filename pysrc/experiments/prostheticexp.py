@@ -31,7 +31,7 @@ def runoneconfig(file_loader, alg, prob):
         if file_loader.i % 1000 == 0:                           # pretty print
             print("Step: {s} of {n}".format(s=file_loader.i, n=len(file_loader.data_stream)))
     print("Finished: " + str((time.time()-start)/60))           # time taken for experiment
-    file_loader.reset()
+    file_loader.reset()                                         # sets the file-loader to obs 0 for next run
     return p, s                                                 # return the predictions and rewards
 
 
@@ -43,16 +43,22 @@ def main():
     parser.add_argument("prob", help="Name of the problem to use.")
     parser.add_argument("algname", help="name of the algorithm.")
     parser.add_argument("filename", help="name you want to add to the file")
+    parser.add_argument('config_number', type=int, default=-1, help="the number of the desired config file. if none, then unumbered is used")
     args = parser.parse_args()
 
     config_prob_path = 'results/robot-experiments/{prob}/configprob.pkl'.format(prob=args.prob)
     config_prob = pickle.load(open(config_prob_path, 'rb'))   # we load a configuration file with all of the data
+    num = args.config_number
+    if num != -1:
+        config_alg_path = \
+            'results/robot-experiments/{prob}/{alg}/configalg_{i}.pkl'.format(prob=args.prob, alg=args.algname, i=num)
+    else:
+        config_alg_path = \
+            'results/robot-experiments/{prob}/{alg}/configalg.pkl'.format(prob=args.prob, alg=args.algname)
 
     config_alg_path = 'results/robot-experiments/{prob}/{alg}/configalg.pkl'.format(prob=args.prob, alg=args.algname)
     config_alg = pickle.load(open(config_alg_path, 'rb'))   # we load a configuration file with all of the data
-
     file_loader = FileLoaderApprox('results/prosthetic-data/EdwardsPOIswitching_{s}{a}.txt'.format(s=args.sVal, a=args.aVal), 14)
-    # file_loader = FileLoader('results/prosthetic-data/EdwardsPOIswitching_{s}{a}.txt'.format(s=args.sVal, a=args.aVal))
 
     algs = {
         'autotd': autotd.AutoTD,
@@ -89,18 +95,18 @@ def main():
 
     # run the experiment
     print(len(config_alg))
-    for config in config_alg:                       # for the parameter sweep we're interested in
-        config.update(config_prob)                  # add the problem-specific configs
+    for config in config_alg:                           # for the parameter sweep we're interested in
+        config.update(config_prob)                      # add the problem-specific configs
         try:
             config['alpha'] /= config['num_tilings']    # divide alpha
         except:
             pass                                        # we're using an alg with different config
-        prob = problems[args.prob](config)                      # construct a problem
-        alg = algs[args.algname](config)            # build our instance of an algorithm
+        prob = problems[args.prob](config)              # construct a problem
+        alg = algs[args.algname](config)                # build our instance of an algorithm
         (prediction, signal) = \
             runoneconfig(file_loader=file_loader, prob=prob, alg=alg)    # grab results of run
 
-        config['signal'] = signal                   # adding to the config so we can save results
+        config['signal'] = signal                       # adding to the config so we can save results
         config['prediction'] = prediction
         config['error'] = np.array(config['return']) - prediction[:len(config['return'])]
         pickle.dump(config, f, -1)
