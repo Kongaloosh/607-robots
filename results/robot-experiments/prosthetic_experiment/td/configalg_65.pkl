@@ -1,8 +1,0 @@
-(dp1
-S'lmbda'
-p2
-I0
-sS'initalpha'
-p3
-F1
-s.
