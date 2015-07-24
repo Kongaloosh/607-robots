@@ -83,8 +83,8 @@ def main():
     Constructs a file comparing the algs across for each alpha
     :returns none:
     """
-    path = "results/robot-experiments/biorob/"          # the path to the experiments
-    postfix = 'sweep_pool_2_s1_na1'                     # the name of the experiment run
+    path = "results/robot-experiments/prosthetic_experiment/"         # the path to the experiments
+    postfix = 'total_run'                                   # the name of the experiment run
     # if not os.path.exists(path):
     #     path = "../." + path
 
