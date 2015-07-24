@@ -6,13 +6,13 @@ do
 #for a in a1 a2 a3 na1 na2 na3
 for a in na1
 do
-#for alg in tdr utdr td totd utd utotd
+#for alg in tdr utdr td totd autotd
 for alg in tdr
 do
 # note: I can't run all of these at once.
 # time python pysrc/experiments/prostheticexp.py $s $a experiment $alg &
 echo $alg
-time python pysrc/experiments/prostheticexp.py $s $a biorob $alg sweep
+time python pysrc/experiments/prostheticexp.py $s $a biorob $alg plotter
 done
 done
 done
