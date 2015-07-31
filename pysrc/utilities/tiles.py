@@ -48,7 +48,8 @@ Useful routines and classes:
               should be zero. The wrapping width is in the same units as the floats, but an integer
 """
 
-import random 
+import random
+random.seed(10)
 import math
 import operator
 
