@@ -67,13 +67,19 @@ cd $PBS_O_WORKDIR
 echo "Current working directory is `pwd`"
 module load application/python/2.7.3
 
-time python pysrc/experiments/prostheticexp.py s'$s' '$a$aval' prosthetic_experiment '$alg' distributed '$var' > txt/'$alg'-'$s'-'$a'-'$var'.txt
+time python pysrc/experiments/prostheticexp.py s'$s' '$a$aval' prosthetic_experiment '$alg' experiment '$var' > txt/'$alg'-'$s'-'$a'-'$var'.txt
 
-if ['$aval' < '3']                                          # if we are at the last trial...
-    qsub pbs/'$alg'-s'$(($s+1))'-'$a$aval'-'$var'.pbs       # move to the next person and the next trial
-elif ['$s' < '4']                                           # if we still have trials left
-    qsub pbs/'$alg'-s'$s'-'$a$(($aval+1))'-'$var'.pbs       # move to the next trial
+
+if [[ '$aval' < "3" ]]
+then
+	qsub pbs/'$alg'-s'$s'-'$a$(($aval+1))'-'$var'.pbs
+	echo 'next action'
+elif [[ '$s' < "4" ]]
+then
+    	qsub pbs/'$alg'-s'$(($s+1))'-'$a'1-'$var'.pbs
+	echo 'next person'
 fi
+echo done
 ' > pbs/$alg-s$s-$a$aval-$var.pbs                           # make a script to run as a process on westgrid
 
 ((var++))                       # increment the config number to move to the next file
@@ -89,7 +95,7 @@ done                            # end algorithms
 #
 # ====================================================================================================================
 
-for alg in td tdr totd autotd                       # for all algorithms
+for alg in td                       # for all algorithms
 do
 for a in a na                                       # for all actions in a session
 do
@@ -98,7 +104,7 @@ aval=1                                              # the first trial is where w
 var=0
 
 while  [ -f results/robot-experiments/prosthetic_experiment/$alg/configalg_$var.pkl ]; do
-    #qsub pbs/$alg-s$s-$a$aval-$var.pbs               # make a script to run as a process on westgrid
+    qsub pbs/$alg-s$s-$a$aval-$var.pbs               # make a script to run as a process on westgrid
     echo pbs/$alg-s$s-$a$aval-$var.pbs
 ((var++))                                           # increment the config number to move to the next file
 
