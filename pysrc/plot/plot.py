@@ -4,10 +4,11 @@ sys.path.insert(0, os.getcwd())
 from matplotlib import pyplot
 import cPickle as pickle
 import numpy
+import math
 
 subjects = ['s{i}'.format(i=i) for i in range(1, 5)]
-# actions = numpy.concatenate((['a{i}'.format(i=i) for i in range(1, 4)], ['na{i}'.format(i=i) for i in range(1, 4)]))
-actions = ['a{i}'.format(i=i) for i in range(1, 4)]
+actions = numpy.concatenate((['a{i}'.format(i=i) for i in range(1, 4)], ['na{i}'.format(i=i) for i in range(1, 4)]))
+# actions = ['a{i}'.format(i=i) for i in range(1, 4)]
 
 
 def plot_performance_vs_lambda(parameters):
@@ -55,30 +56,30 @@ def plot_data_process_prosthetic(parameters):
     :param parameters: a dictionary as seen in main()
     :param path_prefix: where the path goes to
     """
+
     comparison_val = parameters['compare']                                      # the variable we compare across
     data = loaddata(parameters['path_prefix'])                                  # we load all the runs from a trial
-    comparison_values = set([run[comparison_val] for run in data])              # the values we wish to vary over
+    comparison_values = data.keys()                                             # the values we wish to vary over
 
     plot_points = []
-    for run_parameter in comparison_values:                                     # over all of our runs
+    for key_lambda in comparison_values:                                        # over all of our runs
         best = None                                                             # the location of the current best
         best_error = numpy.infty                                                # the error of the current best
-        for run in data:                                                        # for each run we perform
-            # get the avg error
-            new_error = run                                                     # we determine the absolute error
-            if run[comparison_val] == run_parameter and new_error < best_error: # if it's the current best
-                best_error = new_error                                          # update our error tracker
-                best = run                                                      # update our run tracker
-        plot_points.append(best)                                                # append the best
-    plot_points = sorted(plot_points, key=lambda k: k[comparison_val])          # sort the points by comparator var
+        for key_alpha in data[key_lambda].keys():
+            avg_error = data[key_lambda][key_alpha]
+            if avg_error < best_error:
+                best_error = avg_error
+            plot_points.append((float(key_lambda), data[key_lambda][key_alpha]))
 
+    plot_points = sorted(plot_points,key=lambda vals: vals[0])
+    print([x for (x, y) in plot_points])
     pyplot.plot(
-        [i[comparison_val] for i in plot_points],
-        [sum(abs(i['error'])) for i in plot_points],
+        [x for (x, y) in plot_points],
+        [y for (x, y) in plot_points],
+        # plot_points,
         marker='o',
-        label=parameters['label']
+        # label=parameters['label']
     )
-
     pyplot.legend()
 
 
@@ -121,8 +122,49 @@ def plot_data_process_prosthetic(parameters):
 #         print 'End of file reached'
 #     return data                                                         # pass all runs back and find minimum avg
 
+#
+# def loaddata(path, nruns = 1):
+#     """
+#      Takes in the number of runs---or, files we have---and looks for all the files
+#     for any given file, we load all of the results and find.
+#
+#     Remember, the results are going to be a collection of pickled items, each
+#     being one member of a sweep for a particular episode.
+#
+#     :param nruns: number of runs
+#     :param path: the prefix to where we want to find result files
+#     """
+#     data = {}
+#     for a in actions:                                                   # for all actions
+#         print(a)
+#         for s in subjects:                                              # for all subjects
+#             print(s)
+#             filepathname = path + "_{s}_{a}.dat" .format(s=s,a=a)       # point to data file
+#             f = open(filepathname, 'rb')                                # load the file results are stored in
+#             try:                                                        # we catch for the end of the file
+#                 while True:                                             # until we break out of the reading loop
+#                     d = pickle.load(f)                                  # get a run
+#                     lmbda = str(d['lmbda'])                             # get the current lambda's error
+#                     trial_error = sum(abs(d['error'] / d['return']))    # get normalized error
+#                     if not math.isnan(trial_error):                     # check if nan, dump if nan
+#                         try:
+#                             data[lmbda][].append(
+#                                 trial_error
+#                             )                                               # add the abs error
+#                         except KeyError:                                    # if this lambda is not in the dict yet
+#                             data[lmbda][] = {}                                # make a list for the key
+#                             data[lmbda][].append(
+#                                 trial_error
+#                             )                                               # add the abs error
+#             except EOFError:
+#                 pass
+#     for lmbda in data.keys():                                           # for all the configs
+#         data[lmbda] = sum(data[lmbda]) / float(len(data[lmbda]))        # get the avg error
+#     print(data)
+#     return data
 
-def loaddata(path, nruns = 1):
+
+def loaddata(path):
     """
      Takes in the number of runs---or, files we have---and looks for all the files
     for any given file, we load all of the results and find.
@@ -130,7 +172,6 @@ def loaddata(path, nruns = 1):
     Remember, the results are going to be a collection of pickled items, each
     being one member of a sweep for a particular episode.
 
-    :param nruns: number of runs
     :param path: the prefix to where we want to find result files
     """
     data = {}
@@ -141,20 +182,41 @@ def loaddata(path, nruns = 1):
             filepathname = path + "_{s}_{a}.dat" .format(s=s,a=a)       # point to data file
             f = open(filepathname, 'rb')                                # load the file results are stored in
             try:                                                        # we catch for the end of the file
+                i = 0
                 while True:                                             # until we break out of the reading loop
                     d = pickle.load(f)                                  # get a run
                     lmbda = str(d['lmbda'])                             # get the current lambda's error
-                    try:
-                        data[lmbda].append(sum(abs(d['error'])))        # add the abs error
-                    except KeyError:                                    # if this lambda is not in the dict yet
-                        data[lmbda] = []                                # make a list for the key
-                        data[lmbda].append(sum(abs(d['error'])))        # add the abs error
+                    alpha = str(d['alpha'])
+                    trial_error = sum(abs(d['error']))                  # /sum(d['return'])    # get normalized error
+                    if not math.isnan(trial_error):                     # check if nan, dump if nan
+                        try:
+                            data[lmbda][alpha].append(
+                                trial_error
+                            )                                           # add the abs error
+                        except:                                         # if this lambda is not in the dict yet
+                            try:
+                                data[lmbda][alpha] = {}                 # make a list for the key
+                            except KeyError:
+                                data[lmbda] = {}
+                                data[lmbda][alpha] = []                 # make a list for the key
+
+                            data[lmbda][alpha].append(
+                                trial_error
+                            )                                           # add the abs error
+                    else:
+                        print("{s} {a} {i} {e}".format(s=s, a=a, i=i, e=trial_error))
+                    i += 1
             except EOFError:
                 pass
-    for lmbda in data.keys():                                           # for all the configs
-        data[lmbda] = sum(data[lmbda]) / float(len(data[lmbda]))        # get the avg error
     print(data)
+    for key_lambda in data.keys():
+        for key_alpha in data[key_lambda].keys():
+            print("alpha {a}, lambda {l}, values: {v}".format(a=key_alpha, l=key_lambda, v=data[key_lambda]))
+            runs = data[key_lambda][key_alpha]
+            data[key_lambda][key_alpha] = sum(runs)/len(runs)
+
     return data
+
 
 def main():
     """
@@ -195,9 +257,9 @@ def main():
         {'path_prefix':pathfileprefix, 'compare': 'lmbda', 'label': 'TDR'}
     )
 
-    # pathfileprefix = path + "utdr/" + postfix
+    # pathfileprefix = path + "autotd/" + postfix
     # plot_performance_vs_lambda(
-    #     {'path_prefix': pathfileprefix, 'compare': 'lmbda', 'label':'UTDR'}
+    #     {'path_prefix': pathfileprefix, 'compare': 'lmbda', 'label':'AUTOTD'}
     # )
 
     pyplot.show()
