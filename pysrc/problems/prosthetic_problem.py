@@ -7,6 +7,7 @@
 from pysrc.utilities.tiles import loadTiles, getTiles
 import numpy as np
 from pysrc.utilities.max_min_finder import *
+import numpy
 
 __author__ = 'alex'
 
@@ -28,11 +29,13 @@ class Prosthetic_Experiment(object):
         except: pass
         try: self.normalizer = config['normalizer']
         except: pass
+        self.i = 0
 
     def step(self, obs):
         config = {}
         config['phi'] = self.last_phi
         state = self.get_state(obs)
+        config['state_unormalized'] = state
         state = self.normalize_state(self.normalizer, state)
         find_invalid(state, obs)
 
@@ -42,14 +45,41 @@ class Prosthetic_Experiment(object):
         for i in self.feature_vector:
             self.phi[i] = 0
 
-        loadTiles(self.feature_vector, self.starting_element, self.num_tilings, self.memory_size, state)
+        self.feature_vector = getTiles(self.num_tilings, self.memory_size, state)
+
+        config['feature_vec'] = self.feature_vector
 
         for i in self.feature_vector:
             self.phi[i] = 1
 
+        # if not self.last_phi is None:
+        #     print(
+        #         """
+        #         Feature Vector      = {a}
+        #         Starting_Element    = {b}
+        #         Num Tilings         = {c}
+        #         Mem Size            = {d}
+        #         state               = {e}
+        #         reward              = {r}
+        #         phi                 = {p}
+        #         ==========================================
+        #         """.format(
+        #             a=getTiles(self.num_tilings, self.memory_size, state),
+        #             b=self.starting_element,
+        #             c=self.num_tilings,
+        #             d=self.memory_size,
+        #             e=state,
+        #             r=self.get_reward(obs),
+        #             p=[i for i, e in enumerate(self.last_phi) if e != 0]
+        #
+        #
+        #         )
+        #     )
+
         config['R'] = self.get_reward(obs)
 
         self.last_switch_value = obs['switches']
+
         config['gnext'] = self.gamma
         config['g'] = self.gamma
         try: config['l'] = self.rl_lambda   # not every algorithm requires a lambda, so we try
@@ -61,7 +91,6 @@ class Prosthetic_Experiment(object):
     @staticmethod
     def get_reward(obs):
         elbow_velocity = obs['vel4']
-
         if abs(elbow_velocity) > 0.2:
             return 1
         else:
@@ -226,10 +255,10 @@ class Biorob2012Experiment(Prosthetic_Experiment):
             pass
 
     def get_state(self, obs):
-        self.pos_1 = self.pos_1*self.decay + (1-self.decay) * obs['pos1']
-        self.pos_2 = self.pos_2*self.decay + (1-self.decay) * obs['pos2']
-        self.pos_4 = self.pos_4*self.decay + (1-self.decay) * obs['pos4']
-        self.pos_5 = self.pos_5*self.decay + (1-self.decay) * obs['pos5']
+        self.pos_1 = self.pos_1 * self.decay + (1-self.decay) * obs['pos1']
+        self.pos_2 = self.pos_2 * self.decay + (1-self.decay) * obs['pos2']
+        self.pos_4 = self.pos_4 * self.decay + (1-self.decay) * obs['pos4']
+        self.pos_5 = self.pos_5 * self.decay + (1-self.decay) * obs['pos5']
 
         state = np.array([
             obs['pos1'],
@@ -249,13 +278,11 @@ class Biorob2012Experiment(Prosthetic_Experiment):
             self.pos_4,
             self.pos_5,
         ])
-
         return state
 
     def step(self, obs):
         config = {}
         config['phi'] = self.last_phi
-
         state = self.get_state(obs)
         state = self.normalize_state(self.normalizer, state)
         find_invalid(state, obs)
@@ -277,6 +304,7 @@ class Biorob2012Experiment(Prosthetic_Experiment):
                 memctable=shift_factor,                             # the amount of memory we alot for each tilecoder
                 floats=perception)
             ) + i * shift_factor                                    # shift the tiles by the amount we've added on
+            # print(f)
             np.concatenate((self.feature_vector, f))
 
         for i in self.feature_vector:
@@ -291,4 +319,3 @@ class Biorob2012Experiment(Prosthetic_Experiment):
         config['phinext'] = self.phi
         self.last_phi = self.phi
         return config
-
