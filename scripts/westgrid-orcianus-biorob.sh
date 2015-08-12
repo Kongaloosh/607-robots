@@ -49,7 +49,7 @@ do
 
 var=0
 
-while  [ -f results/robot-experiments/prosthetic_experiment/$alg/configalg_$var.pkl ]; do
+while  [ -f results/robot-experiments/biorob/$alg/configalg_$var.pkl ]; do
 # while there are still config files available for a process
 # make a config for these parameters
 
@@ -66,7 +66,7 @@ echo "Current working directory is `pwd`"
 #module load application/python/2.7.3
 module load python/2.7.2
 
-time python pysrc/experiments/prostheticexp.py s'$s' '$a$aval' prosthetic_experiment '$alg' experiment '$var' > txt/'$alg'-'$s'-'$a'-'$var'.txt
+time python pysrc/experiments/prostheticexp.py s'$s' '$a$aval' biorob '$alg' experiment '$var' > txt/'$alg'-'$s'-'$a'-'$var'.txt
 
 
 if [[ '$s' < "4" ]]
@@ -90,7 +90,7 @@ done                            # end algorithms
 #
 # ====================================================================================================================
 
-for alg in totd                       # for all algorithms
+for alg in tdr  	                    # for all algorithms
 do
 for a in a na                               # for all actions in a session
 do
@@ -100,7 +100,7 @@ do
 s=1
 var=0
 
-while  [ -f results/robot-experiments/prosthetic_experiment/$alg/configalg_$var.pkl ]; do
+while  [ -f results/robot-experiments/biorob/$alg/configalg_$var.pkl ]; do
     qsub pbs/$alg-s$s-$a$aval-$var.pbs               # make a script to run as a process on westgrid
     echo pbs/$alg-s$s-$a$aval-$var.pbs
 ((var++))                                           # increment the config number to move to the next file

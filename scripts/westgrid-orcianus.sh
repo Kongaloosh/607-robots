@@ -71,7 +71,7 @@ time python pysrc/experiments/prostheticexp.py s'$s' '$a$aval' prosthetic_experi
 
 if [[ '$s' < "4" ]]
 then
-    	qsub pbs/'$alg'-s'$(($s+1))'-'$a'1-'$var'.pbs
+    	qsub pbs/'$alg'-s'$(($s+1))'-'$a$aval'-'$var'.pbs
 	echo 'next person'
 fi
 echo done

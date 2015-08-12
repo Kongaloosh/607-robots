@@ -69,9 +69,9 @@ module load python/2.7.2
 time python pysrc/experiments/prostheticexp.py s'$s' '$a$aval' prosthetic_experiment '$alg' experiment '$var' > txt/'$alg'-'$s'-'$a'-'$var'.txt
 
 
-if [[ '$s' < "4" ]]
+if [[ '$a' -eq "a" ]]
 then
-    	qsub pbs/'$alg'-s'$(($s+1))'-'$a$aval'-'$var'.pbs
+    	qsub pbs/'$alg'-s'$s'-na'$aval'-'$var'.pbs
 	echo 'next person'
 fi
 echo done
@@ -90,19 +90,18 @@ done                            # end algorithms
 #
 # ====================================================================================================================
 
-for alg in totd                       # for all algorithms
+for alg in td                       # for all algorithms
 do
-for a in a na                               # for all actions in a session
+for s in 1 2 3 4                            # for all subjects
 do
 for aval in 1 2 3                           # for the number of trials per person
 do
 
-s=1
 var=0
 
 while  [ -f results/robot-experiments/prosthetic_experiment/$alg/configalg_$var.pkl ]; do
-    qsub pbs/$alg-s$s-$a$aval-$var.pbs               # make a script to run as a process on westgrid
-    echo pbs/$alg-s$s-$a$aval-$var.pbs
+    qsub pbs/$alg-s$s-$aa-$var.pbs               # make a script to run as a process on westgrid
+    echo pbs/$alg-s$s-$aa-$var.pbs
 ((var++))                                           # increment the config number to move to the next file
 
 done                                                # end test if file exists while
