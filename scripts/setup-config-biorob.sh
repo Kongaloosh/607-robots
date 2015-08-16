@@ -6,6 +6,7 @@ mkdir pbs
 
 module load application/python/2.7.3
 module load python/2.7.2
+module load python
 
 cd results/robot-experiments/biorob/
 python configprob.py
