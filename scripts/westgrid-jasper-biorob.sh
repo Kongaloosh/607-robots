@@ -63,8 +63,9 @@ echo '
 cd $PBS_O_WORKDIR
 
 echo "Current working directory is `pwd`"
-#module load application/python/2.7.3
+module load application/python/2.7.3
 module load python/2.7.2
+module load python
 
 time python pysrc/experiments/prostheticexp.py s'$s' '$a$aval' biorob '$alg' experiment '$var' > txt/'$alg'-'$s'-'$a'-'$var'.txt
 
@@ -100,8 +101,8 @@ do
 var=0
 
 while  [ -f results/robot-experiments/biorob/$alg/configalg_$var.pkl ]; do
-    qsub pbs/$alg-s$s-$aa-$var.pbs               # make a script to run as a process on westgrid
-    echo pbs/$alg-s$s-$aa-$var.pbs
+    qsub pbs/$alg-s$s-a$aval-$var.pbs               # make a script to run as a process on westgrid
+    echo pbs/$alg-s$s-a$aval-$var.pbs
 ((var++))                                           # increment the config number to move to the next file
 
 done                                                # end test if file exists while
