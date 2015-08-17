@@ -21,6 +21,7 @@ def runoneconfig(file_loader, alg, prob):
     state = prob.step(obs)                                      # initial state
     p = []                                                      # holds the predictions
     s = []                                                      # holds all of the rewards
+    start = time.time()                                         # experiment timer
     while file_loader.has_obs():                                # while we still have observations
         obs = file_loader.step()                                # get the next observation diction
         vals = prob.step(obs)                                   # state from prob
@@ -28,9 +29,13 @@ def runoneconfig(file_loader, alg, prob):
         s.append(vals['R'])                                     # record actual reward
         p.append(numpy.dot(vals['phinext'],alg.estimate()))
         if file_loader.i % 1000 == 0:                           # pretty print
-            print([i for i, e in enumerate(vals['phinext']) if e != 0])
+            print(vals.keys())
+            # print(vals['alpha'])
+            # print(vals['lmbda'])
+            print(vals['g'])
             print(numpy.dot(vals['phinext'],alg.estimate()))
             print("Step: {s} of {n}".format(s=file_loader.i, n=len(file_loader.data_stream)))
+    print("Finished: " + str((time.time()-start)/60))           # time taken for experiment
     file_loader.reset()                                         # sets the file-loader to obs 0 for next run
     return p, s,                                                # return the predictions and rewards
 

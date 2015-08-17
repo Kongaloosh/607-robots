@@ -7,7 +7,6 @@
 from pysrc.utilities.tiles import loadTiles, getTiles
 import numpy as np
 from pysrc.utilities.max_min_finder import *
-import numpy
 
 __author__ = 'alex'
 
@@ -30,7 +29,6 @@ class Prosthetic_Experiment(object):
         try: self.normalizer = config['normalizer']
         except: pass
         self.i = 0
-        print(config)
 
     def step(self, obs):
         config = {}
@@ -47,40 +45,29 @@ class Prosthetic_Experiment(object):
             self.phi[i] = 0
 
         self.feature_vector = getTiles(self.num_tilings, self.memory_size, state)
-
         config['feature_vec'] = self.feature_vector
+        # print(
+        #     """
+        #     Feature Vector      = {a}
+        #     Starting_Element    = {b}
+        #     Num Tilings         = {c}
+        #     Mem Size            = {d}
+        #     state               = {e}
+        #     ==========================================
+        #     """.format(
+        #         a=getTiles(self.num_tilings, self.memory_size, state),
+        #         b=self.starting_element,
+        #         c=self.num_tilings,
+        #         d=self.memory_size,
+        #         e=state
+        #     )
+        # )
 
         for i in self.feature_vector:
             self.phi[i] = 1
 
-        # if not self.last_phi is None:
-        #     print(
-        #         """
-        #         Feature Vector      = {a}
-        #         Starting_Element    = {b}
-        #         Num Tilings         = {c}
-        #         Mem Size            = {d}
-        #         state               = {e}
-        #         reward              = {r}
-        #         phi                 = {p}
-        #         ==========================================
-        #         """.format(
-        #             a=getTiles(self.num_tilings, self.memory_size, state),
-        #             b=self.starting_element,
-        #             c=self.num_tilings,
-        #             d=self.memory_size,
-        #             e=state,
-        #             r=self.get_reward(obs),
-        #             p=[i for i, e in enumerate(self.last_phi) if e != 0]
-        #
-        #
-        #         )
-        #     )
-
         config['R'] = self.get_reward(obs)
-
         self.last_switch_value = obs['switches']
-
         config['gnext'] = self.gamma
         config['g'] = self.gamma
         try: config['l'] = self.rl_lambda   # not every algorithm requires a lambda, so we try
@@ -92,6 +79,7 @@ class Prosthetic_Experiment(object):
     @staticmethod
     def get_reward(obs):
         elbow_velocity = obs['vel4']
+
         if abs(elbow_velocity) > 0.2:
             return 1
         else:
@@ -279,6 +267,7 @@ class Biorob2012Experiment(Prosthetic_Experiment):
             self.pos_4,
             self.pos_5,
         ])
+
         return state
 
     def step(self, obs):
@@ -289,7 +278,7 @@ class Biorob2012Experiment(Prosthetic_Experiment):
         find_invalid(state, obs)
 
         for i in range(len(state)):
-            state[i] *= self.num_binsd
+            state[i] *= self.num_bins
 
         for i in self.feature_vector:
             self.phi[i] = 0
@@ -305,6 +294,7 @@ class Biorob2012Experiment(Prosthetic_Experiment):
                 memctable=shift_factor,                             # the amount of memory we alot for each tilecoder
                 floats=perception)
             ) + i * shift_factor                                    # shift the tiles by the amount we've added on
+            print(f)
             np.concatenate((self.feature_vector, f))
 
         for i in self.feature_vector:
@@ -319,3 +309,4 @@ class Biorob2012Experiment(Prosthetic_Experiment):
         config['phinext'] = self.phi
         self.last_phi = self.phi
         return config
+

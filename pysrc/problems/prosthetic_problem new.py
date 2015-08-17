@@ -30,7 +30,6 @@ class Prosthetic_Experiment(object):
         try: self.normalizer = config['normalizer']
         except: pass
         self.i = 0
-        print(config)
 
     def step(self, obs):
         config = {}
