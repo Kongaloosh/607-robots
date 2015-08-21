@@ -11,7 +11,7 @@ __author__ = 'alex'
 
 path = 'results/robot-experiments/prosthetic_experiment/'
 exp_name = 'experiment'
-for alg in ['td','tdr','totd','autotd']:
+for alg in ['tdr']:
     print("Collecting {alg}".format(alg=alg))
     for s in ['s1','s2','s3','s4']:
         print("Over subject {s}".format(s=s))
@@ -21,7 +21,6 @@ for alg in ['td','tdr','totd','autotd']:
             data = path + alg + "/{name}_{s}_{a}_{i}.dat".format(name=exp_name, s=s, a=a, i=i)
             if os.path.isfile(data):
                 f = open(path + alg + '/total_run_{s}_{a}.dat'.format(s=s, a=a), 'wb')
-
             while os.path.isfile(data):                     # if our s, a, or i values ar out of bounds, kick
                 try:
                     run_result = pickle.load(open(data, 'r'))
