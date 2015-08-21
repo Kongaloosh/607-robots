@@ -15,7 +15,10 @@ def plot_performance_vs_lambda(parameters):
     plot_file_name = parameters['path_prefix'] + "perf_vs_lambda" + ".plot.pkl" # The file we store results in
     if not os.path.isfile(plot_file_name):                                      # if we haven't made a plot file yet
         plot_data_process_prosthetic(parameters)                                # collect the data for a plot
-
+    else:
+        open(plot_file_name)
+        data = pickle.load(plot_file_name)
+        plot_data_process_prosthetic(data)
 
 # def plot_data_process_prosthetic(parameters):
 #     """
@@ -66,20 +69,21 @@ def plot_data_process_prosthetic(parameters):
         best = None                                                             # the location of the current best
         best_error = numpy.infty                                                # the error of the current best
         for key_alpha in data[key_lambda].keys():
-            avg_error = data[key_lambda][key_alpha]
+            avg_error = data[key_lambda][key_alpha]['error']
             if avg_error < best_error:
                 best_error = avg_error
 
-        plot_points.append((float(key_lambda), data[key_lambda][key_alpha]))
-    plot_points = sorted(plot_points,key=lambda vals: vals[0])
-    #print([x for (x, y) in plot_points])
-    pyplot.plot(
-        [x for (x, y) in plot_points],
-        [y for (x, y) in plot_points],
-        # plot_points,
+        plot_points.append((float(key_lambda), data[key_lambda][key_alpha]['error'], data[key_lambda][key_alpha]['std']))
+    plot_points = sorted(plot_points, key=lambda vals: vals[0])
+
+    pyplot.errorbar(
+        [x for (x, y, z) in plot_points],
+        [y for (x, y, z) in plot_points],
+        yerr=[z for (x, y, z) in plot_points],
         marker='o',
         label=parameters['label']
     )
+
     pyplot.legend()
 
 
@@ -212,20 +216,24 @@ def loaddata(path):
                     pass
             except IOError:
                 print "File doesn't exist " + path + "_{s}_{a}.dat" .format(s=s,a=a)
+
     # truncate all of the errors over the max to ensure consistent time-steps:
     lmbda = data.keys()[0]
     alpha = data[lmbda].keys()[0]
-    print(data[lmbda][alpha])
+
+    # every parameter combination has all sessions,
+    # so we just need to find the minimum for one combo and it will generalize
     truncate_at = min([len(trial) for trial in data[lmbda][alpha]])
 
-    # truncate for same time-steps
+    # truncate so all runs have the same number of time-steps
     for key_lambda in data.keys():
         for key_alpha in data[key_lambda].keys():
-            runs = [(run[:truncate_at]**2).mean() for run in  data[key_lambda][key_alpha]]
-            data[key_lambda][key_alpha] = sum(runs)/len(runs)
-
-    # mean-squared error
-
+            # for all runs, in this set, find the mean squared error and avg it.
+            runs = [(run[:truncate_at] ** 2).mean() for run in data[key_lambda][key_alpha]]
+            data[key_lambda][key_alpha]={}
+            data[key_lambda][key_alpha]['error'] = sum(runs)/len(runs)
+            data[key_lambda][key_alpha]['std'] = numpy.std(runs)
+            # todo: add std error bars
 
     return data
 
