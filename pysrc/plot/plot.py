@@ -69,16 +69,16 @@ def plot_data_process_prosthetic(parameters):
             avg_error = data[key_lambda][key_alpha]
             if avg_error < best_error:
                 best_error = avg_error
-            plot_points.append((float(key_lambda), data[key_lambda][key_alpha]))
 
+        plot_points.append((float(key_lambda), data[key_lambda][key_alpha]))
     plot_points = sorted(plot_points,key=lambda vals: vals[0])
-    print([x for (x, y) in plot_points])
+    #print([x for (x, y) in plot_points])
     pyplot.plot(
         [x for (x, y) in plot_points],
         [y for (x, y) in plot_points],
         # plot_points,
         marker='o',
-        # label=parameters['label']
+        label=parameters['label']
     )
     pyplot.legend()
 
@@ -180,22 +180,26 @@ def loaddata(path):
         for s in subjects:                                              # for all subjects
             print(s)
             filepathname = path + "_{s}_{a}.dat" .format(s=s,a=a)       # point to data file
-            f = open(filepathname, 'rb')                                # load the file results are stored in
-            try:                                                        # we catch for the end of the file
-                i = 0
-                while True:                                             # until we break out of the reading loop
-                    d = pickle.load(f)                                  # get a run
-                    lmbda = str(d['lmbda'])                             # get the current lambda's error
-                    alpha = str(d['alpha'])
-                    trial_error = sum(abs(d['error']))                  # /sum(d['return'])    # get normalized error
-                    if not math.isnan(trial_error):                     # check if nan, dump if nan
+            try:
+                f = open(filepathname, 'rb')                                # load the file results are stored in
+                try:                                                        # we catch for the end of the file
+                    i = 0
+                    while True:                                             # until we break out of the reading loop
+                        d = pickle.load(f)                                  # get a run
+                        lmbda = str(d['lmbda'])                             # get the current lambda's error
+                        try:
+                            alpha = str(d['alpha'])
+                        except KeyError:
+                            alpha = str(d['initalpha'])
+
+                        trial_error = d['error']                  # /sum(d['return'])    # get normalized error
                         try:
                             data[lmbda][alpha].append(
                                 trial_error
                             )                                           # add the abs error
-                        except:                                         # if this lambda is not in the dict yet
+                        except KeyError:                                         # if this lambda is not in the dict yet
                             try:
-                                data[lmbda][alpha] = {}                 # make a list for the key
+                                data[lmbda][alpha] = []                 # make a list for the key
                             except KeyError:
                                 data[lmbda] = {}
                                 data[lmbda][alpha] = []                 # make a list for the key
@@ -203,17 +207,25 @@ def loaddata(path):
                             data[lmbda][alpha].append(
                                 trial_error
                             )                                           # add the abs error
-                    else:
-                        print("{s} {a} {i} {e}".format(s=s, a=a, i=i, e=trial_error))
-                    i += 1
-            except EOFError:
-                pass
-    print(data)
+                        i += 1
+                except EOFError:
+                    pass
+            except IOError:
+                print "File doesn't exist " + path + "_{s}_{a}.dat" .format(s=s,a=a)
+    # truncate all of the errors over the max to ensure consistent time-steps:
+    lmbda = data.keys()[0]
+    alpha = data[lmbda].keys()[0]
+    print(data[lmbda][alpha])
+    truncate_at = min([len(trial) for trial in data[lmbda][alpha]])
+
+    # truncate for same time-steps
     for key_lambda in data.keys():
         for key_alpha in data[key_lambda].keys():
-            print("alpha {a}, lambda {l}, values: {v}".format(a=key_alpha, l=key_lambda, v=data[key_lambda]))
-            runs = data[key_lambda][key_alpha]
+            runs = [(run[:truncate_at]**2).mean() for run in  data[key_lambda][key_alpha]]
             data[key_lambda][key_alpha] = sum(runs)/len(runs)
+
+    # mean-squared error
+
 
     return data
 
@@ -226,12 +238,14 @@ def main():
     path = "results/robot-experiments/prosthetic_experiment/"         # the path to the experiments
     postfix = 'total_run'                                             # the name of the experiment run
 
-
+    # try:
     pathfileprefix = path + "td/" + postfix
     print("TD")
     plot_performance_vs_lambda(
         {'path_prefix': pathfileprefix, 'compare': 'lmbda', 'label': 'TD'}
     )
+    # except:
+    #     pass
 
     # pathfileprefix = path + "utd/" + postfix
     # print("UTD")
@@ -239,11 +253,14 @@ def main():
     #     {'path_prefix': pathfileprefix, 'compare': 'lmbda', 'label': 'UTD'}
     # )
 
+    # try:
     pathfileprefix = path + "totd/" + postfix
     print("TOTD")
     plot_performance_vs_lambda(
-        {'path_prefix': pathfileprefix, 'compare': 'lmbda', 'label': 'TOTD'}
+       {'path_prefix': pathfileprefix, 'compare': 'lmbda', 'label': 'TOTD'}
     )
+    # except:
+    #     pass
 
     # pathfileprefix = path + "utotd/" + postfix
     # print("UTOTD")
@@ -251,16 +268,22 @@ def main():
     #     {'path_prefix':pathfileprefix, 'compare': 'lmbda', 'label': 'UTOTD'}
     # )
 
+    # try:
     pathfileprefix = path + "tdr/" + postfix
     print("TDR")
     plot_performance_vs_lambda(
-        {'path_prefix':pathfileprefix, 'compare': 'lmbda', 'label': 'TDR'}
+       {'path_prefix':pathfileprefix, 'compare': 'lmbda', 'label': 'TDR'}
     )
+    # except:
+    #     pass
 
-    # pathfileprefix = path + "autotd/" + postfix
-    # plot_performance_vs_lambda(
-    #     {'path_prefix': pathfileprefix, 'compare': 'lmbda', 'label':'AUTOTD'}
-    # )
+    # try:
+    pathfileprefix = path + "autotd/" + postfix
+    plot_performance_vs_lambda(
+        {'path_prefix': pathfileprefix, 'compare': 'lmbda', 'label':'AUTOTD'}
+    )
+    # except:
+    #     pass
 
     pyplot.show()
 
