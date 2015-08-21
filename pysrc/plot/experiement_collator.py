@@ -2,8 +2,10 @@
     to make things speedier, we take advantage of westgrid by splitting everything up and running a single
     config as an individual run. This file takes the individual runs for each algorithim, each trial, and
     each subject.
-"""
 
+    we keep things separated by trial in case someone wants to go through a specific subset of the data
+"""
+import argparse
 import os
 import pickle
 
@@ -11,7 +13,13 @@ __author__ = 'alex'
 
 path = 'results/robot-experiments/prosthetic_experiment/'
 exp_name = 'experiment'
-for alg in ['tdr']:
+
+parser = argparse.ArgumentParser()
+parser.add_argument("algs", help="Algorithms to collect over. For instance, 'autotd,totd,tdr'")
+args = parser.parse_args()
+algs = args.algs.split(',')
+
+for alg in algs:
     print("Collecting {alg}".format(alg=alg))
     for s in ['s1','s2','s3','s4']:
         print("Over subject {s}".format(s=s))
