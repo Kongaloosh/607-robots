@@ -1,4 +1,5 @@
 """little tool for removing un-wanted data while collating"""
+import argparse
 import os
 import pickle
 
@@ -8,7 +9,13 @@ keys = ['alpha', 'lmbda', 'initalpha', 'error']
 
 path = 'results/robot-experiments/prosthetic_experiment/'
 exp_name = 'experiment'
-for alg in ['autotd']:
+
+parser = argparse.ArgumentParser()
+parser.add_argument("algs", help="Algorithms to collect over. For instance, 'autotd,totd,tdr'")
+args = parser.parse_args()
+algs = args.algs.split(',')
+
+for alg in algs:
     print("Collecting {alg}".format(alg=alg))
     for s in ['s1','s2','s3','s4']:
         print("Over subject {s}".format(s=s))
