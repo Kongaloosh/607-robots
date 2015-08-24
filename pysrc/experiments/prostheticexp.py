@@ -11,14 +11,13 @@ from pysrc.utilities.file_loader import FileLoader, FileLoaderApprox
 from pysrc.utilities.verifier import *
 from pysrc.utilities.max_min_finder import *
 import pickle
-import time
 import numpy
 
 
 def runoneconfig(file_loader, alg, prob):
-    """for the specific configuration, problem, alg,"""
+    """for the specific configuration, problem, alg, do a full run over our selected data file"""
     obs = file_loader.step()                                    # get the next observation diction
-    state = prob.step(obs)                                      # initial state
+    prob.step(obs)                                              # initial step
     p = []                                                      # holds the predictions
     s = []                                                      # holds all of the rewards
     while file_loader.has_obs():                                # while we still have observations
@@ -26,10 +25,10 @@ def runoneconfig(file_loader, alg, prob):
         vals = prob.step(obs)                                   # state from prob
         alg.step(vals)                                          # update based on new state
         s.append(vals['R'])                                     # record actual reward
-        p.append(numpy.dot(vals['phinext'],alg.estimate()))
+        p.append(numpy.dot(vals['phinext'], alg.estimate()))    # record the prediction
         if file_loader.i % 1000 == 0:                           # pretty print
             print([i for i, e in enumerate(vals['phinext']) if e != 0])
-            print(numpy.dot(vals['phinext'],alg.estimate()))
+            print(numpy.dot(vals['phinext'], alg.estimate()))
             print("Step: {s} of {n}".format(s=file_loader.i, n=len(file_loader.data_stream)))
     file_loader.reset()                                         # sets the file-loader to obs 0 for next run
     return p, s,                                                # return the predictions and rewards
@@ -37,6 +36,9 @@ def runoneconfig(file_loader, alg, prob):
 
 def main():
     """runs the experiment with commandline args"""
+    # ==================================================================================================================
+    #                                              FILE PARSING AND EXP SET-UP
+    # ==================================================================================================================
     parser = argparse.ArgumentParser()
     parser.add_argument("sVal", help="Session. single digit.")
     parser.add_argument("aVal", help="Activity value. Single digit.")
@@ -67,13 +69,13 @@ def main():
         'utd': utd.UTD,
         'utotd': utotd.UTOTD,
         'utdr': utdr.UTDR
-    }
+    }                                                                                   # To handle creation of alg
 
     problems = {
         'prosthetic_experiment': Prosthetic_Experiment,
         'prosthetic_experiment_with_context': Prosthetic_Experiment_With_Context,
         'biorob': Biorob2012Experiment
-    }
+    }                                                                                   # To handle creation of problem
 
     f = open('results/robot-experiments/{prob}/{alg}/{name}_{s}_{a}_{i}.dat'.format(
         prob=args.prob,
@@ -81,30 +83,27 @@ def main():
         s=args.sVal,
         a=args.aVal,
         name=args.filename,
-        i=args.config_number), 'wb')
+        i=args.config_number), 'wb')                                                    # where we'll write results
 
-    # calculate the return
     calculated_return = calculate_discounted_return_backwards(
         config_prob,
         file_loader.data_stream,
         Prosthetic_Experiment
-    )
+    )                                                                                   # calculate this file's return
     config_prob['return'] = calculated_return
 
-    # calculate normalizer
-    timer = time.time()
-    # todo: make it so that we don't need the alg config to do this
-    c = reduce(lambda x, y: dict(x, **y), (config_alg[0], config_prob)) # concat the dicts
-    prob = problems[args.prob](c)                                       # construct a representative config
-    config_prob['normalizer'] = generate_normalizer(file_loader.data_stream, prob=prob)                             # get constants for normalizing states
+    c = reduce(lambda x, y: dict(x, **y), (config_alg[0], config_prob))                 # concat the dicts
+    prob = problems[args.prob](c)                                                       # construct a config
+    config_prob['normalizer'] = generate_normalizer(file_loader.data_stream, prob=prob) # array for normalizing states
 
-    # run the experiment
-    print(len(config_alg))
+    # ==================================================================================================================
+    #                                              RUN EXPERIMENT
+    # ==================================================================================================================
     for config in config_alg:                                               # for the parameters we're interested in
         config.update(config_prob)                                          # add the problem-specific configs
         try:
             config['alpha'] /= config['num_tilings']                        # divide alpha
-        except:
+        except KeyError:
             pass                                                            # we're using an alg with different config
         prob = problems[args.prob](config)                                  # construct a problem
         alg = algs[args.algname](config)                                    # build our instance of an algorithm
@@ -114,8 +113,8 @@ def main():
         config['prediction'] = prediction
         config['error'] = np.array(config['return']) - prediction[:len(config['return'])]
         pickle.dump(config, f, -1)
-        f.close()
+    f.close()
 
 if __name__ == '__main__':
-    '''from the command-line'''
+    """from the command-line"""
     main()
