@@ -104,7 +104,8 @@ def main():
         try:
             config['alpha'] /= config['num_tilings']                        # divide alpha
         except KeyError:
-            pass                                                            # we're using an alg with different config
+            config['initalpha'] /= config['num_tilings']
+                                                                            # we're using an alg with different config
         prob = problems[args.prob](config)                                  # construct a problem
         alg = algs[args.algname](config)                                    # build our instance of an algorithm
         (prediction, signal) = \
