@@ -25,10 +25,17 @@ class Prosthetic_Experiment(object):
         self.last_phi = None
         self.last_switch_value = None
         self.num_bins = 20
-        try: self.rl_lambda = config['lmbda']       # Lambda-less setups are different
-        except: pass
-        try: self.normalizer = config['normalizer']
-        except: pass
+
+        # We may be creating a problem for testing, allow it.
+        try:
+            self.rl_lambda = config['lmbda']
+        except KeyError:
+            pass
+        try:
+            self.normalizer = config['normalizer']
+        except KeyError:
+            pass
+
         self.i = 0
         print(config)
 
@@ -99,9 +106,17 @@ class Prosthetic_Experiment(object):
 
     @staticmethod
     def get_state(obs):
-        return [obs['pos1']/4, obs['pos2']/4, obs['pos3']/4, obs['pos5']/4,
-                (obs['vel1']+1.5)/3, (obs['vel2']+2)/4, (obs['vel3']+2)/4, (obs['vel5']+3)/6,
-                (obs['load5']+2)/4]
+        return [
+            obs['pos1'],
+            obs['pos2'],
+            obs['pos3'],
+            obs['pos5'],
+            obs['vel1'],
+            obs['vel2'],
+            obs['vel3'],
+            obs['vel5'],
+            obs['load5']
+        ]
 
     @staticmethod
     def normalize_state(normalizer, state):
@@ -247,7 +262,7 @@ class Biorob2012Experiment(Prosthetic_Experiment):
         self.velocity_5 = np.zeros(len(self.alphas))
         self.pos_1 = 0
         self.pos_2 = 0
-        self.pos_4 = 0
+        self.pos_3 = 0
         self.pos_5 = 0
 
         try:
@@ -258,28 +273,40 @@ class Biorob2012Experiment(Prosthetic_Experiment):
     def get_state(self, obs):
         self.pos_1 = self.pos_1 * self.decay + (1-self.decay) * obs['pos1']
         self.pos_2 = self.pos_2 * self.decay + (1-self.decay) * obs['pos2']
-        self.pos_4 = self.pos_4 * self.decay + (1-self.decay) * obs['pos4']
+        self.pos_3 = self.pos_3 * self.decay + (1-self.decay) * obs['pos3']
         self.pos_5 = self.pos_5 * self.decay + (1-self.decay) * obs['pos5']
 
         state = np.array([
             obs['pos1'],
             obs['pos2'],
-            obs['pos4'],
+            obs['pos3'],
             obs['pos5'],
             obs['vel1'],
             obs['vel2'],
-            obs['vel4'],
+            obs['vel3'],
             obs['vel5'],
             obs['load1'],
             obs['load2'],
-            obs['load4'],
+            obs['load3'],
             obs['load5'],
             self.pos_1,
             self.pos_2,
-            self.pos_4,
+            self.pos_3,
             self.pos_5,
         ])
         return state
+
+    def get_phi(self, state):
+        """Multiple tile-coders used. We load the first half of the states in during the first load"""
+        shift_factor = self.memory_size / (len(state) - 4)          # the amount of memory we alot for each tilecoder
+        for i in range(len(state) - 4):                             # for all the other perceptions
+            perception = np.concatenate((state[:4], [state[i]]))    # add the extra obs to the position obs
+            f = np.array(getTiles(
+                numtilings=self.num_tilings,
+                memctable=shift_factor,                             # the amount of memory we alot for each tilecoder
+                floats=perception)
+            ) + i * shift_factor                                    # shift the tiles by the amount we've added on
+            np.concatenate((self.feature_vector, f))
 
     def step(self, obs):
         config = {}
@@ -294,18 +321,7 @@ class Biorob2012Experiment(Prosthetic_Experiment):
         for i in self.feature_vector:
             self.phi[i] = 0
 
-        '''
-            Multiple tile-coders used. We load the first half of the states in during the first load
-        '''
-        shift_factor = self.memory_size / (len(state) - 4)          # the amount of memory we alot for each tilecoder
-        for i in range(len(state) - 4):                             # for all the other perceptions
-            perception = np.concatenate((state[:4], [state[i]]))    # add the extra obs to the position obs
-            f = np.array(getTiles(
-                numtilings=self.num_tilings,
-                memctable=shift_factor,                             # the amount of memory we alot for each tilecoder
-                floats=perception)
-            ) + i * shift_factor                                    # shift the tiles by the amount we've added on
-            np.concatenate((self.feature_vector, f))
+        self.get_phi()
 
         for i in self.feature_vector:
             self.phi[i] = 1
