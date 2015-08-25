@@ -316,12 +316,12 @@ class Biorob2012Experiment(Prosthetic_Experiment):
         find_invalid(state, obs)
 
         for i in range(len(state)):
-            state[i] *= self.num_binsd
+            state[i] *= self.num_bins
 
         for i in self.feature_vector:
             self.phi[i] = 0
 
-        self.get_phi()
+        self.get_phi(state)
 
         for i in self.feature_vector:
             self.phi[i] = 1
