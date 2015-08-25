@@ -298,6 +298,7 @@ class Biorob2012Experiment(Prosthetic_Experiment):
 
     def get_phi(self, state):
         """Multiple tile-coders used. We load the first half of the states in during the first load"""
+        feature_vec = numpy.array([])
         shift_factor = self.memory_size / (len(state) - 4)          # the amount of memory we alot for each tilecoder
         for i in range(len(state) - 4):                             # for all the other perceptions
             perception = np.concatenate((state[:4], [state[i]]))    # add the extra obs to the position obs
@@ -306,7 +307,8 @@ class Biorob2012Experiment(Prosthetic_Experiment):
                 memctable=shift_factor,                             # the amount of memory we alot for each tilecoder
                 floats=perception)
             ) + i * shift_factor                                    # shift the tiles by the amount we've added on
-            np.concatenate((self.feature_vector, f))
+            feature_vec = np.concatenate((f, feature_vec))
+        return feature_vec
 
     def step(self, obs):
         config = {}
@@ -321,7 +323,7 @@ class Biorob2012Experiment(Prosthetic_Experiment):
         for i in self.feature_vector:
             self.phi[i] = 0
 
-        self.get_phi(state)
+        self.feature_vector = self.get_phi(state)
 
         for i in self.feature_vector:
             self.phi[i] = 1
