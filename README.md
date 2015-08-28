@@ -58,8 +58,13 @@ ___
 
 #### Exploring Results
 
-For ease, we collect a
+For ease, we collect all the different run configurations into one file before we plot. To speed the collation up, we crimp the file down to only the values we need: error, lambda, and alpha. 
 
+so, an example setup for plotting all experiments would be 
+
+1. `python pysrc/utilities/file_crimper.py autotd,totd,td,tdr`
+2. `python pysrc/plot/experiment_collator.py autotd,totd,td,tdr`
+3. `python pysrc/plot/plot.py` 
 
 ## Profiling
 
