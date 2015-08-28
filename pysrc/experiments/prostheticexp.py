@@ -14,7 +14,7 @@ import pickle
 import numpy
 
 
-def runoneconfig(file_loader, alg, prob):
+def run_one_config(file_loader, alg, prob):
     """for the specific configuration, problem, alg, do a full run over our selected data file"""
     obs = file_loader.step()                                    # get the next observation diction
     prob.step(obs)                                              # initial step
@@ -27,13 +27,6 @@ def runoneconfig(file_loader, alg, prob):
         s.append(vals['R'])                                     # record actual reward
         p.append(numpy.dot(vals['phinext'], alg.estimate()))    # record the prediction
         if file_loader.i % 1000 == 0:                           # pretty print
-            # print([i for i, e in enumerate(vals['phinext']) if e != 0])
-            for val in vals.keys():
-                try:
-                    print('{a}: {b}'.format(a=val, b=[i for i, e in enumerate(vals[val]) if e != 0]))
-                except TypeError:
-                    print('{a}: {b}'.format(a=val, b=vals[val]))
-            print("=======================================================")
             print(numpy.dot(vals['phinext'], alg.estimate()))
             print("Step: {s} of {n}".format(s=file_loader.i, n=len(file_loader.data_stream)))
     file_loader.reset()                                         # sets the file-loader to obs 0 for next run
@@ -65,8 +58,8 @@ def main():
             'results/robot-experiments/{prob}/{alg}/configalg.pkl'.format(prob=args.prob, alg=args.algname)
 
     config_alg = pickle.load(open(config_alg_path, 'rb'))   # we load a configuration file with all of the data
-    file_loader = FileLoaderSetEnd('results/prosthetic-data/EdwardsPOIswitching_{s}{a}.txt'.format(s=args.sVal, a=args.aVal), 50000)
-    # file_loader = FileLoaderApprox('results/prosthetic-data/EdwardsPOIswitching_{s}{a}.txt'.format(s=args.sVal, a=args.aVal), 14)
+    # file_loader = FileLoaderSetEnd('results/prosthetic-data/EdwardsPOIswitching_{s}{a}.txt'.format(s=args.sVal, a=args.aVal), 50000)
+    file_loader = FileLoaderApprox('results/prosthetic-data/EdwardsPOIswitching_{s}{a}.txt'.format(s=args.sVal, a=args.aVal), 14)
 
     algs = {
         'autotd': autotd.AutoTD,
@@ -97,6 +90,7 @@ def main():
         file_loader.data_stream,
         Prosthetic_Experiment
     )                                                                                   # calculate this file's return
+
     config_prob['return'] = calculated_return
 
     c = reduce(lambda x, y: dict(x, **y), (config_alg[0], config_prob))                 # concat the dicts
@@ -106,20 +100,21 @@ def main():
     # ==================================================================================================================
     #                                              RUN EXPERIMENT
     # ==================================================================================================================
+
     for config in config_alg:                                               # for the parameters we're interested in
         config.update(config_prob)                                          # add the problem-specific configs
         try:
             config['alpha'] /= config['num_tilings']                        # divide alpha
         except KeyError:
-            config['initalpha'] /= config['num_tilings']
-                                                                            # we're using an alg with different config
+            config['initalpha'] /= config['num_tilings']                    # we're using an alg with different config
         prob = problems[args.prob](config)                                  # construct a problem
         alg = algs[args.algname](config)                                    # build our instance of an algorithm
         (prediction, signal) = \
-            runoneconfig(file_loader=file_loader, prob=prob, alg=alg)       # grab results of run
+            run_one_config(file_loader=file_loader, prob=prob, alg=alg)     # grab results of run
         config['signal'] = signal                                           # adding the config so we can save results
         config['prediction'] = prediction
-        config['error'] = np.array(config['return']) - prediction[:len(config['return'])]
+        config['error'] = \
+            np.array(config['return']) - prediction[:len(config['return'])]
         pickle.dump(config, f, -1)
     f.close()
 

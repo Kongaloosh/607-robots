@@ -1,4 +1,5 @@
 import os
+from scipy.stats.distributions import planck_gen
 import sys
 sys.path.insert(0, os.getcwd())
 from matplotlib import pyplot
@@ -14,6 +15,9 @@ def plot_performance_vs_lambda(parameters):
     plot_file_name = parameters['path_prefix'] + "perf_vs_lambda" + ".plot.pkl" # The file we store results in
     if not os.path.isfile(plot_file_name):                                      # if we haven't made a plot file yet
         plot_data_process_prosthetic(parameters)                                # collect the data for a plot
+        # data = loaddata(parameters['path_prefix'])
+        # print(find_best_alpha_lambda(data))
+        # plot_all_alpha(data)
     else:
         open(plot_file_name)
         data = pickle.load(plot_file_name)
@@ -40,6 +44,28 @@ def plot_data_process_prosthetic(parameters):
     pyplot.legend()
 
 
+def plot_all_alpha(data):
+    comparison_values = data[data.keys()[0]].keys()                                   # the values we wish to vary over
+    for key_alpha in comparison_values:                                         # for all alphas
+        current_points = []                                                     # empty array for points
+        for key_lambda in data.keys():                                          # lambda
+            current_points.append((
+                float(key_lambda),
+                data[key_lambda][key_alpha]['error'],
+                data[key_lambda][key_alpha]['std'],
+            ))                                                                  # append lambda, MSE, STD
+        current_points = sorted(current_points, key=lambda vals: vals[0])
+        pyplot.errorbar(
+            [w for (w, x, y) in current_points],
+            [x for (w, x, y) in current_points],
+            yerr=[y for (w, x, y) in current_points],
+            marker='o',
+            label=key_alpha
+        )                                                                       # plot for current alpha
+    pyplot.legend()
+    pyplot.show()
+
+
 def find_best_parameters(data):
     plot_points = []
     comparison_values = data.keys()                                             # the values we wish to vary over
@@ -54,6 +80,58 @@ def find_best_parameters(data):
         plot_points.append((float(key_lambda), data[key_lambda][best]['error'], data[key_lambda][best]['std']))
     plot_points = sorted(plot_points, key=lambda vals: vals[0])
     return plot_points
+
+
+def find_best_alpha_lambda(data):
+    comparison_values = data.keys()                                             # the values we wish to vary over
+    best = None                                                                 # the location of the current best
+    best_error = numpy.infty                                                    # the error of the current best
+    for key_lambda in comparison_values:                                        # over all of our runs
+        for key_alpha in data[key_lambda].keys():
+            avg_error = data[key_lambda][key_alpha]['error']
+            if avg_error < best_error:
+                best_error = avg_error
+                best = (key_alpha,key_lambda)
+    return best
+
+
+def plot_learning_curve(parameters):
+    data = load_data_one_parameter(parameters['path_prefix'])
+    pyplot.plot(data['error'],marker='o', lw=0, ms=1)
+
+
+def load_data_one_parameter(path):
+    """for when we only have one parameter combination"""
+    data = []
+    for a in actions:                                                       # for all actions
+        print(a)
+        for s in subjects:                                                  # for all subjects
+            print(s)
+            filepathname = path + "_{s}_{a}.dat" .format(s=s, a=a)          # point to data file
+            try:
+                f = open(filepathname, 'rb')                                # load the file results are stored in
+                try:                                                        # we catch for the end of the file
+                    while True:                                             # until we break out of the reading loop
+                        d = pickle.load(f)                                  # get a run
+                        lmbda = str(d['lmbda'])                             # get the current lambda's error
+                        try:
+                            alpha = str(d['alpha'])
+                        except KeyError:
+                            alpha = str(d['initalpha'])
+
+                        trial_error = d['error']                  # /sum(d['return'])    # get normalized error
+                        data.append(trial_error)
+                except EOFError:
+                    pass
+            except IOError:
+                print "File doesn't exist " + path + "_{s}_{a}.dat" .format(s=s,a=a)
+    truncate_at = min([len(trial) for trial in data])
+    runs = [(run[:truncate_at] ** 2) for run in data]                   # mean squared error for all
+    data = {}                                                           # dict for SE and STD
+    collapsed = [[runs[y][z] for y in range(len(runs))] for z in range(len(runs[0]))] #badSWE
+    data['error'] = [ numpy.mean(collapsed[x]) for x in range(len(collapsed))]
+    return data
+
 
 def loaddata(path):
     """
@@ -113,7 +191,7 @@ def loaddata(path):
     # every parameter combination has all sessions,
     # so we just need to find the minimum for one combo and it will generalize
     truncate_at = min([len(trial) for trial in data[lmbda][alpha]])
-
+    print(truncate_at)
     for key_lambda in data.keys():
         for key_alpha in data[key_lambda].keys():
             runs = [(run[:truncate_at] ** 2).mean() for run in data[key_lambda][key_alpha]] # mean squared error for all
@@ -128,7 +206,8 @@ def main():
     Constructs a file comparing the algs across for each alpha
     :returns none:
     """
-    path = "results/robot-experiments/prosthetic_experiment/"         # the path to the experiments
+    path = "results/robot-experiments/biorob/"         # the path to the experiments
+    #postfix = 'full_run'                                             # the name of the experiment run
     postfix = 'total_run'                                             # the name of the experiment run
 
     pathfileprefix = path + "td/" + postfix
@@ -149,17 +228,18 @@ def main():
        {'path_prefix': pathfileprefix, 'compare': 'lmbda', 'label': 'TOTD'}
     )
 
+    pathfileprefix = path + "tdr/" + postfix
+    print("TDR")
+    plot_performance_vs_lambda(
+        {'path_prefix':pathfileprefix, 'compare': 'lmbda', 'label': 'TDR'}
+    )
+
     # pathfileprefix = path + "utotd/" + postfix
     # print("UTOTD")
     # plot_performance_vs_lambda(
     #     {'path_prefix':pathfileprefix, 'compare': 'lmbda', 'label': 'UTOTD'}
     # )
 
-    pathfileprefix = path + "tdr/" + postfix
-    print("TDR")
-    plot_performance_vs_lambda(
-       {'path_prefix':pathfileprefix, 'compare': 'lmbda', 'label': 'TDR'}
-    )
 
     pathfileprefix = path + "autotd/" + postfix
     plot_performance_vs_lambda(

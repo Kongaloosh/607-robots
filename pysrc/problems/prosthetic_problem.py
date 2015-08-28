@@ -13,7 +13,11 @@ __author__ = 'alex'
 
 
 class Prosthetic_Experiment(object):
-    """" Analagous to the mdp,  """
+    """ Based on
+        A.L. Edwards, M.R. Dawson, J.S. Hebert, R.S. Sutton, K.M. Chan, P.M. Pilarski,
+        “Adaptive Switching in Practice: Improving Myoelectric Prosthesis Performance through Reinforcement Learning,”
+        Proc. of MEC'14: Myoelectric Controls Symposium, Fredericton, New Brunswick, August 18-22, 2014, pp. 69-73
+    """
 
     def __init__(self, config):
         self.starting_element = 0
@@ -40,12 +44,17 @@ class Prosthetic_Experiment(object):
         print(config)
 
     def step(self, obs):
-        config = {}
-        config['phi'] = self.last_phi
-        state = self.get_state(obs)
-        config['state_unormalized'] = state
-        state = self.normalize_state(self.normalizer, state)
-        find_invalid(state, obs)
+        """Given a set of observations generates the next Phi, Reward, and Gamma for a RL agent
+        :param obs: a dictionary where each key is the title of an observation. This represents the observations for a
+        specific time-step.
+        :returns config: a dictionary with the parameters for the next step in the learning algorithm.
+        """
+        config = dict()
+        config['phi'] = self.last_phi                           # define vals phi
+        state = self.get_state(obs)                             # get our current state
+        state = self.normalize_state(self.normalizer, state)    # Normalize features within 0-1
+        find_invalid(state, obs)                                # Fail if values in state > 1
+        state.append(1)                                         # Bias feature
 
         for i in range(len(state)):
             state[i] *= self.num_bins
@@ -53,9 +62,11 @@ class Prosthetic_Experiment(object):
         for i in self.feature_vector:
             self.phi[i] = 0
 
-        self.feature_vector = getTiles(self.num_tilings, self.memory_size, state)
-
-        config['feature_vec'] = self.feature_vector
+        self.feature_vector = getTiles(
+            self.num_tilings,
+            self.memory_size,
+            state
+        )
 
         for i in self.feature_vector:
             self.phi[i] = 1
@@ -85,19 +96,25 @@ class Prosthetic_Experiment(object):
         #     )
 
         config['R'] = self.get_reward(obs)
-
-        self.last_switch_value = obs['switches']
-
         config['gnext'] = self.gamma
         config['g'] = self.gamma
-        try: config['l'] = self.rl_lambda   # not every algorithm requires a lambda, so we try
-        except: pass
+        config['phi'] = self.last_phi
         config['phinext'] = self.phi
+        try:
+            config['l'] = self.rl_lambda   # not every algorithm requires a lambda, so we try
+        except KeyError:
+            pass
+
         self.last_phi = self.phi
         return config
 
     @staticmethod
     def get_reward(obs):
+        """
+        :param obs: a dictionary where each key is the title of an observation. This represents the observations for a
+        specific time-step.
+        :return reward: the cumulant for our learning-algorithm
+        """
         # shoulder = obs['vel1']
         # if abs(shoulder) > 0.2:
         #     return 1
@@ -107,16 +124,23 @@ class Prosthetic_Experiment(object):
 
     @staticmethod
     def get_state(obs):
+        """
+        :param obs: a dictionary where each key is the title of an observation. This represents the observations for a
+        specific time-step.
+        :return state: a list with the state-values for a time-step
+        """
         return [
-            # obs['pos1'],
-            # obs['pos2'],
+            obs['pos1'],
+            obs['pos2'],
             obs['pos3'],
-            # obs['pos5'],
-            # obs['vel1'],
-            # obs['vel2'],
-            # obs['vel3'],
-            # obs['vel5'],
-            # obs['load5']
+            obs['pos4'],
+            obs['pos5'],
+            obs['vel1'],
+            obs['vel2'],
+            obs['vel3'],
+            obs['vel4'],
+            obs['vel5'],
+            obs['load5']
         ]
 
     @staticmethod
@@ -124,122 +148,8 @@ class Prosthetic_Experiment(object):
         for i in range(len(state)):
             (high, low) = normalizer[i]
             state[i] -= low
-            state[i] /= (high-low)
+            state[i] /= (high - low)
         return state
-
-
-class Prosthetic_Experiment_With_Context(Prosthetic_Experiment):
-
-    def __init__(self, config):
-        self.starting_element = 0
-        self.num_tilings = config['num_tilings']
-        self.memory_size = config['memory_size']
-        self.gamma = config['gamma']
-        self.feature_vector = np.zeros(self.num_tilings)
-        self.phi = np.zeros(self.memory_size)
-        self.last_phi = None
-        self.rl_lambda = config['lmbda']
-        self.last_switch_value = None
-        self.num_bins = 6
-
-        self.alphas = [0.95]  #
-        self.decay = 0.999
-
-        self.velocity_1 = np.zeros(len(self.alphas))
-        self.velocity_2 = np.zeros(len(self.alphas))
-        self.velocity_3 = np.zeros(len(self.alphas))
-        self.velocity_5 = np.zeros(len(self.alphas))
-
-        self.pos_1 = 0
-        self.pos_2 = 0
-        self.pos_3 = 0
-        self.pos_5 = 0
-
-        try:
-            self.normalizer = config['normalizer']
-        except:
-            pass
-
-    def get_state(self, obs):
-        self.velocity_1 = [
-            (self.velocity_1[i]*self.alphas[i] + ((1-self.alphas[i])*obs['vel1']))
-            for i in range(len(self.velocity_1))]
-
-        self.velocity_2 = [
-            (self.velocity_2[i]*self.alphas[i] + ((1-self.alphas[i])*obs['vel2']))
-            for i in range(len(self.velocity_2))]
-
-        self.velocity_4 = [
-            (self.velocity_3[i] * self.alphas[i] + ((1 - self.alphas[i]) * obs['vel3']))
-            for i in range(len(self.velocity_3))]
-
-        self.velocity_5 = [
-            (self.velocity_5[i]*self.alphas[i] +((1-self.alphas[i])*obs['vel5']))
-            for i in range(len(self.velocity_5))]
-
-        self.pos_1 = self.pos_1*self.decay + (1-self.decay) * obs['pos1']
-        self.pos_2 = self.pos_2*self.decay + (1-self.decay) * obs['pos2']
-        self.pos_3 = self.pos_3*self.decay + (1-self.decay) * obs['pos3']
-        self.pos_5 = self.pos_5*self.decay + (1-self.decay) * obs['pos5']
-
-        state = np.array([
-            obs['pos1'],
-            obs['pos2'],
-            obs['pos3'],
-            obs['pos5'],
-            obs['vel1'],
-            obs['vel2'],
-            obs['vel4'],
-            obs['vel5'],
-            obs['load5'],
-        ])
-
-        state = np.concatenate((
-            state,
-            self.velocity_1,
-            self.velocity_2,
-            self.velocity_3,
-            self.velocity_5,
-            [self.pos_1, self.pos_2, self.pos_3, self.pos_5],
-        ))
-
-        return state
-
-    def step(self, obs):
-        config = {}
-        config['phi'] = self.last_phi
-
-        state = self.get_state(obs)
-        state = self.normalize_state(self.normalizer, state)
-        find_invalid(state, obs)
-
-        for i in range(len(state)):
-            state[i] *= self.num_bins
-
-        for i in self.feature_vector:
-            self.phi[i] = 0
-
-        '''
-            Multiple tile-coders used. We load the first half of the states in during the first load
-        '''
-
-        loadTiles(self.feature_vector, 0, self.num_tilings, self.memory_size, state[:len(state)/2], [0])
-        for i in self.feature_vector:
-            self.phi[i] = 1
-
-        loadTiles(self.feature_vector, 0, self.num_tilings, self.memory_size, state[len(state)/2:], [1])
-        for i in self.feature_vector:
-            self.phi[i] = 1
-
-        config['R'] = self.get_reward(obs)
-
-        self.last_switch_value = obs['switches']
-        config['gnext'] = self.gamma
-        config['g'] = self.gamma
-        config['l'] = self.rl_lambda
-        config['phinext'] = self.phi
-        self.last_phi = self.phi
-        return config
 
 
 class Biorob2012Experiment(Prosthetic_Experiment):
@@ -269,12 +179,18 @@ class Biorob2012Experiment(Prosthetic_Experiment):
         self.emg_1 = 0
         self.emg_2 = 0
         self.emg_3 = 0
+
         try:
             self.normalizer = config['normalizer']
-        except:
+        except KeyError:
             pass
 
     def get_state(self, obs):
+        """
+        :param obs: a dictionary where each key is the title of an observation. This represents the observations for a
+        specific time-step.
+        :return state: a list with the state-values for a time-step
+        """
         self.pos_1 = self.pos_1 * self.decay + (1-self.decay) * obs['pos1']
         self.pos_2 = self.pos_2 * self.decay + (1-self.decay) * obs['pos2']
         self.pos_3 = self.pos_3 * self.decay + (1-self.decay) * obs['pos3']
@@ -312,7 +228,10 @@ class Biorob2012Experiment(Prosthetic_Experiment):
         return state
 
     def get_phi(self, state):
-        """Multiple tile-coders used. We load the first half of the states in during the first load"""
+        """Multiple tile-coders used. We Compose our position features with every other value in our state.
+        :param state: a list with the values returned by get_state()
+        :returns feature_vec: a list with the active indices in phi for this time-step
+        """
         feature_vec = numpy.array([])
         state = np.concatenate((state, [1]))
         shift_factor = self.memory_size / (len(state) - 5)              # the amount of memory we for each tilecoder
@@ -341,9 +260,13 @@ class Biorob2012Experiment(Prosthetic_Experiment):
             raise
         return feature_vec
 
-
     def step(self, obs):
-        config = {}
+        """Given a set of observations generates the next Phi, Reward, and Gamma for a RL agent
+        :param obs: a dictionary where each key is the title of an observation. This represents the observations for a
+        specific time-step.
+        :returns config: a dictionary with the parameters for the next step in the learning algorithm.
+        """
+        config = dict()
         config['phi'] = self.last_phi
         state = self.get_state(obs)
         state = self.normalize_state(self.normalizer, state)
