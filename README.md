@@ -11,8 +11,23 @@ In order to run the experiment on the randomly generated MDP with 100 state and 
 
 ## Running Experiments Using Prosthetic Data
 
-The
+The experiments can be broken into three pieces: the `experiment`, the `problem`, and the `learning algorithm`.
 
+#### The Experiment
+The Experiment handles the data, the algorithm's configuration files, and the problem's configuration files. 
+
+For instance, the following line constructs a prosthetic experiment on subject one (s1), adaptive trial one (a1), using the biorob problem (biorob), using algorithm TOTD (totd), naming the results file_name, using configuration file 1.
+
+`python pysrc/experiments/prosthetic_experiment.py s1 a1 biorob totd file_name 1`
+
+Given these, it will pass the observations to the problem, which will in turn generate the parameters for the next step in the learning algorithm. These are all 
+
+Finally, the results are stored in `pysrc/robot-experiments/<problem>/<algorithm>/<file_name>.dat`
+
+#### The Problem
+The Problem---given a set of observations---defines phi, gamma, gamma next, and reward.
+
+#### Directory Tree
 ```
 usage-td-experiments-robot/
   |
@@ -38,6 +53,12 @@ usage-td-experiments-robot/
   |                  |
   |                  |-- prosthetic_experiment    (folders with each problem's configuration)
 ```
+
+___
+
+#### Exploring Results
+
+For ease, we collect a
 
 
 ## Profiling
