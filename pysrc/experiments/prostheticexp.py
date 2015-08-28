@@ -7,7 +7,7 @@ sys.path.insert(0, os.getcwd())
 import argparse
 from pysrc.problems.prosthetic_problem import Prosthetic_Experiment, Prosthetic_Experiment_With_Context, Biorob2012Experiment
 from pysrc.algorithms.tdprediction.onpolicy import td, tdr, totd, utd, utotd, utdr, autotd
-from pysrc.utilities.file_loader import FileLoader, FileLoaderApprox
+from pysrc.utilities.file_loader import FileLoader, FileLoaderApprox, FileLoaderSetEnd
 from pysrc.utilities.verifier import *
 from pysrc.utilities.max_min_finder import *
 import pickle
@@ -27,11 +27,17 @@ def runoneconfig(file_loader, alg, prob):
         s.append(vals['R'])                                     # record actual reward
         p.append(numpy.dot(vals['phinext'], alg.estimate()))    # record the prediction
         if file_loader.i % 1000 == 0:                           # pretty print
-            print([i for i, e in enumerate(vals['phinext']) if e != 0])
+            # print([i for i, e in enumerate(vals['phinext']) if e != 0])
+            for val in vals.keys():
+                try:
+                    print('{a}: {b}'.format(a=val, b=[i for i, e in enumerate(vals[val]) if e != 0]))
+                except TypeError:
+                    print('{a}: {b}'.format(a=val, b=vals[val]))
+            print("=======================================================")
             print(numpy.dot(vals['phinext'], alg.estimate()))
             print("Step: {s} of {n}".format(s=file_loader.i, n=len(file_loader.data_stream)))
     file_loader.reset()                                         # sets the file-loader to obs 0 for next run
-    return p, s,                                                # return the predictions and rewards
+    return p, s                                                 # return the predictions and rewards
 
 
 def main():
@@ -59,7 +65,8 @@ def main():
             'results/robot-experiments/{prob}/{alg}/configalg.pkl'.format(prob=args.prob, alg=args.algname)
 
     config_alg = pickle.load(open(config_alg_path, 'rb'))   # we load a configuration file with all of the data
-    file_loader = FileLoaderApprox('results/prosthetic-data/EdwardsPOIswitching_{s}{a}.txt'.format(s=args.sVal, a=args.aVal), 14)
+    file_loader = FileLoaderSetEnd('results/prosthetic-data/EdwardsPOIswitching_{s}{a}.txt'.format(s=args.sVal, a=args.aVal), 50000)
+    # file_loader = FileLoaderApprox('results/prosthetic-data/EdwardsPOIswitching_{s}{a}.txt'.format(s=args.sVal, a=args.aVal), 14)
 
     algs = {
         'autotd': autotd.AutoTD,
