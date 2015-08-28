@@ -9,12 +9,43 @@ In order to run the experiment on the randomly generated MDP with 10 state and g
 
 In order to run the experiment on the randomly generated MDP with 100 state and generate plot, execute `run-rndmdp-experiments100.sh`.
 
+## Running Experiments Using Prosthetic Data
+
+The
+
+```
+usage-td-experiments-robot/
+  |
+  |---- pysrc/
+  |       |
+  |       |--- experiments/                       
+  |       |         |
+  |       |         |---- prostheticexp.py        (bulids the problem and runs it)
+  |       |
+  |       |--- problems/                          (defines phi, r, and other values to be passed to td, totd,.etc)
+  |                 |
+  |                 |---- prosthetic_problem.py   (collection of different problems for running with prosthetic data)
+  |
+  |
+  |---- results/
+  |         |
+  |         |--- prosthetic-data/                 (data from Ann's adaptive and non-adaptive prosthetic trials)
+  |         |
+  |         |--- robot-experiments/     
+  |                  |              
+  |                  |
+  |                  |-- biorob                   (folders with each problem's configuration)
+  |                  |
+  |                  |-- prosthetic_experiment    (folders with each problem's configuration)
+```
+
+
 ## Profiling
 
 Use the following to profile the random mdp experiment code:
 
 `python -m cProfile pysrc/experiments/rndmdpexp.py 1000 1 results/rndmdp-experiments/state-10-ftype-binary/ td`
-
+e
 ## Unit tests
 
 Use the following from the root directory:
