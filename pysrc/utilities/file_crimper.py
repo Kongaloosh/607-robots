@@ -7,7 +7,7 @@ __author__ = 'alex'
 
 keys = ['alpha', 'lmbda', 'initalpha', 'error']
 
-path = 'results/robot-experiments/prosthetic_experiment/'
+path = 'results/robot-experiments/biorob/'
 exp_name = 'experiment'
 
 parser = argparse.ArgumentParser()
@@ -34,9 +34,10 @@ for alg in algs:
                         except KeyError:
                             pass
                     f = open(data, 'wb')
-                    pickle.dump(dump,f)
+                    pickle.dump(dump, f)
                     f.close()
                 except EOFError:
                     print('unexpected EOF on file {i}'.format(i=i))
                 i += 1
                 data = path + alg + "/{name}_{s}_{a}_{i}.dat".format(name=exp_name, s=s, a=a, i=i)
+            print("no more files.")

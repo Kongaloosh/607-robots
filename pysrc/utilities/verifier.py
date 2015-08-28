@@ -22,7 +22,7 @@ def calculate_discounted_return_backwards(config, obs, reward_calculator):
     while i >= 0:                                           # until we reach the start of the array
         ret[i] += reward_calculator.get_reward(obs[i])      # add the
         try:                                                # we surround in a try catch in case we are at the start
-            ret[i] += ret[i+1] * gamma                      # we add the previous return with a decay
+            ret[i] += (ret[i+1] * gamma)                    # we add the previous return with a decay
         except:                                             # if there was no ret[i+1]
             pass                                            # should only occur for first element
         i -= 1                                              # move to the next element

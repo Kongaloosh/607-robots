@@ -47,7 +47,6 @@ class FileLoaderApprox(FileLoader):
         f = open(file_loc, 'r')                             # open the file for reading
         self.data_stream = []                               # this is where we store the stream of experience
         self.elements = f.readline().rstrip().split(',')    # extracts the header of the file
-
         j = 0                                               # temporary counter
         for line in f:                                      # for all obs in file
             if j % n == 0:                                  # if this is an nth step...
@@ -58,5 +57,26 @@ class FileLoaderApprox(FileLoader):
                 )
                 # we -1 because there's another comma at the end of every line but the header
             j += 1
+        self.i = 0                                          # set state counter
 
+
+class FileLoaderSetEnd(FileLoader):
+
+    def __init__(self, file_loc, n):
+        """Initializes a file-loader given a file-location, only takes every nth step"""
+        f = open(file_loc, 'r')                             # open the file for reading
+        self.data_stream = []                               # this is where we store the stream of experience
+        self.elements = f.readline().rstrip().split(',')    # extracts the header of the file
+        j = 0                                               # temporary counter
+        for line in f:                                      # for all obs in file
+            if j == n:                                  # if this is an nth step...
+                break                                   # then stop adding values
+            vals = line.rstrip().split(',')             # separate all the values in an observation
+            self.data_stream.append(
+                dict(
+                    [(self.elements[i], float(vals[i])) for i in range(len(vals) - 1)]
+                )
+            )
+            # we -1 because there's another comma at the end of every line but the header
+            j += 1
         self.i = 0                                          # set state counter
