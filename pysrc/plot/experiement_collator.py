@@ -11,7 +11,7 @@ import pickle
 
 __author__ = 'alex'
 
-path = 'results/robot-experiments/prosthetic_experiment/'
+path = 'results/robot-experiments/biorob/'
 exp_name = 'experiment'
 
 parser = argparse.ArgumentParser()
