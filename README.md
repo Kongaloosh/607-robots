@@ -1,6 +1,5 @@
 # Robot experiments on auto-td and usage-td
 
-
 This project contains robot experiments evaluating auto-td (Degris et al.) and the usage-based step-size adaptation idea (Mahmood & Sutton 2015).
 
 This project can be imported as an Eclipse Pydev project.
@@ -26,6 +25,14 @@ Finally, the results are stored in `pysrc/robot-experiments/<problem>/<algorithm
 
 #### The Problem
 The Problem---given a set of observations---defines phi, gamma, gamma next, and reward.
+
+There are currently two problems:
+
+1. prosthetic_experiment:
+  This is based off of Ann Edward's experiment. The state is comprised of the position and the velocity with the load of the hand in one tile coder.
+
+2. Biorob2012 
+  The position of each joint is tiled together with one of: a decayed trace of each joint, the load of each joint, the velocity of each joint, and an absolute decayed trace of the emg-signals. The tilings are concatenated together to make one feature-vector. 
 
 #### Directory Tree
 ```
@@ -66,12 +73,14 @@ so, an example setup for plotting all experiments would be
 2. `python pysrc/plot/experiment_collator.py autotd,totd,td,tdr`
 3. `python pysrc/plot/plot.py` 
 
+____
+
 ## Profiling
 
 Use the following to profile the random mdp experiment code:
 
 `python -m cProfile pysrc/experiments/rndmdpexp.py 1000 1 results/rndmdp-experiments/state-10-ftype-binary/ td`
-e
+
 ## Unit tests
 
 Use the following from the root directory:
@@ -81,6 +90,3 @@ Use the following from the root directory:
 ## References
 
 Mahmood, A. R., Sutton R. S. (2015). Off-policy learning based on weighted importance sampling with linear computational complexity. In *Proceedings of the 301st Conference on Uncertainty in Arti- ficial Intelligence* Amsterdam, Netherlands.
-
-
-
