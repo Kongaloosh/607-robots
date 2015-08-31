@@ -12,16 +12,17 @@ actions = numpy.concatenate((['a{i}'.format(i=i) for i in range(1, 4)], ['na{i}'
 
 
 def plot_performance_vs_lambda(parameters):
-    plot_file_name = parameters['path_prefix'] + "perf_vs_lambda" + ".plot.pkl" # The file we store results in
+    plot_file_name = parameters['path_prefix'] + "_data.pkl" # The file we store results in
+    print(plot_file_name)
     if not os.path.isfile(plot_file_name):                                      # if we haven't made a plot file yet
+        parameters['data'] = loaddata(parameters['path_prefix'])
         plot_data_process_prosthetic(parameters)                                # collect the data for a plot
         # data = loaddata(parameters['path_prefix'])
         # print(find_best_alpha_lambda(data))
         # plot_all_alpha(data)
     else:
-        open(plot_file_name)
-        data = pickle.load(plot_file_name)
-        plot_data_process_prosthetic(data)
+        parameters['data'] = pickle.load(open(plot_file_name, 'r'))
+        plot_data_process_prosthetic(parameters)
 
 
 def plot_data_process_prosthetic(parameters):
@@ -30,7 +31,7 @@ def plot_data_process_prosthetic(parameters):
     :param parameters: a dictionary as seen in main(); a multi-dimensional dictionary containing the STD and AVG MSE
     by lambda-alpha combination for a specific algorithm.
     """
-    data = loaddata(parameters['path_prefix'])                                  # we load all the runs from a trial
+    data = parameters['data']                                  # we load all the runs from a trial
 
     plot_points = find_best_parameters(data)
 
@@ -130,6 +131,7 @@ def load_data_one_parameter(path):
     data = {}                                                           # dict for SE and STD
     collapsed = [[runs[y][z] for y in range(len(runs))] for z in range(len(runs[0]))] #badSWE
     data['error'] = [ numpy.mean(collapsed[x]) for x in range(len(collapsed))]
+    pickle.dump(data, open(path+"_data.pkl",'wb'))
     return data
 
 
@@ -198,6 +200,7 @@ def loaddata(path):
             data[key_lambda][key_alpha] = {}                                                # dict for MSE and STD
             data[key_lambda][key_alpha]['error'] = sum(runs) / len(runs)                    # avg MSE
             data[key_lambda][key_alpha]['std'] = numpy.std(runs)                            # STD
+    pickle.dump(data, open(path+"_data.pkl",'wb'))
     return data
 
 
