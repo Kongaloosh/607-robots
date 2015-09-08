@@ -15,8 +15,8 @@ __author__ = 'alex'
 class Prosthetic_Experiment(object):
     """ Based on
         A.L. Edwards, M.R. Dawson, J.S. Hebert, R.S. Sutton, K.M. Chan, P.M. Pilarski,
-        “Adaptive Switching in Practice: Improving Myoelectric Prosthesis Performance through Reinforcement Learning,”
-        Proc. of MEC'14: Myoelectric Controls Symposium, Fredericton, New Brunswick, August 18-22, 2014, pp. 69-73
+        Adaptive Switching in Practice: Improving Myoelectric Prosthesis Performance through Reinforcement Learning,
+        Proc. of MEC14: Myoelectric Controls Symposium, Fredericton, New Brunswick, August 18-22, 2014, pp. 69-73
     """
 
     def __init__(self, config):
@@ -28,7 +28,7 @@ class Prosthetic_Experiment(object):
         self.phi = np.zeros(self.memory_size)
         self.last_phi = None
         self.last_switch_value = None
-        self.num_bins = 20
+        self.num_bins = 8
 
         # We may be creating a problem for testing, allow it.
         try:
@@ -120,7 +120,7 @@ class Prosthetic_Experiment(object):
         #     return 1
         # else:
         #     return 0
-        return obs['pos1']
+        return obs['pos1'] * 10
 
     @staticmethod
     def get_state(obs):
@@ -160,7 +160,7 @@ class Biorob2012Experiment(Prosthetic_Experiment):
         self.memory_size = config['memory_size']
         self.gamma = config['gamma']
         self.feature_vector = np.zeros(self.num_tilings)
-        self.phi = np.zeros(self.memory_size)
+        self.phi = None
         self.last_phi = None
         self.last_switch_value = None
         self.rl_lambda = config['lmbda']
@@ -179,7 +179,7 @@ class Biorob2012Experiment(Prosthetic_Experiment):
         self.emg_1 = 0
         self.emg_2 = 0
         self.emg_3 = 0
-
+        self.feature_vector_last = 0
         try:
             self.normalizer = config['normalizer']
         except KeyError:
@@ -232,20 +232,21 @@ class Biorob2012Experiment(Prosthetic_Experiment):
         :param state: a list with the values returned by get_state()
         :returns feature_vec: a list with the active indices in phi for this time-step
         """
+        state = [1,2,3,4,5,6,7,8,9,10]
+
         feature_vec = numpy.array([])
         state = np.concatenate((state, [1]))
         shift_factor = self.memory_size / (len(state) - 5)              # the amount of memory we for each tilecoder
         for i in range(len(state) - 5):                                 # for all the other perceptions
             #                        decay position   other     bias
-            perception = np.concatenate((state[:5], [state[i]]))   # add the extra obs to the position obs
+            perception = np.concatenate((state[:5], [state[i+5]]))        # add the extra obs to the position obs)
             f = np.array(getTiles(
                 numtilings=self.num_tilings,
-                memctable=shift_factor,                             # the amount of memory we alot for each tilecoder
+                memctable=shift_factor,                                 # the amount of memory for each tilecoder
                 floats=perception)
-            ) + (i * shift_factor)                                  # shift the tiles by the amount we've added on
+            ) + (i * shift_factor)                                      # shift the tiles by the amount we've added on
 
-            f = sorted(f)                                           # we sort to make our verification simpler
-
+            f = sorted(f)                                               # we sort to make our verification simpler
             try:
                 if f[0] <= feature_vec[len(feature_vec)-1]:
                     print("Tilings are clashing.")                  # notify that our tilings are overlapping
@@ -261,35 +262,62 @@ class Biorob2012Experiment(Prosthetic_Experiment):
         return feature_vec
 
     def step(self, obs):
-        """Given a set of observations generates the next Phi, Reward, and Gamma for a RL agent
+        """
+        Given a set of observations generates the next Phi, Reward, and Gamma
         :param obs: a dictionary where each key is the title of an observation. This represents the observations for a
         specific time-step.
         :returns config: a dictionary with the parameters for the next step in the learning algorithm.
         """
         config = dict()
-        config['phi'] = self.last_phi
+        config['phi'] = self.phi
         state = self.get_state(obs)
         state = self.normalize_state(self.normalizer, state)
-
         find_invalid(state, obs)
 
         for i in range(len(state)):
             state[i] *= self.num_bins
 
-        for i in self.feature_vector:
-            self.phi[i] = 0
-
-        self.feature_vector = self.get_phi(state)
-
-        for i in self.feature_vector:
+        self.phi=np.zeros(self.memory_size)                     # reset phi
+        self.feature_vector = self.get_phi(state)               # find the new active features
+        for i in self.feature_vector:                           # update phi
             self.phi[i] = 1
 
+        config['phinext'] = self.phi
         config['R'] = self.get_reward(obs)
-
         self.last_switch_value = obs['switches']
         config['gnext'] = self.gamma
         config['g'] = self.gamma
         config['l'] = self.rl_lambda
-        config['phinext'] = self.phi
-        self.last_phi = self.phi
+
+        # if not config['phi'] is None:
+        #     p=[i for i, e in enumerate(config['phinext']) if e != 0]
+        #     lp=[i for i, e in enumerate(config['phi']) if e != 0]
+        #     pd=[i for i, j in zip(p, lp) if i == j]
+        #     print(
+        #         """
+        #         Feature Vector      = {a}
+        #         Starting_Element    = {b}
+        #         Num Tilings         = {c}
+        #         Mem Size            = {d}
+        #         state               = {e}
+        #         reward              = {r}
+        #         phi                 = {p}
+        #         last phi            = {lp}
+        #         phi diff            = {pd}
+        #         lens                = {l}
+        #         ==========================================
+        #         """.format(
+        #             a=self.feature_vector,
+        #             b=self.starting_element,
+        #             c=self.num_tilings,
+        #             d=self.memory_size,
+        #             e=state,
+        #             r=self.get_reward(obs),
+        #             p=p,
+        #             lp=lp,
+        #             pd=pd,
+        #             l=len(pd)-len(p)
+        #         )
+        #     )
+
         return config
