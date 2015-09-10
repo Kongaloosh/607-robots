@@ -160,7 +160,7 @@ class Biorob2012Experiment(Prosthetic_Experiment):
         self.memory_size = config['memory_size']
         self.gamma = config['gamma']
         self.feature_vector = np.zeros(self.num_tilings)
-        self.phi = None
+        self.phi = np.zeros(self.memory_size)
         self.last_phi = None
         self.last_switch_value = None
         self.rl_lambda = config['lmbda']
@@ -276,8 +276,8 @@ class Biorob2012Experiment(Prosthetic_Experiment):
 
         for i in range(len(state)):
             state[i] *= self.num_bins
-
-        self.phi=np.zeros(self.memory_size)                     # reset phi
+        for i in self.feature_vector:
+            self.phi[int(i)] = 0
         self.feature_vector = self.get_phi(state)               # find the new active features
         for i in self.feature_vector:                           # update phi
             self.phi[i] = 1
@@ -320,4 +320,6 @@ class Biorob2012Experiment(Prosthetic_Experiment):
         #         )
         #     )
 
+            # for i in obs.keys():
+            #     print(i, obs[i])
         return config

@@ -71,7 +71,7 @@ def main():
         'prosthetic_experiment': Prosthetic_Experiment,
         'prosthetic_experiment_with_context': Prosthetic_Experiment_With_Context,
         'biorob': Biorob2012Experiment
-        }
+    }
 
     f = open('results/robot-experiments/{prob}/{alg}/{name}_{s}_{a}.dat'.format(prob=args.prob, alg=args.algname, s=args.sVal, a=args.aVal, name=args.filename), 'wb')
 

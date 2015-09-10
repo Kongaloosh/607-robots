@@ -5,7 +5,7 @@ import os
 import sys
 sys.path.insert(0, os.getcwd())
 import argparse
-from pysrc.problems.prosthetic_problem import Prosthetic_Experiment, Prosthetic_Experiment_With_Context, Biorob2012Experiment
+from pysrc.problems.prosthetic_problem import Prosthetic_Experiment, Biorob2012Experiment
 from pysrc.algorithms.tdprediction.onpolicy import td, tdr, totd, utd, utotd, utdr, autotd
 from pysrc.utilities.file_loader import FileLoader, FileLoaderApprox, FileLoaderSetEnd
 from pysrc.utilities.verifier import *
@@ -73,7 +73,6 @@ def main():
 
     problems = {
         'prosthetic_experiment': Prosthetic_Experiment,
-        'prosthetic_experiment_with_context': Prosthetic_Experiment_With_Context,
         'biorob': Biorob2012Experiment
     }                                                                                   # To handle creation of problem
 
@@ -109,6 +108,7 @@ def main():
             config['initalpha'] /= config['num_tilings']                    # we're using an alg with different config
         prob = problems[args.prob](config)                                  # construct a problem
         alg = algs[args.algname](config)                                    # build our instance of an algorithm
+        print(config)
         (prediction, signal) = \
             run_one_config(file_loader=file_loader, prob=prob, alg=alg)     # grab results of run
         config['signal'] = signal                                           # adding the config so we can save results
