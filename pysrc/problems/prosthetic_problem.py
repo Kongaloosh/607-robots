@@ -232,14 +232,13 @@ class Biorob2012Experiment(Prosthetic_Experiment):
         :param state: a list with the values returned by get_state()
         :returns feature_vec: a list with the active indices in phi for this time-step
         """
-        state = [1,2,3,4,5,6,7,8,9,10]
 
         feature_vec = numpy.array([])
         state = np.concatenate((state, [1]))
         shift_factor = self.memory_size / (len(state) - 5)              # the amount of memory we for each tilecoder
         for i in range(len(state) - 5):                                 # for all the other perceptions
             #                        decay position   other     bias
-            perception = np.concatenate((state[:5], [state[i+5]]))        # add the extra obs to the position obs)
+            perception = np.concatenate((state[:5], [state[i+5]]))      # add the extra obs to the position obs)
             f = np.array(getTiles(
                 numtilings=self.num_tilings,
                 memctable=shift_factor,                                 # the amount of memory for each tilecoder
@@ -258,7 +257,7 @@ class Biorob2012Experiment(Prosthetic_Experiment):
 
         if feature_vec[len(feature_vec) - 1] > self.memory_size:    # if we're using more memory than we have
             print("Exceeding maximum memory")                       # notify
-            raise
+
         return feature_vec
 
     def step(self, obs):
@@ -289,37 +288,37 @@ class Biorob2012Experiment(Prosthetic_Experiment):
         config['g'] = self.gamma
         config['l'] = self.rl_lambda
 
-        # if not config['phi'] is None:
-        #     p=[i for i, e in enumerate(config['phinext']) if e != 0]
-        #     lp=[i for i, e in enumerate(config['phi']) if e != 0]
-        #     pd=[i for i, j in zip(p, lp) if i == j]
-        #     print(
-        #         """
-        #         Feature Vector      = {a}
-        #         Starting_Element    = {b}
-        #         Num Tilings         = {c}
-        #         Mem Size            = {d}
-        #         state               = {e}
-        #         reward              = {r}
-        #         phi                 = {p}
-        #         last phi            = {lp}
-        #         phi diff            = {pd}
-        #         lens                = {l}
-        #         ==========================================
-        #         """.format(
-        #             a=self.feature_vector,
-        #             b=self.starting_element,
-        #             c=self.num_tilings,
-        #             d=self.memory_size,
-        #             e=state,
-        #             r=self.get_reward(obs),
-        #             p=p,
-        #             lp=lp,
-        #             pd=pd,
-        #             l=len(pd)-len(p)
-        #         )
-        #     )
+        if not config['phi'] is None:
+            p=[i for i, e in enumerate(config['phinext']) if e != 0]
+            lp=[i for i, e in enumerate(config['phi']) if e != 0]
+            pd=[i for i, j in zip(p, lp) if i == j]
+            print(
+                """
+                Feature Vector      = {a}
+                Starting_Element    = {b}
+                Num Tilings         = {c}
+                Mem Size            = {d}
+                state               = {e}
+                reward              = {r}
+                phi                 = {p}
+                last phi            = {lp}
+                phi diff            = {pd}
+                lens                = {l}
+                ==========================================
+                """.format(
+                    a=self.feature_vector,
+                    b=self.starting_element,
+                    c=self.num_tilings,
+                    d=self.memory_size,
+                    e=state,
+                    r=self.get_reward(obs),
+                    p=p,
+                    lp=lp,
+                    pd=pd,
+                    l=len(pd)-len(p)
+                )
+            )
 
-            # for i in obs.keys():
-            #     print(i, obs[i])
+            if (len(pd) != len(p)):
+                exit(1)
         return config
