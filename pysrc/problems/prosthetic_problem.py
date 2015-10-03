@@ -25,7 +25,6 @@ class Prosthetic_Experiment(object):
         self.memory_size = config['memory_size']
         self.gamma = config['gamma']
         self.feature_vector = np.zeros(self.num_tilings)
-        self.phi = np.zeros(self.memory_size)
         self.last_phi = None
         self.last_switch_value = None
         self.num_bins = 8
@@ -98,7 +97,6 @@ class Prosthetic_Experiment(object):
         config['R'] = self.get_reward(obs)
         config['gnext'] = self.gamma
         config['g'] = self.gamma
-        config['phi'] = self.last_phi
         config['phinext'] = self.phi
         try:
             config['l'] = self.rl_lambda   # not every algorithm requires a lambda, so we try
@@ -160,8 +158,7 @@ class Biorob2012Experiment(Prosthetic_Experiment):
         self.memory_size = config['memory_size']
         self.gamma = config['gamma']
         self.feature_vector = np.zeros(self.num_tilings)
-        self.phi = np.zeros(self.memory_size)
-        self.last_phi = None
+        self.last_phi = []
         self.last_switch_value = None
         self.rl_lambda = config['lmbda']
         self.num_bins = 8
@@ -232,7 +229,6 @@ class Biorob2012Experiment(Prosthetic_Experiment):
         :param state: a list with the values returned by get_state()
         :returns feature_vec: a list with the active indices in phi for this time-step
         """
-
         feature_vec = numpy.array([])
         state = np.concatenate((state, [1]))
         shift_factor = self.memory_size / (len(state) - 5)              # the amount of memory we for each tilecoder
@@ -267,23 +263,25 @@ class Biorob2012Experiment(Prosthetic_Experiment):
         specific time-step.
         :returns config: a dictionary with the parameters for the next step in the learning algorithm.
         """
-        config = dict()
-        config['phi'] = self.phi
-        state = self.get_state(obs)
-        state = self.normalize_state(self.normalizer, state)
-        find_invalid(state, obs)
+        # print [i for i, e in enumerate(self.phi) if e != 0]
+        state = self.get_state(obs)                             # get the state
+        state = self.normalize_state(self.normalizer, state)    # normalize the state
+        find_invalid(state, obs)                                # check for invalid states
 
         for i in range(len(state)):
             state[i] *= self.num_bins
-        for i in self.feature_vector:
-            self.phi[int(i)] = 0
+
+        phi = np.zeros(self.memory_size)
         self.feature_vector = self.get_phi(state)               # find the new active features
         for i in self.feature_vector:                           # update phi
-            self.phi[i] = 1
+            phi[i] = 1
 
-        config['phinext'] = self.phi
+        # print [i for i, e in enumerate(self.phi) if e != 0]
+        config = dict()
+        config['phi'] = self.last_phi
+        config['phinext'] = phi
+        self.last_phi = phi
         config['R'] = self.get_reward(obs)
-        self.last_switch_value = obs['switches']
         config['gnext'] = self.gamma
         config['g'] = self.gamma
         config['l'] = self.rl_lambda
@@ -291,7 +289,7 @@ class Biorob2012Experiment(Prosthetic_Experiment):
         if not config['phi'] is None:
             p=[i for i, e in enumerate(config['phinext']) if e != 0]
             lp=[i for i, e in enumerate(config['phi']) if e != 0]
-            pd=[i for i, j in zip(p, lp) if i == j]
+            pd=[i for i, j in zip(p, lp) if i != j]
             print(
                 """
                 Feature Vector      = {a}
@@ -319,6 +317,4 @@ class Biorob2012Experiment(Prosthetic_Experiment):
                 )
             )
 
-            if (len(pd) != len(p)):
-                exit(1)
         return config
