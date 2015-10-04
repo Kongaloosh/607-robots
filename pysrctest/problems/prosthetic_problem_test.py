@@ -1,3 +1,6 @@
+import os
+import sys
+sys.path.insert(0, os.getcwd())
 import unittest
 from pysrc.problems.prosthetic_problem import Prosthetic_Experiment, Biorob2012Experiment
 
@@ -14,7 +17,7 @@ class BasicProblem (unittest.TestCase):
             'normalizer':[(100,0) for i in range(23)],
         }
 
-        self.biorob =Biorob2012Experiment(configs)
+        self.biorob = Biorob2012Experiment(configs)
         self.prosthetic_experiment = Prosthetic_Experiment(configs)
 
 
@@ -22,48 +25,52 @@ class TestProstheticProblem (BasicProblem):
     """Ensures that the state and the rewards are correctly calculated by problem"""
     #TODO: abstract out get-phi and make sure everything's fine
 
-    def test_get_reward_prosthetic_experiment(self):
-        """Should return 1 if abs value of elbow is > 0.2 otherwise, 0"""
-        self.assertEquals(self.prosthetic_experiment.get_reward({'vel4':1}),1)
-        self.assertEquals(self.prosthetic_experiment.get_reward({'vel4':-1}),1)
+    def setUp(self):
+        print('BasicTest.setUp')
+        BasicProblem.setUp(self)
 
-        self.assertEquals(self.prosthetic_experiment.get_reward({'vel4':0.1}),0)
-        self.assertEquals(self.prosthetic_experiment.get_reward({'vel4':-0.1}),0)
+    # def test_get_reward_prosthetic_experiment(self):
+    #     """Should return 1 if abs value of elbow is > 0.2 otherwise, 0"""
+    #     self.assertEquals(self.prosthetic_experiment.get_reward({'vel4':1}),1)
+    #     self.assertEquals(self.prosthetic_experiment.get_reward({'vel4':-1}),1)
+    #
+    #     self.assertEquals(self.prosthetic_experiment.get_reward({'vel4':0.1}),0)
+    #     self.assertEquals(self.prosthetic_experiment.get_reward({'vel4':-0.1}),0)
 
-    def test_get_reward_biorob(self):
-        """Should return 1 if abs value of elbow is > 0.2 otherwise, 0"""
-        self.assertEquals(self.biorob.get_reward({'vel4':1}),1)
-        self.assertEquals(self.biorob.get_reward({'vel4':-1}),1)
+    # def test_get_reward_biorob(self):
+    #     """Should return 1 if abs value of elbow is > 0.2 otherwise, 0"""
+    #     self.assertEquals(self.biorob.get_reward({'vel4':1}),1)
+    #     self.assertEquals(self.biorob.get_reward({'vel4':-1}),1)
+    #
+    #     self.assertEquals(self.biorob.get_reward({'vel4':0.1}),0)
+    #     self.assertEquals(self.biorob.get_reward({'vel4':-0.1}),0)
 
-        self.assertEquals(self.biorob.get_reward({'vel4':0.1}),0)
-        self.assertEquals(self.biorob.get_reward({'vel4':-0.1}),0)
-
-    def test_get_state_prosthetic_experiment(self):
-        """Should only return the states which are not labeled random_val_#"""
-        obs = {
-            'random_val_1': 100,
-            'pos1': 1,
-            'random_val_2': 99,
-            'pos2': 2,
-            'random_val_3': 98,
-            'pos3': 3,
-            'random_val_4': 97,
-            'pos5': 4,
-            'random_val_5': 96,
-            'vel1': 5,
-            'random_val_6': 95,
-            'vel2': 6,
-            'random_val_7': 94,
-            'vel3': 7,
-            'random_val_8': 93,
-            'vel5': 8,
-            'random_val_9': 92,
-            'load5': 9,
-            'random_val_9': 91,
-        }
-        state_true = [1,2,3,4,5,6,7,8,9]
-        state = self.prosthetic_experiment.get_state(obs)
-        self.assertItemsEqual(state, state_true)
+    # def test_get_state_prosthetic_experiment(self):
+    #     """Should only return the states which are not labeled random_val_#"""
+    #     obs = {
+    #         'random_val_1': 100,
+    #         'pos1': 1,
+    #         'random_val_2': 99,
+    #         'pos2': 2,
+    #         'random_val_3': 98,
+    #         'pos3': 3,
+    #         'random_val_4': 97,
+    #         'pos5': 4,
+    #         'random_val_5': 96,
+    #         'vel1': 5,
+    #         'random_val_6': 95,
+    #         'vel2': 6,
+    #         'random_val_7': 94,
+    #         'vel3': 7,
+    #         'random_val_8': 93,
+    #         'vel5': 8,
+    #         'random_val_9': 92,
+    #         'load5': 9,
+    #         'random_val_9': 91,
+    #     }
+    #     state_true = [1,2,3,4,5,6,7,8,9]
+    #     state = self.prosthetic_experiment.get_state(obs)
+    #     self.assertItemsEqual(state, state_true)
 
     def test_get_state_biorob(self):
         """Should only return the states which are not labeled random_val_# AND the decay traces"""
@@ -88,25 +95,24 @@ class TestProstheticProblem (BasicProblem):
             'emg3': 18,
         }
 
-        # state_true = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,
-        #               (0 * self.biorob.decay + (1 - self.biorob.decay) * 1),
-        #               (0 * self.biorob.decay + (1 - self.biorob.decay) * 2),
-        #               (0 * self.biorob.decay + (1 - self.biorob.decay) * 3),
-        #               (0 * self.biorob.decay + (1 - self.biorob.decay) * 4)]
+        state_true = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+                      (0 * self.biorob.decay + (1 - self.biorob.decay) * 1),
+                      (0 * self.biorob.decay + (1 - self.biorob.decay) * 2),
+                      (0 * self.biorob.decay + (1 - self.biorob.decay) * 3),
+                      (0 * self.biorob.decay + (1 - self.biorob.decay) * 4),
+                      (0 * self.biorob.decay + (1 - self.biorob.decay) * 5),
+                      (0 * self.biorob.decay + (1 - self.biorob.decay) * 16),
+                      (0 * self.biorob.decay + (1 - self.biorob.decay) * 17),
+                      (0 * self.biorob.decay + (1 - self.biorob.decay) * 18)]
 
-        print("1")
+        state = self.biorob.get_state(obs)
+
+        # check to make sure states are being properly formatted
+        self.assertEqual(len(state), len(state_true))
+        self.assertItemsEqual(state, state_true)
+
         state = self.biorob.step(obs)
-        # self.assertItemsEqual(state, state_true)
-        # print([i for i, e in enumerate(state['phinext']) if e != 0])
-        # print([i for i, e in enumerate(state['phi']) if e != 0])
-
-
-
-        # print("2")
-        # state = self.biorob.step(obs)
-        # # self.assertItemsEqual(state, state_true)
-        # print([i for i, e in enumerate(state['phinext']) if e != 0])
-        # print([i for i, e in enumerate(state['phi']) if e != 0])
+        phi = state['phinext']
 
         obs = {
             'pos1': 18,
@@ -129,13 +135,39 @@ class TestProstheticProblem (BasicProblem):
             'emg3': 1,
         }
 
-        print("3")
         state = self.biorob.step(obs)
-        # self.assertItemsEqual(state, state_true)
-        # print([i for i, e in enumerate(state['phi']) if e != 0])
-        # print([i for i, e in enumerate(state['phinext']) if e != 0])
 
+        self.assertItemsEqual(phi, state['phi'])    # check to make sure phis are updated correctly
+        self.assertEqual(obs['pos1'], state['R'])   # check rewards formation
+        self.assertEqual(state['g'], state['gnext'])
+        self.assertEqual(state['g'], 0)
+        self.assertEqual(state['l'], 0)
 
+        true_arrangement = [[1,2,3,4,5,6],
+                            [1,2,3,4,5,7],
+                            [1,2,3,4,5,8],
+                            [1,2,3,4,5,9],
+                            [1,2,3,4,5,10],
+                            [1,2,3,4,5,11],
+                            [1,2,3,4,5,12],
+                            [1,2,3,4,5,13],
+                            [1,2,3,4,5,14],
+                            [1,2,3,4,5,15],
+                            [1,2,3,4,5,0.01],
+                            [1,2,3,4,5,0.02],
+                            [1,2,3,4,5,0.03],
+                            [1,2,3,4,5,0.04],
+                            [1,2,3,4,5,0.05],
+                            [1,2,3,4,5,0.16],
+                            [1,2,3,4,5,0.17],
+                            [1,2,3,4,5,0.18],
+                            [1,2,3,4,5,1]
+                            ]
+        test_arrangement = self.biorob.arrange_states(state_true)
+
+        for i in range(len(test_arrangement)):
+            for j in range(len(test_arrangement[i])):
+                self.assertAlmostEqual(test_arrangement[i][j],true_arrangement[i][j])
 
 if __name__ == '__main__':
     unittest.main()
