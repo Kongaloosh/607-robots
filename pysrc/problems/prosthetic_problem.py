@@ -161,7 +161,7 @@ class Biorob2012Experiment(Prosthetic_Experiment):
         self.last_phi = []
         self.last_switch_value = None
         self.rl_lambda = config['lmbda']
-        self.num_bins = 8
+        self.num_bins = 10
         self.alphas = [0.95]
         self.decay = 0.99
         self.velocity_1 = np.zeros(len(self.alphas))
@@ -203,9 +203,6 @@ class Biorob2012Experiment(Prosthetic_Experiment):
             obs['pos3'],
             obs['pos4'],
             obs['pos5'],
-            self.emg_1,
-            self.emg_2,
-            self.emg_3,
             obs['vel1'],
             obs['vel2'],
             obs['vel3'],
@@ -216,6 +213,9 @@ class Biorob2012Experiment(Prosthetic_Experiment):
             obs['load3'],
             obs['load4'],
             obs['load5'],
+            self.emg_1,
+            self.emg_2,
+            self.emg_3,
             self.pos_1,
             self.pos_2,
             self.pos_3,
@@ -223,6 +223,15 @@ class Biorob2012Experiment(Prosthetic_Experiment):
             self.pos_5,
         ])
         return state
+
+    def arrange_states(self, state):
+        perception = []
+        state = np.concatenate((state, [1]))
+        shift_factor = self.memory_size / (len(state) - 5)              # the amount of memory we for each tilecoder
+        for i in range(len(state) - 5):                                 # for all the other perceptions
+            temp = np.concatenate((state[:5], [state[i+5]]))            # add the extra obs to the position obs)
+            perception.append(temp)
+        return perception
 
     def get_phi(self, state):
         """Multiple tile-coders used. We Compose our position features with every other value in our state.
@@ -271,6 +280,8 @@ class Biorob2012Experiment(Prosthetic_Experiment):
         for i in range(len(state)):
             state[i] *= self.num_bins
 
+        state = numpy.concatenate((state,numpy.array([1])))
+
         phi = np.zeros(self.memory_size)
         self.feature_vector = self.get_phi(state)               # find the new active features
         for i in self.feature_vector:                           # update phi
@@ -286,35 +297,35 @@ class Biorob2012Experiment(Prosthetic_Experiment):
         config['g'] = self.gamma
         config['l'] = self.rl_lambda
 
-        if not config['phi'] is None:
-            p=[i for i, e in enumerate(config['phinext']) if e != 0]
-            lp=[i for i, e in enumerate(config['phi']) if e != 0]
-            pd=[i for i, j in zip(p, lp) if i != j]
-            print(
-                """
-                Feature Vector      = {a}
-                Starting_Element    = {b}
-                Num Tilings         = {c}
-                Mem Size            = {d}
-                state               = {e}
-                reward              = {r}
-                phi                 = {p}
-                last phi            = {lp}
-                phi diff            = {pd}
-                lens                = {l}
-                ==========================================
-                """.format(
-                    a=self.feature_vector,
-                    b=self.starting_element,
-                    c=self.num_tilings,
-                    d=self.memory_size,
-                    e=state,
-                    r=self.get_reward(obs),
-                    p=p,
-                    lp=lp,
-                    pd=pd,
-                    l=len(pd)-len(p)
-                )
-            )
+        # if not config['phi'] is None:
+        #     p=[i for i, e in enumerate(config['phinext']) if e != 0]
+        #     lp=[i for i, e in enumerate(config['phi']) if e != 0]
+        #     pd=[i for i, j in zip(p, lp) if i != j]
+        #     print(
+        #         """
+        #         Feature Vector      = {a}
+        #         Starting_Element    = {b}
+        #         Num Tilings         = {c}
+        #         Mem Size            = {d}
+        #         state               = {e}
+        #         reward              = {r}
+        #         phi                 = {p}
+        #         last phi            = {lp}
+        #         phi diff            = {pd}
+        #         lens                = {l}
+        #         ==========================================
+        #         """.format(
+        #             a=self.feature_vector,
+        #             b=self.starting_element,
+        #             c=self.num_tilings,
+        #             d=self.memory_size,
+        #             e=state,
+        #             r=self.get_reward(obs),
+        #             p=p,
+        #             lp=lp,
+        #             pd=pd,
+        #             l=len(pd)-len(p)
+        #         )
+        #     )
 
         return config
