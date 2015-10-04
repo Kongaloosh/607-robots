@@ -103,7 +103,7 @@ def main():
     for config in config_alg:                                               # for the parameters we're interested in
         config.update(config_prob)                                          # add the problem-specific configs
         try:
-            config['alpha'] /= config['num_tilings']                        # divide alpha
+            config['alpha'] /= float(config['num_tilings'])                        # divide alpha
         except KeyError:
             config['initalpha'] /= config['num_tilings']                    # we're using an alg with different config
         prob = problems[args.prob](config)                                  # construct a problem
