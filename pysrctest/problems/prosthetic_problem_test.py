@@ -209,7 +209,7 @@ class TestProstheticProblem (BasicProblem):
                             [1,2,3,4,5, (0 * self.biorob.decay + (1 - self.biorob.decay) * 4)],
                             [1,2,3,4,5, (0 * self.biorob.decay + (1 - self.biorob.decay) * 5)],
                             [1,2,3,4,5,1]
-                            ]got 
+                            ]
                       #
                       # (0 * self.biorob.decay + (1 - self.biorob.decay) * 2),
                       # (0 * self.biorob.decay + (1 - self.biorob.decay) * 3),
