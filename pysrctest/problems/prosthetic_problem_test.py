@@ -143,6 +143,53 @@ class TestProstheticProblem (BasicProblem):
         self.assertEqual(state['g'], 0)
         self.assertEqual(state['l'], 0)
 
+        # true_arrangement = [[1,2,3,4,5,6],
+        #                     [1,2,3,4,5,7],
+        #                     [1,2,3,4,5,8],
+        #                     [1,2,3,4,5,9],
+        #                     [1,2,3,4,5,10],
+        #                     [1,2,3,4,5,11],
+        #                     [1,2,3,4,5,12],
+        #                     [1,2,3,4,5,13],
+        #                     [1,2,3,4,5,14],
+        #                     [1,2,3,4,5,15],
+        #                     [1,2,3,4,5,0.01],
+        #                     [1,2,3,4,5,0.02],
+        #                     [1,2,3,4,5,0.03],
+        #                     [1,2,3,4,5,0.04],
+        #                     [1,2,3,4,5,0.05],
+        #                     [1,2,3,4,5,0.16],
+        #                     [1,2,3,4,5,0.17],
+        #                     [1,2,3,4,5,0.18],
+        #                     [1,2,3,4,5,1]
+        #                     ]
+        # test_arrangement = self.biorob.arrange_states(state_true)
+        #
+
+
+    def test_phi_arrangement(self):
+        # self.setUp()
+        obs = {
+            'pos1': 1,
+            'pos2': 2,
+            'pos3': 3,
+            'pos4': 4,
+            'pos5': 5,
+            'vel1': 6,
+            'vel2': 7,
+            'vel3': 8,
+            'vel4': 9,
+            'vel5': 10,
+            'load1': 11,
+            'load2': 12,
+            'load3': 13,
+            'load4': 14,
+            'load5': 15,
+            'emg1': 16,
+            'emg2': 17,
+            'emg3': 18,
+        }
+
         true_arrangement = [[1,2,3,4,5,6],
                             [1,2,3,4,5,7],
                             [1,2,3,4,5,8],
@@ -153,19 +200,29 @@ class TestProstheticProblem (BasicProblem):
                             [1,2,3,4,5,13],
                             [1,2,3,4,5,14],
                             [1,2,3,4,5,15],
-                            [1,2,3,4,5,0.01],
-                            [1,2,3,4,5,0.02],
-                            [1,2,3,4,5,0.03],
-                            [1,2,3,4,5,0.04],
-                            [1,2,3,4,5,0.05],
-                            [1,2,3,4,5,0.16],
-                            [1,2,3,4,5,0.17],
-                            [1,2,3,4,5,0.18],
+                            [1,2,3,4,5, (0 * self.biorob.decay + (1 - self.biorob.decay) * 16)],
+                            [1,2,3,4,5, (0 * self.biorob.decay + (1 - self.biorob.decay) * 17)],
+                            [1,2,3,4,5, (0 * self.biorob.decay + (1 - self.biorob.decay) * 18)],
+                            [1,2,3,4,5, (0 * self.biorob.decay + (1 - self.biorob.decay) * 1)],
+                            [1,2,3,4,5, (0 * self.biorob.decay + (1 - self.biorob.decay) * 2)],
+                            [1,2,3,4,5, (0 * self.biorob.decay + (1 - self.biorob.decay) * 3)],
+                            [1,2,3,4,5, (0 * self.biorob.decay + (1 - self.biorob.decay) * 4)],
+                            [1,2,3,4,5, (0 * self.biorob.decay + (1 - self.biorob.decay) * 5)],
                             [1,2,3,4,5,1]
-                            ]
-        test_arrangement = self.biorob.arrange_states(state_true)
+                            ]got 
+                      #
+                      # (0 * self.biorob.decay + (1 - self.biorob.decay) * 2),
+                      # (0 * self.biorob.decay + (1 - self.biorob.decay) * 3),
+                      # (0 * self.biorob.decay + (1 - self.biorob.decay) * 4),
+                      # (0 * self.biorob.decay + (1 - self.biorob.decay) * 5),
+                      # (0 * self.biorob.decay + (1 - self.biorob.decay) * 16),
+                      # (0 * self.biorob.decay + (1 - self.biorob.decay) * 17),
+                      # (0 * self.biorob.decay + (1 - self.biorob.decay) * 18)
 
+        state = self.biorob.get_state(obs)
+        (_,test_arrangement) = self.biorob.get_phi(state)
         for i in range(len(test_arrangement)):
+            print test_arrangement[i]
             for j in range(len(test_arrangement[i])):
                 self.assertAlmostEqual(test_arrangement[i][j],true_arrangement[i][j])
 
