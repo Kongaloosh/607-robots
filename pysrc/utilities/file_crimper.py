@@ -22,7 +22,7 @@ for alg in algs:
         for a in ['a1','a2','a3','na1','na2','na3']:
             print("Over trial {a}".format(a=a))
             i = 0
-            data = path + alg + "/{name}_{s}_{a}_{i}.dat".format(name=exp_name, s=s, a=a, i=i)
+            data = path + alg + "/{name}_{s}_{a}_{i}.pkl".format(name=exp_name, s=s, a=a, i=i)
             while os.path.isfile(data):                     # if our s, a, or i values ar out of bounds, kick
                 try:
                     f = open(data, 'r+')
@@ -39,5 +39,5 @@ for alg in algs:
                 except EOFError:
                     print('unexpected EOF on file {i}'.format(i=i))
                 i += 1
-                data = path + alg + "/{name}_{s}_{a}_{i}.dat".format(name=exp_name, s=s, a=a, i=i)
+                data = path + alg + "/{name}_{s}_{a}_{i}.pkl".format(name=exp_name, s=s, a=a, i=i)
             print("no more files.")

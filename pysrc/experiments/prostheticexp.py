@@ -77,7 +77,7 @@ def main():
         'biorob': Biorob2012Experiment
     }                                                                                   # To handle creation of problem
 
-    f = open('results/robot-experiments/{prob}/{alg}/{name}_{s}_{a}_{i}.dat'.format(
+    f = open('results/robot-experiments/{prob}/{alg}/{name}_{s}_{a}_{i}.pkl'.format(
         prob=args.prob,
         alg=args.algname,
         s=args.sVal,
