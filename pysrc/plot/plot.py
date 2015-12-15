@@ -22,6 +22,7 @@ def plot_performance_vs_lambda(parameters):
         # plot_all_alpha(data)
     else:
         parameters['data'] = pickle.load(open(plot_file_name, 'r'))
+        print(parameters['data']['0.9'])
         plot_data_process_prosthetic(parameters)
 
 
@@ -78,8 +79,11 @@ def find_best_parameters(data):
             if avg_error < best_error:
                 best_error = avg_error
                 best = key_alpha
+        print(key_lambda, best)
         plot_points.append((float(key_lambda), data[key_lambda][best]['error'], data[key_lambda][best]['std']))
     plot_points = sorted(plot_points, key=lambda vals: vals[0])
+    print("\n points \n")
+    print(plot_points)
     return plot_points
 
 
@@ -219,12 +223,6 @@ def main():
         {'path_prefix': pathfileprefix, 'compare': 'lmbda', 'label': 'TD'}
     )
 
-    # pathfileprefix = path + "utd/" + postfix
-    # print("UTD")
-    # plot_performance_vs_lambda(
-    #     {'path_prefix': pathfileprefix, 'compare': 'lmbda', 'label': 'UTD'}
-    # )
-
     pathfileprefix = path + "totd/" + postfix
     print("TOTD")
     plot_performance_vs_lambda(
@@ -236,13 +234,6 @@ def main():
     plot_performance_vs_lambda(
         {'path_prefix':pathfileprefix, 'compare': 'lmbda', 'label': 'TDR'}
     )
-
-    # pathfileprefix = path + "utotd/" + postfix
-    # print("UTOTD")
-    # plot_performance_vs_lambda(
-    #     {'path_prefix':pathfileprefix, 'compare': 'lmbda', 'label': 'UTOTD'}
-    # )
-
 
     pathfileprefix = path + "autotd/" + postfix
     plot_performance_vs_lambda(

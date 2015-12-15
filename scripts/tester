@@ -1,0 +1,5 @@
+
+ls *-1.dat | while read -r line
+do
+mv $line $(echo $line | cut -d '-' -f 1 | rev | cut -c 2- | rev).dat
+done

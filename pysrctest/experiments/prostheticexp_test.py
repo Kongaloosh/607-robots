@@ -98,7 +98,7 @@ class TestProstheticexp(unittest.TestCase):
             file_loader=TestFileLoader(),
             alg=TD(self.configs),
             # prob=Biorob2012Experiment(self.configs))
-            prob=TestProb())
+            prob=TestProb(self.configs))
         print(p)
 
     def pos(self):

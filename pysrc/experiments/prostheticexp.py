@@ -29,7 +29,8 @@ def run_one_config(file_loader, alg, prob):
         if file_loader.i % 1000 == 0:                           # pretty print
             print(numpy.dot(vals['phinext'], alg.estimate()))
             print("Step: {s} of {n}".format(s=file_loader.i, n=len(file_loader.data_stream)))
-    file_loader.reset()                                         # sets the file-loader to obs 0 for next run
+            # print(vals['R'])
+    file_loader.reset()                                        # sets the file-loader to obs 0 for next run
     return p, s                                                 # return the predictions and rewards
 
 
@@ -58,8 +59,8 @@ def main():
             'results/robot-experiments/{prob}/{alg}/configalg.pkl'.format(prob=args.prob, alg=args.algname)
 
     config_alg = pickle.load(open(config_alg_path, 'rb'))   # we load a configuration file with all of the data
-    # file_loader = FileLoaderSetEnd('results/prosthetic-data/EdwardsPOIswitching_{s}{a}.txt'.format(s=args.sVal, a=args.aVal), 50000)
-    file_loader = FileLoaderApprox('results/prosthetic-data/EdwardsPOIswitching_{s}{a}.txt'.format(s=args.sVal, a=args.aVal), 14)
+    file_loader = FileLoaderSetEnd('results/prosthetic-data/EdwardsPOIswitching_{s}{a}.txt'.format(s=args.sVal, a=args.aVal), 20000)
+    # file_loader = FileLoaderApprox('results/prosthetic-data/EdwardsPOIswitching_{s}{a}.txt'.format(s=args.sVal, a=args.aVal), 14)
 
     algs = {
         'autotd': autotd.AutoTD,

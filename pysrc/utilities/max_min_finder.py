@@ -65,7 +65,7 @@ def find_invalid(state, obs):
             for j in obs:
                 print("TAG: " + str(j) + " VALUE: " + str(obs[j]))
             print(state)
-            raise ValueError
+            raise ValueError("You're not normalizing correctly! Some of your values are either above one or below zero.")
 
 if __name__ == "__main__":
     main()

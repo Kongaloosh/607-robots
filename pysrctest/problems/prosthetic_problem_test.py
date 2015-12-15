@@ -208,16 +208,7 @@ class TestProstheticProblem (BasicProblem):
                             [1,2,3,4,5, (0 * self.biorob.decay + (1 - self.biorob.decay) * 3)],
                             [1,2,3,4,5, (0 * self.biorob.decay + (1 - self.biorob.decay) * 4)],
                             [1,2,3,4,5, (0 * self.biorob.decay + (1 - self.biorob.decay) * 5)],
-                            [1,2,3,4,5,1]
                             ]
-                      #
-                      # (0 * self.biorob.decay + (1 - self.biorob.decay) * 2),
-                      # (0 * self.biorob.decay + (1 - self.biorob.decay) * 3),
-                      # (0 * self.biorob.decay + (1 - self.biorob.decay) * 4),
-                      # (0 * self.biorob.decay + (1 - self.biorob.decay) * 5),
-                      # (0 * self.biorob.decay + (1 - self.biorob.decay) * 16),
-                      # (0 * self.biorob.decay + (1 - self.biorob.decay) * 17),
-                      # (0 * self.biorob.decay + (1 - self.biorob.decay) * 18)
 
         state = self.biorob.get_state(obs)
         (_,test_arrangement) = self.biorob.get_phi(state)
