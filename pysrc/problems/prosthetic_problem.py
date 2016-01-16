@@ -118,8 +118,7 @@ class Prosthetic_Experiment(object):
         # else:
         #     return 0
         return obs['pos1']
-        # return obs['pos1']
-
+        
     @staticmethod
     def get_state(obs):
         """

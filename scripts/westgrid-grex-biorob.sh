@@ -90,7 +90,7 @@ done                            # end algorithms
 #
 # ====================================================================================================================
 
-for alg in totd                       # for all algorithms
+for alg in td                       # for all algorithms
 do
 for a in a na                               # for all actions in a session
 do
