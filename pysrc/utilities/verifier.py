@@ -3,8 +3,6 @@ A collection of methods which post-hoc calculate return for a particular experim
 
 """
 import math
-import pickle
-from matplotlib import pyplot
 import numpy as np
 
 def calculate_discounted_return_backwards(config, obs, reward_calculator):
