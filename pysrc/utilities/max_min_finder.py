@@ -44,7 +44,6 @@ def generate_normalizer(datastream, prob):
     """ given a problem and a data stream finds the values to normalize the feature-vectors """
     for obs in datastream:
         state = prob.get_state(obs)
-
         try:                                    # Check if the current state is higher or lower than max/min
             for i in range(len(state)):
                 (high, low) = normalizer[i]

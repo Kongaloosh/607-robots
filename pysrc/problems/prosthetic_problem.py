@@ -118,7 +118,7 @@ class Prosthetic_Experiment(object):
         # else:
         #     return 0
         return obs['pos1']
-        
+
     @staticmethod
     def get_state(obs):
         """
@@ -145,7 +145,8 @@ class Prosthetic_Experiment(object):
         for i in range(len(state)):
             (high, low) = normalizer[i]
             state[i] -= low
-            state[i] /= (high - low)
+            if high != low:
+                state[i] /= (high - low)
         return state
 
 
@@ -253,6 +254,7 @@ class Biorob2012Experiment(Prosthetic_Experiment):
             #                        decay position   other     bias
             perception = np.concatenate((state[:5], [state[i+5]]))      # add the extra obs to the position obs)
             tile_coders.append(perception)
+
             f = np.array(
                     getTiles(
                         numtilings=self.num_tilings,
