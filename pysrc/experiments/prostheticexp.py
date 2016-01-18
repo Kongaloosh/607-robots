@@ -6,7 +6,7 @@ import sys
 sys.path.insert(0, os.getcwd())
 import argparse
 from pysrc.problems.prosthetic_problem import Prosthetic_Experiment, Biorob2012Experiment
-from pysrc.algorithms.tdprediction.onpolicy import td, tdr, totd, utd, utotd, utdr, autotd
+from pysrc.algorithms.tdprediction.onpolicy import td, tdr, totd, autotd
 from pysrc.utilities.file_loader import FileLoader, FileLoaderApprox, FileLoaderSetEnd
 from pysrc.utilities.verifier import *
 from pysrc.utilities.max_min_finder import *
@@ -67,9 +67,9 @@ def main():
         'td': td.TD,
         'totd': totd.TOTD,
         'tdr': tdr.TDR,
-        'utd': utd.UTD,
-        'utotd': utotd.UTOTD,
-        'utdr': utdr.UTDR
+#        'utd': utd.UTD,
+#        'utotd': utotd.UTOTD,
+#        'utdr': utdr.UTDR
     }                                                                                   # To handle creation of alg
 
     problems = {

@@ -66,7 +66,7 @@ echo "Current working directory is `pwd`"
 #module load application/python/2.7.3
 module load python/2.7.2
 
-time python pysrc/experiments/prostheticexp.py s'$s' '$a$aval' biorob '$alg' honors-pos-2016-01-16 '$var' > txt/'$alg'-'$s'-'$a'-'$var'.txt
+time python pysrc/experiments/prostheticexp.py s'$s' '$a$aval' biorob '$alg' honors-pos-2016-01-16 '$var' > txt/'$alg'-s'$s'-'$a$aval'-'$var'.txt
 
 
 if [[ '$s' < "4" ]]
