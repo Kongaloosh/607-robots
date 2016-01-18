@@ -5,7 +5,6 @@ Created on May 2, 2014
 '''
 
 import numpy as np
-import pylab as pl
 from pysrc.algorithms.tdprediction.tdprediction import TDPrediction
 
 class TOTD(TDPrediction):
@@ -34,4 +33,3 @@ class TOTD(TDPrediction):
     self.z = g*l*self.z + self.alpha*phi - self.alpha*g*l*np.dot(self.z,phi)*phi
     self.th += delta*self.z + self.alpha*(self.predprev - np.dot(phi, self.th))*phi
     self.predprev = prednext
-      

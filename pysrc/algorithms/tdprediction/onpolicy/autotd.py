@@ -8,7 +8,6 @@ Auto-TD by Thomas Degris
 '''
 
 import numpy as np
-import pylab as pl
 from pysrc.algorithms.tdprediction.tdprediction import TDPrediction
 
 class AutoTD(TDPrediction):
@@ -55,9 +54,3 @@ class AutoTD(TDPrediction):
     self.z = g*l*self.z + phi
     #self.auto( self.delta, self.z, np.abs(self.z)*np.maximum(np.abs(self.z), np.abs(phi-gnext*phinext) ))
     self.auto( self.delta, self.z, np.maximum(np.abs(self.z)*np.abs(phi-gnext*phinext), np.abs(self.z)) )
-    
-    
-
-
-
-      
