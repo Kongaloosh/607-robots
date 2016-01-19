@@ -56,7 +56,7 @@ while  [ -f results/robot-experiments/biorob/$alg/configalg_$var.pkl ]; do
 echo '
 #!/bin/bash
 #PBS -S /bin/bash
-#PBS -l walltime=2:00:00
+#PBS -l walltime=5:00:00
 #PBS -l mem=1gb
 #PBS -o o/'$alg'-s'$s'-'$a$aval'-'$var'.out
 #PBS -e e/'$alg'-s'$s'-'$a$aval'-'$var'.err
@@ -68,7 +68,7 @@ module load python/2.7.3
 #module load python/2.7.2
 #module load python
 
-time python pysrc/experiments/prostheticexp.py s'$s' '$a$aval' biorob '$alg' honors-pos-2016-01-16 '$var' > txt/'$alg'-s'$s'-'$a$aval'-'$var'.txt
+python pysrc/experiments/prostheticexp.py s'$s' '$a$aval' biorob '$alg' honors-pos-2016-01-16 '$var' > txt/'$alg'-s'$s'-'$a$aval'-'$var'.txt
 
 
 if [[ '$s' < "4" ]]
