@@ -21,10 +21,10 @@ class AutoTD(TDPrediction):
     '''
     self.nf         = config['nf']
     try:
-      self.alpha = config['initalpha'] / config['active_features']
+      self.initalpha = config['initalpha'] / config['active_features']
     except KeyError:
-      self.alpha = config['initalpha']
-
+      self.initalpha = config['initalpha']
+    self.truncate   = config['truncate']
     self.th     = np.zeros(self.nf)
     self.z      = np.zeros(self.nf)
     self.alpha  = np.ones(self.nf)*self.initalpha
