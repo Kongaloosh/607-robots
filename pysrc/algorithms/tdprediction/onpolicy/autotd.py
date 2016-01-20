@@ -20,8 +20,11 @@ class AutoTD(TDPrediction):
     Constructor
     '''
     self.nf         = config['nf']
-    self.initalpha  = config['initalpha']
-    self.truncate   = config['truncate'] 
+    try:
+      self.alpha = config['initalpha'] / config['active_features']
+    except KeyError:
+      self.alpha = config['initalpha']
+
     self.th     = np.zeros(self.nf)
     self.z      = np.zeros(self.nf)
     self.alpha  = np.ones(self.nf)*self.initalpha
