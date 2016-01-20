@@ -258,7 +258,8 @@ class Biorob2012Experiment(Prosthetic_Experiment):
         :param fake_obs: stand-in for observations so we can determine the length of state
         :returns number of active features: the number of active features we have for this problem
         """
-        return self.num_tilings * (len(self.get_state(fake_obs)) - 5)
+        # the nuber of tilings by number of tiles plus the bias
+        return self.num_tilings * (len(self.get_state(fake_obs)) - 5) + 1
 
     def get_phi(self, state):
         """Multiple tile-coders used. We Compose our position features with every other value in our state.
@@ -289,8 +290,10 @@ class Biorob2012Experiment(Prosthetic_Experiment):
                 pass                                                # the first tiling will have an index error
 
             feature_vec = np.concatenate((f, feature_vec))          # add our tile-coder to the feature vector
+        feature_vec = np.concatenate(([1], feature_vec))            # bias
         if feature_vec[len(feature_vec) - 1] > self.memory_size:    # if we're using more memory than we have
             print("Exceeding maximum memory")                       # notify
+
         return feature_vec, tile_coders
 
     # def get_phi(self, state):
@@ -345,7 +348,6 @@ class Biorob2012Experiment(Prosthetic_Experiment):
         (self.feature_vector,_) = self.get_phi(state)           # find the new active features
         for i in self.feature_vector:                           # update phi so that...
             phi[i] = 1                                          # all active features are 1
-        phi[len(phi)-1] = 1                                     # the last feature is the bias weight
 
         config = dict()
         config['phi'] = self.last_phi
