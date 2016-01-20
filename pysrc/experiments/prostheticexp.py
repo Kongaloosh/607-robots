@@ -67,9 +67,9 @@ def main():
         'td': td.TD,
         'totd': totd.TOTD,
         'tdr': tdr.TDR,
-#        'utd': utd.UTD,
-#        'utotd': utotd.UTOTD,
-#        'utdr': utdr.UTDR
+       # 'utd': utd.UTD,
+       # 'utotd': utotd.UTOTD,
+       # 'utdr': utdr.UTDR
     }                                                                                   # To handle creation of alg
 
     problems = {
@@ -103,11 +103,9 @@ def main():
 
     for config in config_alg:                                               # for the parameters we're interested in
         config.update(config_prob)                                          # add the problem-specific configs
-        try:
-            config['alpha'] /= float(config['num_tilings'])                        # divide alpha
-        except KeyError:
-            config['initalpha'] /= config['num_tilings']                    # we're using an alg with different config
         prob = problems[args.prob](config)                                  # construct a problem
+        config['active_features'] =\
+            prob.get_num_active_features(file_loader.data_stream[0])
         alg = algs[args.algname](config)                                    # build our instance of an algorithm
         print(config)
         (prediction, signal) = \
