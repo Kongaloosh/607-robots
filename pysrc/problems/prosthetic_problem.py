@@ -153,10 +153,13 @@ class Prosthetic_Experiment(object):
 class Biorob2012Experiment(Prosthetic_Experiment):
 
     def __init__(self, config):
+
         self.starting_element = 0
+
         self.num_tilings = config['num_tilings']
         self.memory_size = config['memory_size']
         self.gamma = config['gamma']
+
         self.feature_vector = np.zeros(self.num_tilings)
         self.last_phi = []
         self.last_switch_value = None
@@ -165,10 +168,12 @@ class Biorob2012Experiment(Prosthetic_Experiment):
         self.alphas = [0.95]
         # self.decay = 0.99
         self.decay = 0.95
+
         self.velocity_1 = np.zeros(len(self.alphas))
         self.velocity_2 = np.zeros(len(self.alphas))
         self.velocity_4 = np.zeros(len(self.alphas))
         self.velocity_5 = np.zeros(len(self.alphas))
+
         self.pos_1 = 0
         self.pos_2 = 0
         self.pos_3 = 0
@@ -177,9 +182,15 @@ class Biorob2012Experiment(Prosthetic_Experiment):
         self.emg_1 = 0
         self.emg_2 = 0
         self.emg_3 = 0
+
         self.feature_vector_last = 0
         try:
             self.normalizer = config['normalizer']
+        except KeyError:
+            pass
+
+        try:
+            self.obs_keys = config['obs_keys']
         except KeyError:
             pass
 
@@ -241,6 +252,13 @@ class Biorob2012Experiment(Prosthetic_Experiment):
             temp = np.concatenate((state[:5], [state[i+5]]))            # add the extra obs to the position obs)
             perception.append(temp)
         return perception
+
+    def get_num_active_features(self, fake_obs):
+        """
+        :param fake_obs: stand-in for observations so we can determine the length of state
+        :returns number of active features: the number of active features we have for this problem
+        """
+        return self.num_tilings * (len(self.get_state(fake_obs)) - 5)
 
     def get_phi(self, state):
         """Multiple tile-coders used. We Compose our position features with every other value in our state.
