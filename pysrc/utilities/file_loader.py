@@ -40,6 +40,11 @@ class FileLoader(object):
     def reset(self):
         self.i = 0
 
+    def keys(self):
+        """Returns the keys which label our data stream"""
+        return self.data_stream[0].keys()
+
+
 class FileLoaderApprox(FileLoader):
 
     def __init__(self, file_loc, n):
@@ -69,9 +74,9 @@ class FileLoaderSetEnd(FileLoader):
         self.elements = f.readline().rstrip().split(',')    # extracts the header of the file
         j = 0                                               # temporary counter
         for line in f:                                      # for all obs in file
-            if j == n:                                  # if this is an nth step...
-                break                                   # then stop adding values
-            vals = line.rstrip().split(',')             # separate all the values in an observation
+            if j == n:                                      # if this is an nth step...
+                break                                       # then stop adding values
+            vals = line.rstrip().split(',')                 # separate all the values in an observation
             self.data_stream.append(
                 dict(
                     [(self.elements[i], float(vals[i])) for i in range(len(vals) - 1)]
