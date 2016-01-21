@@ -8,6 +8,7 @@ from pysrc.utilities.tiles import loadTiles, getTiles
 import numpy as np
 from pysrc.utilities.max_min_finder import *
 import numpy
+from math import floor
 
 __author__ = 'alex'
 
@@ -145,8 +146,10 @@ class Prosthetic_Experiment(object):
         for i in range(len(state)):
             (high, low) = normalizer[i]
             state[i] -= low
-            if high != low:
-                state[i] /= (high - low)
+            if high - low != 0:
+                state[i] = floor((state[i] / (high - low)) * (10**4)) / (10**4)
+
+
         return state
 
 
@@ -201,14 +204,14 @@ class Biorob2012Experiment(Prosthetic_Experiment):
         :return state: a list with the state-values for a time-step
 
         """
-        self.pos_1 = self.pos_1 * self.decay + (1-self.decay) * obs['pos1']
-        self.pos_2 = self.pos_2 * self.decay + (1-self.decay) * obs['pos2']
-        self.pos_3 = self.pos_3 * self.decay + (1-self.decay) * obs['pos3']
-        self.pos_4 = self.pos_4 * self.decay + (1-self.decay) * obs['pos4']
-        self.pos_5 = self.pos_5 * self.decay + (1-self.decay) * obs['pos5']
-        self.emg_1 = self.emg_1 * self.decay + (1-self.decay) * abs(obs['emg1'])
-        self.emg_2 = self.emg_2 * self.decay + (1-self.decay) * abs(obs['emg2'])
-        self.emg_3 = self.emg_3 * self.decay + (1-self.decay) * abs(obs['emg3'])
+        self.pos_1 = self.pos_1 * self.decay + (1 - self.decay) * obs['pos1']
+        self.pos_2 = self.pos_2 * self.decay + (1 - self.decay) * obs['pos2']
+        self.pos_3 = self.pos_3 * self.decay + (1 - self.decay) * obs['pos3']
+        self.pos_4 = self.pos_4 * self.decay + (1 - self.decay) * obs['pos4']
+        self.pos_5 = self.pos_5 * self.decay + (1 - self.decay) * obs['pos5']
+        self.emg_1 = self.emg_1 * self.decay + (1 - self.decay) * abs(obs['emg1'])
+        self.emg_2 = self.emg_2 * self.decay + (1 - self.decay) * abs(obs['emg2'])
+        self.emg_3 = self.emg_3 * self.decay + (1 - self.decay) * abs(obs['emg3'])
 
         state = np.array([
             obs['pos1'],
@@ -246,7 +249,6 @@ class Biorob2012Experiment(Prosthetic_Experiment):
     def arrange_states(self, state):
         perception = []
         state = np.concatenate((state, [1]))
-        print(state)
         shift_factor = self.memory_size / (len(state) - 5)              # the amount of memory we for each tilecoder
         for i in range(len(state) - 5):                                 # for all the other perceptions
             temp = np.concatenate((state[:5], [state[i+5]]))            # add the extra obs to the position obs)
@@ -259,7 +261,7 @@ class Biorob2012Experiment(Prosthetic_Experiment):
         :returns number of active features: the number of active features we have for this problem
         """
         # the nuber of tilings by number of tiles plus the bias
-        return self.num_tilings * (len(self.get_state(fake_obs)) - 5) + 1
+        return len(self.get_phi(self.get_state(fake_obs))[0]) + 1
 
     def get_phi(self, state):
         """Multiple tile-coders used. We Compose our position features with every other value in our state.
@@ -290,43 +292,11 @@ class Biorob2012Experiment(Prosthetic_Experiment):
                 pass                                                # the first tiling will have an index error
 
             feature_vec = np.concatenate((f, feature_vec))          # add our tile-coder to the feature vector
-        feature_vec = np.concatenate(([1], feature_vec))            # bias
+        feature_vec = numpy.concatenate(([1],feature_vec))
         if feature_vec[len(feature_vec) - 1] > self.memory_size:    # if we're using more memory than we have
             print("Exceeding maximum memory")                       # notify
 
         return feature_vec, tile_coders
-
-    # def get_phi(self, state):
-    #     """Multiple tile-coders used. We Compose our position features with every other value in our state.
-    #     :param state: a list with the values returned by get_state()
-    #     :returns feature_vec: a list with the active indices in phi for this time-step
-    #     """
-    #     feature_vec = numpy.array([])
-    #     state = np.concatenate((state, [1]))
-    #     shift_factor = self.memory_size / (len(state) - 5)              # the amount of memory we for each tilecoder
-    #     for i in range(len(state) - 5):                                 # for all the other perceptions
-    #         #                        decay position   other     bias
-    #         perception = np.concatenate((state[:5], [state[i+5]]))      # add the extra obs to the position obs)
-    #         f = np.array(getTiles(
-    #             numtilings=self.num_tilings,
-    #             memctable=shift_factor,                                 # the amount of memory for each tilecoder
-    #             floats=perception)
-    #         ) + (i * shift_factor)                                      # shift the tiles by the amount we've added on
-    #
-    #         f = sorted(f)                                               # we sort to make our verification simpler
-    #         try:
-    #             if f[0] <= feature_vec[len(feature_vec)-1]:
-    #                 print("Tilings are clashing.")                  # notify that our tilings are overlapping
-    #                 raise                                           # fail
-    #         except IndexError:
-    #             pass                                                # the first tiling will have an index error
-    #
-    #         feature_vec = np.concatenate((f, feature_vec))          # add our tile-coder to the feature vector
-    #
-    #     if feature_vec[len(feature_vec) - 1] > self.memory_size:    # if we're using more memory than we have
-    #         print("Exceeding maximum memory")                       # notify
-    #
-    #     return feature_vec
 
     def step(self, obs):
         """
@@ -337,18 +307,14 @@ class Biorob2012Experiment(Prosthetic_Experiment):
         """
         state = self.get_state(obs)                             # get the state
         state = self.normalize_state(self.normalizer, state)    # normalize the state
-        find_invalid(state, obs)                                # check for invalid states
-        # state = numpy.concatenate((state,numpy.array([1])))
-
+        find_invalid(state,obs)
         for i in range(len(state)):
             state[i] *= self.num_bins
-
 
         phi = np.zeros(self.memory_size)                        # phi is the size
         (self.feature_vector,_) = self.get_phi(state)           # find the new active features
         for i in self.feature_vector:                           # update phi so that...
             phi[i] = 1                                          # all active features are 1
-
         config = dict()
         config['phi'] = self.last_phi
         config['phinext'] = phi

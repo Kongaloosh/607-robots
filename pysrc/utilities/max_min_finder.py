@@ -1,3 +1,4 @@
+from math import floor
 """
 Creates an instance of a file loader. Takes in a file and parses it into a stream of experience
 where each step is a dictionary in an array. The dictionary keys are as specified in the header of
@@ -44,6 +45,8 @@ def generate_normalizer(datastream, prob):
     """ given a problem and a data stream finds the values to normalize the feature-vectors """
     for obs in datastream:
         state = prob.get_state(obs)
+        if state[19] < 0:
+            print("heh")
         try:                                    # Check if the current state is higher or lower than max/min
             for i in range(len(state)):
                 (high, low) = normalizer[i]
@@ -59,11 +62,10 @@ def generate_normalizer(datastream, prob):
 
 def find_invalid(state, obs):
     for i in range(len(state)):
-        if state[i] > 1 or state[i] < 0:
+        s = floor(state[i] * (10**4))/(10**4)
+        if s > 1.0 or s < 0:
+            print(obs[obs.keys()[19]])
             print "INDEX OVER: " + str(i) + " STATE " + str(state[i])
-            for j in obs:
-                print("TAG: " + str(j) + " VALUE: " + str(obs[j]))
-            print(state)
             raise ValueError("You're not normalizing correctly! Some of your values are either above one or below zero.")
 
 if __name__ == "__main__":
