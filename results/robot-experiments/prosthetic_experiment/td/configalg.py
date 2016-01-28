@@ -9,7 +9,7 @@ print len(configs)
 
 for i in range(len(configs)):
     print configs[i]['lmbda']
-    if configs[i]['lmbda'] == 0.8 and configs[i]['alpha'] ==  0.008333333333333333:
+    if configs[i]['lmbda'] == 0.8 and configs[i]['alpha'] == 0.008333333333333333:
         print(i)
 
 f = open('configalg.pkl', 'wb')
