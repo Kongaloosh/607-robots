@@ -113,12 +113,12 @@ class Prosthetic_Experiment(object):
         specific time-step.
         :return reward: the cumulant for our learning-algorithm
         """
-        # shoulder = obs['vel1']
-        # if abs(shoulder) > 0.2:
-        #     return 1
-        # else:
-        #     return 0
-        return obs['pos1']
+        shoulder = obs['vel1']
+        if abs(shoulder) > 0.2:
+            return 1
+        else:
+            return 0
+        # return obs['pos1']
 
     @staticmethod
     def get_state(obs):
@@ -167,7 +167,7 @@ class Biorob2012Experiment(Prosthetic_Experiment):
         self.last_phi = []
         self.last_switch_value = None
         self.rl_lambda = config['lmbda']
-        self.num_bins = 8
+        self.num_bins = 10
         self.alphas = [0.95]
         # self.decay = 0.99
         self.decay = 0.95
@@ -356,3 +356,135 @@ class Biorob2012Experiment(Prosthetic_Experiment):
         #     )
 
         return config
+
+
+class TOTDExperiment(Prosthetic_Experiment):
+
+    def __init__(self, config):
+
+        self.starting_element = 0
+
+        self.num_tilings = config['num_tilings']
+        self.memory_size = config['memory_size']
+        self.gamma = config['gamma']
+
+        self.feature_vector = np.zeros(self.num_tilings)
+        self.last_phi = []
+        self.last_switch_value = None
+        self.rl_lambda = config['lmbda']
+        self.num_bins = 10
+        self.alphas = [0.95]
+        # self.decay = 0.99
+        self.decay = 0.95
+
+        self.velocity_1 = np.zeros(len(self.alphas))
+        self.velocity_2 = np.zeros(len(self.alphas))
+        self.velocity_4 = np.zeros(len(self.alphas))
+        self.velocity_5 = np.zeros(len(self.alphas))
+
+        self.pos_1 = 0
+        self.pos_2 = 0
+        self.pos_3 = 0
+        self.pos_4 = 0
+        self.pos_5 = 0
+        self.emg_1 = 0
+        self.emg_2 = 0
+        self.emg_3 = 0
+
+        self.feature_vector_last = 0
+        try:
+            self.normalizer = config['normalizer']
+        except KeyError:
+            pass
+
+        try:
+            self.obs_keys = config['obs_keys']
+        except KeyError:
+            pass
+
+    def get_state(self, obs):
+        """
+        :param obs: a dictionary where each key is the title of an observation. This represents the observations for a
+        specific time-step.
+        :return state: a list with the state-values for a time-step
+
+        """
+        self.pos_1 = self.pos_1 * self.decay + (1 - self.decay) * obs['pos1']
+        self.pos_2 = self.pos_2 * self.decay + (1 - self.decay) * obs['pos2']
+        self.pos_3 = self.pos_3 * self.decay + (1 - self.decay) * obs['pos3']
+        self.pos_4 = self.pos_4 * self.decay + (1 - self.decay) * obs['pos4']
+        self.pos_5 = self.pos_5 * self.decay + (1 - self.decay) * obs['pos5']
+        self.emg_1 = self.emg_1 * self.decay + (1 - self.decay) * abs(obs['emg1'])
+        self.emg_2 = self.emg_2 * self.decay + (1 - self.decay) * abs(obs['emg2'])
+        self.emg_3 = self.emg_3 * self.decay + (1 - self.decay) * abs(obs['emg3'])
+
+        state = np.array([
+            obs['pos5'],
+            obs['vel5'],
+            obs['emg1'],
+            obs['emg2']
+            ])
+        return state
+
+    def get_num_active_features(self, fake_obs):
+        """
+        :param fake_obs: stand-in for observations so we can determine the length of state
+        :returns number of active features: the number of active features we have for this problem
+        """
+        # the nuber of tilings by number of tiles plus the bias
+        return len(self.get_phi(self.get_state(fake_obs))[0]) + 1
+
+    def get_phi(self, state):
+        """Multiple tile-coders used. We Compose our position features with every other value in our state.
+        :param state: a list with the values returned by get_state()
+        :returns feature_vec: a list with the active indices in phi for this time-step
+        """
+        f = np.array(
+                    getTiles(
+                        numtilings=self.num_tilings,
+                        memctable=self.memory_size,                         # the amount of memory for each tilecoder
+                        floats=state)
+        )
+        f = numpy.concatenate(([1], f))
+        return f, None
+
+    def step(self, obs):
+        """
+        Given a set of observations generates the next Phi, Reward, and Gamma
+        :param obs: a dictionary where each key is the title of an observation. This represents the observations for a
+        specific time-step.
+        :returns config: a dictionary with the parameters for the next step in the learning algorithm.
+        """
+        state = self.get_state(obs)                             # get the state
+        state = self.normalize_state(self.normalizer, state)    # normalize the state
+        find_invalid(state,obs)
+        for i in range(len(state)):
+            state[i] *= self.num_bins
+
+        phi = np.zeros(self.memory_size)                        # phi is the size
+        (self.feature_vector,_) = self.get_phi(state)           # find the new active features
+        for i in self.feature_vector:                           # update phi so that...
+            phi[i] = 1                                          # all active features are 1
+        config = dict()
+        config['phi'] = self.last_phi
+        config['phinext'] = phi
+        self.last_phi = phi
+        config['R'] = self.get_reward(obs)
+        config['gnext'] = self.gamma
+        config['g'] = self.gamma
+        config['l'] = self.rl_lambda
+        return config
+
+    @staticmethod
+    def get_reward(obs):
+        """
+        :param obs: a dictionary where each key is the title of an observation. This represents the observations for a
+        specific time-step.
+        :return reward: the cumulant for our learning-algorithm
+        """
+        shoulder = obs['vel5']
+        # if abs(shoulder) > 0.2:
+        #     return 1
+        # else:
+        #     return 0
+        return obs['pos5']
