@@ -17,7 +17,7 @@ class Max_Min_Finder(object):
 
         for line in f:
             vals = line.rstrip().split(',')              # separate all the values in an observation
-            self.data_stream.append(dict([(self.elements[i], float(vals[i])) for i in range(len(vals)-1)]))
+            self.data_stream.append(dict([(self.elements[i], float(vals[i])) for i in range(len(vals) - 1)]))
             # we -1 because there's another comma at the end of every line but the header
         self.i = 0
 
@@ -45,8 +45,6 @@ def generate_normalizer(datastream, prob):
     """ given a problem and a data stream finds the values to normalize the feature-vectors """
     for obs in datastream:
         state = prob.get_state(obs)
-        if state[19] < 0:
-            print("heh")
         try:                                    # Check if the current state is higher or lower than max/min
             for i in range(len(state)):
                 (high, low) = normalizer[i]
