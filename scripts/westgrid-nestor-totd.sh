@@ -48,8 +48,8 @@ echo '
 #!/bin/bash
 #PBS -S /bin/bash
 #PBS -l walltime=12:00:00
-#PBS -o o/'$alg'-s'$s'-'$a$aval'.out
-#PBS -e e/'$alg'-s'$s'-'$a$aval'.err
+#PBS -o o/'$alg'.out
+#PBS -e e/'$alg'.err
 
 cd $PBS_O_WORKDIR
 
@@ -65,15 +65,16 @@ do
 for aval in 1 2 3                           # for the number of trials per person
 do
 
-time python pysrc/experiments/prostheticexp.py s'$s' '$a$aval' totd '$alg' honors-pos-2016-01-16 -1 > txt/'$alg'-'$s'-'$a'.txt
+echo pysrc/experiments/prostheticexp.py s$s $a$aval totd '$alg' honors-pos-2016-01-16 -1
+time python pysrc/experiments/prostheticexp.py s$s $a$aval totd '$alg' honors-pos-2016-01-16 -1 > txt/'$alg'.txt
 
 done                            # end actions vals
 done                            # end actions
 done                            # end subjects
 
 echo done
-' > pbs/$alg-s$s-$a$aval.pbs                           # make a script to run as a process on westgrid
-
+' > pbs/$alg.pbs                           # make a script to run as a process on westgrid
+echo 'pbs/'$alg'.pbs'
 done                            # end algorithms
 
 # ====================================================================================================================
@@ -84,6 +85,6 @@ done                            # end algorithms
 
 for alg in td tdr totd autotd               # for all algorithms
 do
-    qsub pbs/$alg-s$s-$a$aval.pbs               # make a script to run as a process on westgrid
-    echo pbs/$alg-s$s-$a$aval.pbs
+    qsub pbs/$alg.pbs               # make a script to run as a process on westgrid
+    echo pbs/$alg.pbs
 done
