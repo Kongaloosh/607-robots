@@ -1,0 +1,12 @@
+(lp1
+(dp2
+S'lmbda'
+p3
+F0.995
+sS'truncate'
+p4
+I00
+sS'initalpha'
+p5
+F0.20000000000000001
+sa.

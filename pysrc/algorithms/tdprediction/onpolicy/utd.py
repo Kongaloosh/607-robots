@@ -5,7 +5,6 @@ Created on January, 2015
 '''
 
 import numpy as np
-import pylab as pl
 from pysrc.algorithms.tdprediction.tdprediction import TDPrediction
 
 class UTD(TDPrediction):

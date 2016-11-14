@@ -57,17 +57,18 @@ echo '
 #!/bin/bash
 #PBS -S /bin/bash
 #PBS -l walltime=5:00:00
+#PBS -l mem=1gb
 #PBS -o o/'$alg'-s'$s'-'$a$aval'-'$var'.out
 #PBS -e e/'$alg'-s'$s'-'$a$aval'-'$var'.err
 #PBS
 cd $PBS_O_WORKDIR
 
 echo "Current working directory is `pwd`"
-module load application/python/2.7.3
-module load python/2.7.2
-module load python
+module load python/2.7.3
+#module load python/2.7.2
+#module load python
 
-time python pysrc/experiments/prostheticexp.py s'$s' '$a$aval' biorob '$alg' experiment '$var' > txt/'$alg'-'$s'-'$a'-'$var'.txt
+python pysrc/experiments/prostheticexp.py s'$s' '$a$aval' biorob '$alg' honors-pos-2016-01-16 '$var' > txt/'$alg'-s'$s'-'$a$aval'-'$var'.txt
 
 
 if [[ '$s' < "4" ]]
@@ -91,7 +92,7 @@ done                            # end algorithms
 #
 # ====================================================================================================================
 
-for alg in tdr  	                    # for all algorithms
+for alg in totd  	                    # for all algorithms
 do
 for a in a na                               # for all actions in a session
 do

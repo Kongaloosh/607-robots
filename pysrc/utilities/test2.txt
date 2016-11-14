@@ -1,2 +1,0 @@
-time,pos1,vel1,temp1,load1,is_moving1,pos2,vel2,temp2,load2,is_moving2,pos3,vel3,temp3,load3,is_moving3,pos4,vel4,temp4,load4,is_moving4,pos5,vel5,temp5,load5,is_moving5,emg1,emg2,emg3,switches,active_joint,id1,id2,id3,id4,id5,iteration
-1418768349968487977,3.13392274965,0.0,43.0,-0.0390625,0,3.12165090335,0.0,36.0,-0.0390625,0,3.14312663438,0.0,37.0,0.0078125,0,3.13392274965,0.0,38.0,-0.0390625,0,1.99417502425,0.0,37.0,0.0,0,-0.0933269932866,-0.0851047635078,0.917021393776,2.0,3.0,3.0,4.0,5.0,2.0,1.0,0,

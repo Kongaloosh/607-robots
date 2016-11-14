@@ -17,7 +17,10 @@ class TD(TDPrediction):
         self.nf = config['nf']
         self.th = np.zeros(self.nf)
         self.z = np.zeros(self.nf)
-        self.alpha = config['alpha']
+        try:
+            self.alpha = config['alpha'] / config['active_features']
+        except KeyError:
+            self.alpha = config['alpha']
 
     def initepisode(self):
         self.z = np.zeros(self.nf)

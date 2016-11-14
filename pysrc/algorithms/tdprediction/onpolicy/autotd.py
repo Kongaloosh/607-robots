@@ -8,7 +8,6 @@ Auto-TD by Thomas Degris
 '''
 
 import numpy as np
-import pylab as pl
 from pysrc.algorithms.tdprediction.tdprediction import TDPrediction
 
 class AutoTD(TDPrediction):
@@ -21,8 +20,11 @@ class AutoTD(TDPrediction):
     Constructor
     '''
     self.nf         = config['nf']
-    self.initalpha  = config['initalpha']
-    self.truncate   = config['truncate'] 
+    try:
+      self.initalpha = config['initalpha'] / config['active_features']
+    except KeyError:
+      self.initalpha = config['initalpha']
+    self.truncate   = config['truncate']
     self.th     = np.zeros(self.nf)
     self.z      = np.zeros(self.nf)
     self.alpha  = np.ones(self.nf)*self.initalpha
@@ -55,9 +57,3 @@ class AutoTD(TDPrediction):
     self.z = g*l*self.z + phi
     #self.auto( self.delta, self.z, np.abs(self.z)*np.maximum(np.abs(self.z), np.abs(phi-gnext*phinext) ))
     self.auto( self.delta, self.z, np.maximum(np.abs(self.z)*np.abs(phi-gnext*phinext), np.abs(self.z)) )
-    
-    
-
-
-
-      

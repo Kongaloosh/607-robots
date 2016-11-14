@@ -5,8 +5,8 @@ import os
 import sys
 sys.path.insert(0, os.getcwd())
 import argparse
-from pysrc.problems.prosthetic_problem import Prosthetic_Experiment, Biorob2012Experiment
-from pysrc.algorithms.tdprediction.onpolicy import td, tdr, totd, utd, utotd, utdr, autotd
+from pysrc.problems.prosthetic_problem import Prosthetic_Experiment, Biorob2012Experiment, TOTDExperiment
+from pysrc.algorithms.tdprediction.onpolicy import td, tdr, totd, autotd
 from pysrc.utilities.file_loader import FileLoader, FileLoaderApprox, FileLoaderSetEnd
 from pysrc.utilities.verifier import *
 from pysrc.utilities.max_min_finder import *
@@ -26,9 +26,9 @@ def run_one_config(file_loader, alg, prob):
         alg.step(vals)                                          # update based on new state
         s.append(vals['R'])                                     # record actual reward
         p.append(numpy.dot(vals['phinext'], alg.estimate()))    # record the prediction
-        if file_loader.i % 1000 == 0:                           # pretty print
-            print(numpy.dot(vals['phinext'], alg.estimate()))
-            print("Step: {s} of {n}".format(s=file_loader.i, n=len(file_loader.data_stream)))
+        # if file_loader.i % 1000 == 0:                           # pretty print
+        #     print(numpy.dot(vals['phinext'], alg.estimate()))
+        #     print("Step: {s} of {n}".format(s=file_loader.i, n=len(file_loader.data_stream)))
             # print(vals['R'])
     file_loader.reset()                                        # sets the file-loader to obs 0 for next run
     return p, s                                                 # return the predictions and rewards
@@ -59,7 +59,7 @@ def main():
             'results/robot-experiments/{prob}/{alg}/configalg.pkl'.format(prob=args.prob, alg=args.algname)
 
     config_alg = pickle.load(open(config_alg_path, 'rb'))   # we load a configuration file with all of the data
-    file_loader = FileLoaderSetEnd('results/prosthetic-data/EdwardsPOIswitching_{s}{a}.txt'.format(s=args.sVal, a=args.aVal), 20000)
+    file_loader = FileLoaderSetEnd('results/prosthetic-data/EdwardsPOIswitching_{s}{a}.txt'.format(s=args.sVal, a=args.aVal), 58000)
     # file_loader = FileLoaderApprox('results/prosthetic-data/EdwardsPOIswitching_{s}{a}.txt'.format(s=args.sVal, a=args.aVal), 14)
 
     algs = {
@@ -67,14 +67,15 @@ def main():
         'td': td.TD,
         'totd': totd.TOTD,
         'tdr': tdr.TDR,
-        'utd': utd.UTD,
-        'utotd': utotd.UTOTD,
-        'utdr': utdr.UTDR
+       # 'utd': utd.UTD,
+       # 'utotd': utotd.UTOTD,
+       # 'utdr': utdr.UTDR
     }                                                                                   # To handle creation of alg
 
     problems = {
         'prosthetic_experiment': Prosthetic_Experiment,
-        'biorob': Biorob2012Experiment
+        'biorob': Biorob2012Experiment,
+        'totd': TOTDExperiment
     }                                                                                   # To handle creation of problem
 
     f = open('results/robot-experiments/{prob}/{alg}/{name}_{s}_{a}_{i}.pkl'.format(
@@ -88,7 +89,7 @@ def main():
     calculated_return = calculate_discounted_return_backwards(
         config_prob,
         file_loader.data_stream,
-        Prosthetic_Experiment
+        problems[args.prob]
     )                                                                                   # calculate this file's return
 
     config_prob['return'] = calculated_return
@@ -103,11 +104,9 @@ def main():
 
     for config in config_alg:                                               # for the parameters we're interested in
         config.update(config_prob)                                          # add the problem-specific configs
-        try:
-            config['alpha'] /= float(config['num_tilings'])                        # divide alpha
-        except KeyError:
-            config['initalpha'] /= config['num_tilings']                    # we're using an alg with different config
         prob = problems[args.prob](config)                                  # construct a problem
+        config['active_features'] =\
+            prob.get_num_active_features(file_loader.data_stream[0])
         alg = algs[args.algname](config)                                    # build our instance of an algorithm
         print(config)
         (prediction, signal) = \
