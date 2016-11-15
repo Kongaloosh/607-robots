@@ -38,7 +38,7 @@
 
 
 
-for alg in td tdr totd autotd               # for all algorithms
+for alg in dasautotd #td tdr totd autotd               # for all algorithms
 do
 for s in 1 2 3 4                            # for all subjects
 do
@@ -84,7 +84,7 @@ done                            # end algorithms
 #
 # ====================================================================================================================
 
-for alg in autotd               # for all algorithms
+for alg in dasautotd               # for all algorithms
 do
 for s in 1 2 3 4                            # for all subjects
 do

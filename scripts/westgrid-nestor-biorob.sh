@@ -38,7 +38,7 @@
 
 
 
-for alg in td tdr totd autotd               # for all algorithms
+for alg in dasautotd # td tdr totd autotd               # for all algorithms
 do
 for s in 1 2 3 4                            # for all subjects
 do
@@ -67,7 +67,7 @@ module load application/python/2.7.3
 module load python/2.7.2
 module load python
 
-time python pysrc/experiments/prostheticexp.py s'$s' '$a$aval' biorob '$alg' honors-pos-2016-01-16 '$var' > txt/'$alg'-'$s'-'$a'-'$var'.txt
+time python pysrc/experiments/prostheticexp.py s'$s' '$a$aval' biorob '$alg' honors-pos-2016-01-16-truncate '$var' > txt/'$alg'-'$s'-'$a'-'$var'.txt
 
 echo done
 ' > pbs/$alg-s$s-$a$aval-$var.pbs                           # make a script to run as a process on westgrid
@@ -85,7 +85,7 @@ done                            # end algorithms
 #
 # ====================================================================================================================
 
-for alg in autotd               # for all algorithms
+for alg in dasautotd               # for all algorithms
 do
 for s in 1 2 3 4                            # for all subjects
 do

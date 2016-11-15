@@ -3,5 +3,9 @@
 .*~
 *#
 *dat
-
-
+*.pkl
+*.tar.gz
+*.txt
+*.DS_Store
+*.xml
+*.iml
