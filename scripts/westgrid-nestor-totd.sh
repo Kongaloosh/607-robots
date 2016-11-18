@@ -38,7 +38,7 @@
 
 
 
-for alg in tdr totd autotd               # for all algorithms
+for alg in dasautotd               # for all algorithms
 do
 
 # while there are still config files available for a process
@@ -81,7 +81,7 @@ done                            # end algorithms
 #
 # ====================================================================================================================
 
-for alg in tdr totd autotd               # for all algorithms
+for alg in dasautotd               # for all algorithms
 do
     qsub pbs/$alg.pbs               # make a script to run as a process on westgrid
     echo pbs/$alg.pbs
