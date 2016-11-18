@@ -67,6 +67,7 @@ def main():
         'td': td.TD,
         'totd': totd.TOTD,
         'dasautotd': dasautotd.TD,
+        'dasautotdr': dasautotd.TDR,
         'tdr': tdr.TDR,
        # 'utd': utd.UTD,
        # 'utotd': utotd.UTOTD,
