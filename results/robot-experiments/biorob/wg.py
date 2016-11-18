@@ -5,40 +5,43 @@ import os
 import sys
 sys.path.insert(0, os.getcwd())
 import argparse
-from pysrc.problems.prosthetic_problem import Prosthetic_Experiment, Biorob2012Experiment, TOTDExperiment
-from pysrc.algorithms.tdprediction.onpolicy import td, tdr, totd, autotd, dasautotd
-from pysrc.utilities.file_loader import FileLoader, FileLoaderApprox, FileLoaderSetEnd
+from pysrc.problems.prosthetic_problem import Prosthetic_Experiment, Prosthetic_Experiment_With_Context, Biorob2012Experiment
+from pysrc.algorithms.tdprediction.onpolicy import td, tdr, totd, utd, utotd, utdr, autotd
+from pysrc.utilities.file_loader import FileLoader, FileLoaderApprox
 from pysrc.utilities.verifier import *
 from pysrc.utilities.max_min_finder import *
 import pickle
+import time
 import numpy
 
 
-def run_one_config(file_loader, alg, prob):
-    """for the specific configuration, problem, alg, do a full run over our selected data file"""
+def runoneconfig(file_loader, alg, prob):
+    """for the specific configuration, problem, alg,"""
     obs = file_loader.step()                                    # get the next observation diction
-    prob.step(obs)                                              # initial step
+    state = prob.step(obs)                                      # initial state
     p = []                                                      # holds the predictions
     s = []                                                      # holds all of the rewards
+    start = time.time()                                         # experiment timer
     while file_loader.has_obs():                                # while we still have observations
         obs = file_loader.step()                                # get the next observation diction
         vals = prob.step(obs)                                   # state from prob
         alg.step(vals)                                          # update based on new state
         s.append(vals['R'])                                     # record actual reward
-        p.append(numpy.dot(vals['phinext'], alg.estimate()))    # record the prediction
-        # if file_loader.i % 1000 == 0:                           # pretty print
-        #     print(numpy.dot(vals['phinext'], alg.estimate()))
-        #     print("Step: {s} of {n}".format(s=file_loader.i, n=len(file_loader.data_stream)))
-            # print(vals['R'])
-    file_loader.reset()                                        # sets the file-loader to obs 0 for next run
-    return p, s                                                 # return the predictions and rewards
+        p.append(numpy.dot(vals['phinext'],alg.estimate()))
+        if file_loader.i % 1000 == 0:                           # pretty print
+            print(vals.keys())
+            # print(vals['alpha'])
+            # print(vals['lmbda'])
+            print(vals['g'])
+            print(numpy.dot(vals['phinext'],alg.estimate()))
+            print("Step: {s} of {n}".format(s=file_loader.i, n=len(file_loader.data_stream)))
+    print("Finished: " + str((time.time()-start)/60))           # time taken for experiment
+    file_loader.reset()                                         # sets the file-loader to obs 0 for next run
+    return p, s,                                                # return the predictions and rewards
 
 
 def main():
     """runs the experiment with commandline args"""
-    # ==================================================================================================================
-    #                                              FILE PARSING AND EXP SET-UP
-    # ==================================================================================================================
     parser = argparse.ArgumentParser()
     parser.add_argument("sVal", help="Session. single digit.")
     parser.add_argument("aVal", help="Activity value. Single digit.")
@@ -59,26 +62,23 @@ def main():
             'results/robot-experiments/{prob}/{alg}/configalg.pkl'.format(prob=args.prob, alg=args.algname)
 
     config_alg = pickle.load(open(config_alg_path, 'rb'))   # we load a configuration file with all of the data
-    file_loader = FileLoaderSetEnd('results/prosthetic-data/EdwardsPOIswitching_{s}{a}.txt'.format(s=args.sVal, a=args.aVal), 58000)
-    # file_loader = FileLoaderApprox('results/prosthetic-data/EdwardsPOIswitching_{s}{a}.txt'.format(s=args.sVal, a=args.aVal), 14)
+    file_loader = FileLoaderApprox('results/prosthetic-data/EdwardsPOIswitching_{s}{a}.txt'.format(s=args.sVal, a=args.aVal), 14)
 
     algs = {
         'autotd': autotd.AutoTD,
         'td': td.TD,
         'totd': totd.TOTD,
-        'dasautotd': dasautotd.TD,
-        'dasautotdr': dasautotd.TDR,
         'tdr': tdr.TDR,
-       # 'utd': utd.UTD,
-       # 'utotd': utotd.UTOTD,
-       # 'utdr': utdr.UTDR
-    }                                                                                   # To handle creation of alg
+        'utd': utd.UTD,
+        'utotd': utotd.UTOTD,
+        'utdr': utdr.UTDR
+    }
 
     problems = {
         'prosthetic_experiment': Prosthetic_Experiment,
-        'biorob': Biorob2012Experiment,
-        'totd': TOTDExperiment
-    }                                                                                   # To handle creation of problem
+        'prosthetic_experiment_with_context': Prosthetic_Experiment_With_Context,
+        'biorob': Biorob2012Experiment
+    }
 
     f = open('results/robot-experiments/{prob}/{alg}/{name}_{s}_{a}_{i}.dat'.format(
         prob=args.prob,
@@ -86,40 +86,41 @@ def main():
         s=args.sVal,
         a=args.aVal,
         name=args.filename,
-        i=args.config_number), 'wb')                                                    # where we'll write results
+        i=args.config_number), 'wb')
 
+    # calculate the return
     calculated_return = calculate_discounted_return_backwards(
         config_prob,
         file_loader.data_stream,
-        problems[args.prob]
-    )                                                                                   # calculate this file's return
-
+        Prosthetic_Experiment
+    )
     config_prob['return'] = calculated_return
 
-    c = reduce(lambda x, y: dict(x, **y), (config_alg[0], config_prob))                 # concat the dicts
-    prob = problems[args.prob](c)                                                       # construct a config
-    config_prob['normalizer'] = generate_normalizer(file_loader.data_stream, prob=prob) # array for normalizing states
+    # calculate normalizer
+    timer = time.time()
+    # todo: make it so that we don't need the alg config to do this
+    c = reduce(lambda x, y: dict(x, **y), (config_alg[0], config_prob)) # concat the dicts
+    prob = problems[args.prob](c)                                       # construct a representative config
+    config_prob['normalizer'] = generate_normalizer(file_loader.data_stream, prob=prob)                             # get constants for normalizing states
 
-    # ==================================================================================================================
-    #                                              RUN EXPERIMENT
-    # ==================================================================================================================
-
+    # run the experiment
+    print(len(config_alg))
     for config in config_alg:                                               # for the parameters we're interested in
         config.update(config_prob)                                          # add the problem-specific configs
+        try:
+            config['alpha'] /= config['num_tilings']                        # divide alpha
+        except:
+            pass                                                            # we're using an alg with different config
         prob = problems[args.prob](config)                                  # construct a problem
-        config['active_features'] =\
-            prob.get_num_active_features(file_loader.data_stream[0])
         alg = algs[args.algname](config)                                    # build our instance of an algorithm
-        print(config)
         (prediction, signal) = \
-            run_one_config(file_loader=file_loader, prob=prob, alg=alg)     # grab results of run
+            runoneconfig(file_loader=file_loader, prob=prob, alg=alg)       # grab results of run
         config['signal'] = signal                                           # adding the config so we can save results
         config['prediction'] = prediction
-        config['error'] = \
-            np.array(config['return']) - prediction[:len(config['return'])]
+        config['error'] = np.array(config['return']) - prediction[:len(config['return'])]
         pickle.dump(config, f, -1)
-    f.close()
+        f.close()
 
 if __name__ == '__main__':
-    """from the command-line"""
+    '''from the command-line'''
     main()

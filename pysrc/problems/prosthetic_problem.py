@@ -70,30 +70,6 @@ class Prosthetic_Experiment(object):
         for i in self.feature_vector:
             self.phi[i] = 1
 
-        # if not self.last_phi is None:
-        #     print(
-        #         """
-        #         Feature Vector      = {a}
-        #         Starting_Element    = {b}
-        #         Num Tilings         = {c}
-        #         Mem Size            = {d}
-        #         state               = {e}
-        #         reward              = {r}
-        #         phi                 = {p}
-        #         ==========================================
-        #         """.format(
-        #             a=getTiles(self.num_tilings, self.memory_size, state),
-        #             b=self.starting_element,
-        #             c=self.num_tilings,
-        #             d=self.memory_size,
-        #             e=state,
-        #             r=self.get_reward(obs),
-        #             p=[i for i, e in enumerate(self.last_phi) if e != 0]
-        #
-        #
-        #         )
-        #     )
-
         config['R'] = self.get_reward(obs)
         config['gnext'] = self.gamma
         config['g'] = self.gamma
@@ -113,12 +89,12 @@ class Prosthetic_Experiment(object):
         specific time-step.
         :return reward: the cumulant for our learning-algorithm
         """
-        shoulder = obs['vel1']
-        if abs(shoulder) > 0.2:
-            return 1
-        else:
-            return 0
-        # return obs['pos1']
+        # shoulder = obs['vel1']
+        # if abs(shoulder) > 0.2:
+        #     return 1
+        # else:
+        #     return 0
+        return obs['pos5']
 
     @staticmethod
     def get_state(obs):
@@ -323,38 +299,6 @@ class Biorob2012Experiment(Prosthetic_Experiment):
         config['gnext'] = self.gamma
         config['g'] = self.gamma
         config['l'] = self.rl_lambda
-
-        # if not config['phi'] is None:
-        #     p=[i for i, e in enumerate(config['phinext']) if e != 0]
-        #     lp=[i for i, e in enumerate(config['phi']) if e != 0]
-        #     pd=[i for i, j in zip(p, lp) if i != j]
-        #     print(
-        #         """
-        #         Feature Vector      = {a}
-        #         Starting_Element    = {b}
-        #         Num Tilings         = {c}
-        #         Mem Size            = {d}
-        #         state               = {e}
-        #         reward              = {r}
-        #         phi                 = {p}
-        #         last phi            = {lp}
-        #         phi diff            = {pd}
-        #         lens                = {l}
-        #         ==========================================
-        #         """.format(
-        #             a=self.feature_vector,
-        #             b=self.starting_element,
-        #             c=self.num_tilings,
-        #             d=self.memory_size,
-        #             e=state,
-        #             r=self.get_reward(obs),
-        #             p=p,
-        #             lp=lp,
-        #             pd=pd,
-        #             l=len(pd)-len(p)
-        #         )
-        #     )
-
         return config
 
 
@@ -482,9 +426,4 @@ class TOTDExperiment(Prosthetic_Experiment):
         specific time-step.
         :return reward: the cumulant for our learning-algorithm
         """
-        shoulder = obs['vel5']
-        # if abs(shoulder) > 0.2:
-        #     return 1
-        # else:
-        #     return 0
         return obs['pos5']
