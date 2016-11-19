@@ -28,7 +28,7 @@ class BaseKanervaCoder:
     def calculate_f(self, data):
 
         diffs = np.zeros(self.numPrototypes)
-
+        print(data.shape, self.prototypes[0].shape, "HERHEHERHERHERH ")
         for i in range(self.numPrototypes):
             diffs[i] = np.linalg.norm(data - self.prototypes[i])
 
@@ -37,7 +37,7 @@ class BaseKanervaCoder:
         for i in range(self.numPrototypes):
             for j in range(self.dimensions):
                 state_diff = np.linalg.norm(data - self.prototypes[i])
-                sigmoid = (1+np.where(state_diff == diffs)[0][0])/self.numPrototypes
+                sigmoid = (1 + np.where(state_diff == diffs)[0][0]) / self.numPrototypes
                 self.F[i][j] = sigmoid*(1-sigmoid)*data[j]
 
 
