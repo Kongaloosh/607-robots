@@ -129,8 +129,7 @@ class TDR_Kanerva(TDR):
         g = params['g']
         l = params['l']
         gnext = params['gnext']
-
-        self.kanerva.calculate_f(phi,)
+        self.kanerva.calculate_f(phi)
 
         phi = self.kanerva.get_features(phi)
         phinext = self.kanerva.get_features(phinext)
