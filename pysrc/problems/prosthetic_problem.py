@@ -427,3 +427,85 @@ class TOTDExperiment(Prosthetic_Experiment):
         :return reward: the cumulant for our learning-algorithm
         """
         return obs['pos5']
+
+
+class TOTD_kanerva(TOTDExperiment):
+
+    def __init__(self, config):
+        self.starting_element = 0
+
+        self.num_tilings = config['num_tilings']
+        self.memory_size = config['memory_size']
+        self.gamma = config['gamma']
+
+        self.feature_vector = np.zeros(self.num_tilings)
+        self.last_phi = []
+        self.last_switch_value = None
+        self.rl_lambda = config['lmbda']
+        self.num_bins = 10
+        self.alphas = [0.95]
+        # self.decay = 0.99
+        self.decay = 0.95
+
+        self.velocity_1 = np.zeros(len(self.alphas))
+        self.velocity_2 = np.zeros(len(self.alphas))
+        self.velocity_4 = np.zeros(len(self.alphas))
+        self.velocity_5 = np.zeros(len(self.alphas))
+
+        self.pos_1 = 0
+        self.pos_2 = 0
+        self.pos_3 = 0
+        self.pos_4 = 0
+        self.pos_5 = 0
+        self.emg_1 = 0
+        self.emg_2 = 0
+        self.emg_3 = 0
+
+        self.feature_vector_last = 0
+        try:
+            self.normalizer = config['normalizer']
+        except KeyError:
+            pass
+
+        try:
+            self.obs_keys = config['obs_keys']
+        except KeyError:
+            pass
+
+    def step(self, obs):
+        """
+        Given a set of observations generates the next Phi, Reward, and Gamma
+        :param obs: a dictionary where each key is the title of an observation. This represents the observations for a
+        specific time-step.
+        :returns config: a dictionary with the parameters for the next step in the learning algorithm.
+        """
+        state = self.get_state(obs)                             # get the state
+        state = self.normalize_state(self.normalizer, state)    # normalize the state
+        find_invalid(state,obs)
+
+        config = dict()
+        config['phi'] = self.last_phi
+        config['phinext'] = state
+        self.last_phi = state
+        config['R'] = self.get_reward(obs)
+        config['gnext'] = self.gamma
+        config['g'] = self.gamma
+        config['l'] = self.rl_lambda
+        return config
+
+    def get_state(self, obs):
+        """
+        :param obs: a dictionary where each key is the title of an observation. This represents the observations for a
+        specific time-step.
+        :return state: a list with the state-values for a time-step
+
+        """
+
+        state = np.array([
+            obs['pos5'],
+            obs['vel5'],
+            obs['emg1'],
+            obs['emg2']
+            ])
+        return state
+
