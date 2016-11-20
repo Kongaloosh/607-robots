@@ -1,0 +1,17 @@
+(dp1
+S'starting_element'
+p2
+I0
+sS'num_tilings'
+p3
+I8
+sS'memory_size'
+p4
+I1024
+sS'gamma'
+p5
+F0.96999999999999997
+sS'nf'
+p6
+I1024
+s.
