@@ -3,7 +3,7 @@ import math
 import operator
 import numpy as np
 
-__author__ = 'kongaloosh'
+__author__ = 'travnik'
 
 class BaseKanervaCoder:
     def __init__(self, _startingPrototypes, _dimensions):
@@ -11,7 +11,10 @@ class BaseKanervaCoder:
         self.dimensions = _dimensions
         self.prototypes = np.array([np.random.rand(self.dimensions) for i in range(self.numPrototypes)])
         self.F = np.array([np.random.rand(self.dimensions) for i in range(self.numPrototypes)])
-        self.updatedPrototypes = []
+        self.sorted_prototype_diffs_indexs = np.zeros(self.numPrototypes)
+        self.g = np.array([np.random.rand(self.dimensions) for i in range(self.numPrototypes)])
+
+        self.numActiveFeatures = 10
 
     def get_features(self, data):
         closestPrototypesIndxs = np.zeros(self.numPrototypes)
@@ -20,29 +23,41 @@ class BaseKanervaCoder:
         for i in range(self.numPrototypes):
             diffs[i] = np.linalg.norm(data - self.prototypes[i])
 
-        diffs = np.argsort(diffs)[:10]
+        self.sorted_prototype_diffs_indexs = np.argsort(diffs)
+
+        diffs = self.sorted_prototype_diffs_indexs[:self.numActiveFeatures]
         closestPrototypesIndxs[diffs] = 1
 
         return closestPrototypesIndxs
 
     def calculate_f(self, data):
 
-        diffs = np.zeros(self.numPrototypes)
+        sigmoid = self.sorted_prototype_diffs_indexs / self.numPrototypes
+        tempF = np.array([np.random.rand(self.numPrototypes) for i in range(self.dimensions)])
+        for i in range(self.dimensions):
+            tempF[i] = sigmoid*(1-sigmoid)*data[i] # Setting the whole array here instead of one element at a time
+        self.F = tempF.T
 
-        for i in range(self.numPrototypes):
-            diffs[i] = np.linalg.norm(data - self.prototypes[i])
+    def update_prototypes(self, alpha, delta, phi, th):
 
-        diffs = np.sort(diffs)
-
-        for i in range(self.numPrototypes):
-            for j in range(self.dimensions):
-                state_diff = np.linalg.norm(data - self.prototypes[i])
-                sigmoid = (1+np.where(state_diff == diffs)[0][0])/self.numPrototypes
-                self.F[i][j] = sigmoid*(1-sigmoid)*data[j]
+        #self.g = self.g * (np.ones(self.g.shape) - self.g * alpha * phi) + self.F.T * self.alpha * (self.ones*delta - th) + self.F
 
 
-    def update_prototypes(self, g, alpha, delta, phi, th):
-        for i in range(self.numPrototypes):
-            for j in range(self.dimensions):
-                self.prototypes[i][j] += alpha[i]*delta*(phi[i]*g[i][j] + phi[i]*self.F[i][j])
+        partA = self.g * np.ones(self.g.shape) - (self.g.T * (alpha * phi)).T
+        
+        partB = self.F.T * (1 + alpha * (np.ones(th.shape)*delta - th))
 
+        self.g = partA + partB.T
+
+        partA = alpha*delta*phi
+
+        tempPrototypes = np.array([np.random.rand(self.numPrototypes) for i in range(self.dimensions)])
+
+        tempG = self.g.T
+
+        for i in range(self.dimensions):
+            tempPrototypes[i] += partA*tempG[i]
+
+        self.prototypes += tempPrototypes.T
+        
+            # self.prototypes[i][j] += alpha[i]*delta*(phi[i]*g[i][j] + phi[i]*self.F[i][j])
