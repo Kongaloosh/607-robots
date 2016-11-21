@@ -113,7 +113,6 @@ class TDR_Kanerva(TDR):
         self.h = np.zeros(self.nf)
         self.ones = np.ones(self.nf)
         self.z = np.zeros(self.nf)
-        self.g = np.zeros((4, self.nf))
 
         try:
           self.initalpha = config['initalpha'] / config['active_features']
@@ -147,9 +146,8 @@ class TDR_Kanerva(TDR):
         self.th += self.alpha * delta * self.z
         self.h = self.h * (self.ones - effective_step_size) + self.alpha * delta * phi
 
-        self.g = self.g * (np.ones(self.g.shape) - self.g * self.alpha * phi) + self.kanerva.F.T * self.alpha * (self.ones*delta - self.th)
 
-        self.kanerva.update_prototypes(self.g.T, self.alpha, delta, phi, self.th)
+        self.kanerva.update_prototypes(self.alpha, delta, phi, self.th)
 
 
 
