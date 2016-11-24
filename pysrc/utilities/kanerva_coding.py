@@ -6,7 +6,7 @@ import numpy as np
 __author__ = 'travnik'
 
 class BaseKanervaCoder:
-    def __init__(self, _startingPrototypes, _dimensions):
+    def __init__(self, _startingPrototypes, _dimensions, _numActiveFeatures):
         self.numPrototypes = _startingPrototypes
         self.dimensions = _dimensions
         self.prototypes = np.array([np.random.rand(self.dimensions) for i in range(self.numPrototypes)])
@@ -14,7 +14,7 @@ class BaseKanervaCoder:
         self.sorted_prototype_diffs_indexs = np.zeros(self.numPrototypes)
         self.g = np.array([np.random.rand(self.dimensions) for i in range(self.numPrototypes)])
 
-        self.numActiveFeatures = 10
+        self.numActiveFeatures = _numActiveFeatures
 
     def get_features(self, data):
         closestPrototypesIndxs = np.zeros(self.numPrototypes)
@@ -39,20 +39,15 @@ class BaseKanervaCoder:
         self.F = tempF.T
 
     def update_prototypes(self, alpha, delta, phi, th):
-
         #self.g = self.g * (np.ones(self.g.shape) - self.g * alpha * phi) + self.F.T * self.alpha * (self.ones*delta - th) + self.F
 
-
         partA = self.g * np.ones(self.g.shape) - (self.g.T * (alpha * phi)).T
-        
         partB = self.F.T * (1 + alpha * (np.ones(th.shape)*delta - th))
 
         self.g = partA + partB.T
 
         partA = alpha*delta*phi
-
         tempPrototypes = np.array([np.random.rand(self.numPrototypes) for i in range(self.dimensions)])
-
         tempG = self.g.T
 
         for i in range(self.dimensions):
