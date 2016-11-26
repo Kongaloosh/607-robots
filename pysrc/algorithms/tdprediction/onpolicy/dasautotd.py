@@ -2,6 +2,7 @@ import numpy as np
 from scipy.sparse import csc_matrix as sp
 from pysrc.algorithms.tdprediction.tdprediction import TDPrediction
 from pysrc.utilities.kanerva_coding import BaseKanervaCoder
+from pysrc.utilities.Prototype_MetaGradientDescent import MetaGradientDescent
 
 class TD(TDPrediction):
     """Does Not Use Replacing Traces"""
@@ -140,7 +141,8 @@ class TDR_Kanerva(TDR):
         except KeyError:
           self.initalpha = config['initalpha']
         self.alpha = np.ones(self.nf) * self.initalpha
-        self.kanerva = BaseKanervaCoder(_startingPrototypes=1024, _dimensions=4, _numActiveFeatures=config['active_features'])
+#        self.kanerva = BaseKanervaCoder(_startingPrototypes=1024, _dimensions=4, _numActiveFeatures=config['active_features'])
+        self.mgd = MetaGradientDescent(_startingPrototypes=1024, _dimensions=4)
 
     def step(self, params):
         phi = params['phi']
@@ -149,10 +151,11 @@ class TDR_Kanerva(TDR):
         g = params['g']
         l = params['l']
         gnext = params['gnext']
-        self.kanerva.calculate_f(phi)
 
-        phi = self.kanerva.get_features(phi)
-        phinext = self.kanerva.get_features(phinext)
+        obs = phi
+
+        phi = self.mgd.get_features(phi)
+        phinext = self.mgd.get_features(phinext)
 
         effective_step_size = g * self.alpha * self.z * phinext
         delta = r + gnext * np.dot(phinext, self.th) - np.dot(phi, self.th)
@@ -166,10 +169,14 @@ class TDR_Kanerva(TDR):
         self.z = g * l * self.z * (phi == 0.) + (phi != 0.) * phi
         self.th += self.alpha * delta * self.z
         self.h = self.h * (self.ones - effective_step_size) + self.alpha * delta * phi
-        self.kanerva.update_prototypes(self.alpha, delta, phi, self.th)
+#        self.kanerva.update_prototypes(self.alpha, delta, phi, self.th)
+
+#    def estimate(self, phi):
+#          return np.dot(self.kanerva.get_features(phi), self.th)
+
+        self.mgd.update_prototypes(obs, self.alpha, delta, self.th)
+
 
     def estimate(self, phi):
-        return np.dot(self.kanerva.get_features(phi), self.th)
-
-
-
+        phi = self.mgd.get_features(phi)
+        return np.dot(phi, self.th)
