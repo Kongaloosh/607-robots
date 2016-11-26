@@ -38,10 +38,11 @@ class BaseKanervaCoder:
             tempF[i] = sigmoid*(1-sigmoid)*data[i] # Setting the whole array here instead of one element at a time
         self.F = tempF.T
 
-    def update_prototypes(self, alpha, delta, phi, th):
+    def update_prototypes(self, obs, alpha, delta, phi, th):
 
         #self.g = self.g * (np.ones(self.g.shape) - self.g * alpha * phi) + self.F.T * self.alpha * (self.ones*delta - th) + self.F
 
+        self.calculate_f(obs)
 
         partA = self.g * np.ones(self.g.shape) - (self.g.T * (alpha * phi)).T
         
