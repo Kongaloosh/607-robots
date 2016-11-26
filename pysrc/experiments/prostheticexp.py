@@ -64,7 +64,6 @@ def main():
 
     config_alg = pickle.load(open(config_alg_path, 'rb'))   # we load a configuration file with all of the data
     file_loader = FileLoaderSetEnd('results/prosthetic-data/EdwardsPOIswitching_{s}{a}.txt'.format(s=args.sVal, a=args.aVal), 58000)
-    # file_loader = FileLoaderApprox('results/prosthetic-data/EdwardsPOIswitching_{s}{a}.txt'.format(s=args.sVal, a=args.aVal), 14)
 
     algs = {
         'autotd': autotd.AutoTD,
@@ -74,6 +73,7 @@ def main():
         'dasautotdr': dasautotd.TDR,
         'dasautotdr_kanerva': dasautotd.TDR_Kanerva,
         'tdr': tdr.TDR,
+        'tdr_kanerva': tdr.TDR_Kanerva,
        # 'utd': utd.UTD,
        # 'utotd': utotd.UTOTD,
        # 'utdr': utdr.UTDR
