@@ -87,16 +87,14 @@ class TDR_Kanerva(TDPrediction):
 class TDR_MGD(TDR):
 
     def __init__(self, config):
-
         self.nf = config['nf']
         self.th = np.zeros(self.nf)
         self.v = np.zeros(self.nf)
         self.h = np.zeros(self.nf)
         self.ones = np.ones(self.nf)
         self.z = np.zeros(self.nf)
-
         try:
-          self.initalpha = config['alpha'] / config['active_features']
+          self.initalpha = config['alpha'] / 1024
         except KeyError:
           self.initalpha = config['alpha']
         self.alpha = np.ones(self.nf) * self.initalpha
@@ -115,8 +113,8 @@ class TDR_MGD(TDR):
         phi = self.mgd.get_features(phi)
         phinext = self.mgd.get_features(phinext)
 
-        delta = r + gnext*np.dot(phinext, self.th) - np.dot(phi, self.th)
-        self.z = g*l*self.z*(phi==0.) + (phi!=0.)*phi
+        delta = r + gnext * np.dot(phinext, self.th) - np.dot(phi, self.th)
+        self.z = g * l * self.z * (phi==0.) + (phi != 0.) * phi
         self.th += self.alpha*delta*self.z
 
         self.mgd.update_prototypes(obs, self.alpha, delta, self.th)
