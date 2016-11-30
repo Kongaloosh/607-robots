@@ -74,6 +74,7 @@ def main():
         'dasautotdr_kanerva': dasautotd.TDR_Kanerva,
         'tdr': tdr.TDR,
         'tdr_kanerva': tdr.TDR_Kanerva,
+        'tdr_mgd': tdr.TDR_MGD,
        # 'utd': utd.UTD,
        # 'utotd': utotd.UTOTD,
        # 'utdr': utdr.UTDR
