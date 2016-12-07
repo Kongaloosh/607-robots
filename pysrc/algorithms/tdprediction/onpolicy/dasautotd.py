@@ -37,8 +37,7 @@ class TD(TDPrediction):
         l = params['l']
         gnext = params['gnext']
 
-        effective_step_size = g * self.alpha * self.z * phinext
-        # print(np.nonzero(effective_step_size))
+        effective_step_size = self.alpha * self.z * phinext
         delta = r + gnext*np.dot(phinext, self.th) - np.dot(phi, self.th)
         self.v = np.maximum(
             np.abs(delta*phi*self.h),
@@ -84,7 +83,7 @@ class TDR(TDPrediction):
         l = params['l']
         gnext = params['gnext']
 
-        effective_step_size = g * self.alpha * self.z * phinext
+        effective_step_size = self.alpha * self.z * phinext
         delta = r + gnext*np.dot(phinext, self.th) - np.dot(phi, self.th)
         self.v = np.maximum(
             np.abs(delta*phi*self.h),
@@ -157,7 +156,7 @@ class TDR_Kanerva(TDR):
         phi = self.mgd.get_features(phi)
         phinext = self.mgd.get_features(phinext)
 
-        effective_step_size = g * self.alpha * self.z * phinext
+        effective_step_size = self.alpha * self.z * phinext
         delta = r + gnext * np.dot(phinext, self.th) - np.dot(phi, self.th)
         self.v = np.maximum(
             np.abs(delta * phi * self.h),
@@ -169,10 +168,6 @@ class TDR_Kanerva(TDR):
         self.z = g * l * self.z * (phi == 0.) + (phi != 0.) * phi
         self.th += self.alpha * delta * self.z
         self.h = self.h * (self.ones - effective_step_size) + self.alpha * delta * phi
-#        self.kanerva.update_prototypes(self.alpha, delta, phi, self.th)
-
-#    def estimate(self, phi):
-#          return np.dot(self.kanerva.get_features(phi), self.th)
 
         self.mgd.update_prototypes(obs, self.alpha, delta, self.th)
 
