@@ -84,7 +84,7 @@ class TDR(TDPrediction):
         l = params['l']
         gnext = params['gnext']
 
-        effective_step_size = g * self.alpha * self.z * phi
+        effective_step_size = self.alpha * self.z * phi
         delta = r + gnext*np.dot(phinext, self.th) - np.dot(phi, self.th)
         self.v = np.maximum(
             np.abs(delta*phi*self.h),
@@ -105,7 +105,7 @@ class TDR(TDPrediction):
         l = params['l']
         gnext = params['gnext']
 
-        effective_step_size = g * self.alpha * self.z * phi
+        effective_step_size = self.alpha * self.z * phi
         delta = r + gnext*np.dot(phinext, self.th) - np.dot(phi, self.th)
         self.v = np.maximum(
             np.abs(delta*phi*self.h),
@@ -140,8 +140,8 @@ class TDR_Kanerva(TDR):
           self.initalpha = config['initalpha'] / config['active_features']
         except KeyError:
           self.initalpha = config['initalpha']
+            
         self.alpha = np.ones(self.nf) * self.initalpha
-#        self.kanerva = BaseKanervaCoder(_startingPrototypes=1024, _dimensions=4, _numActiveFeatures=config['active_features'])
         self.mgd = MetaGradientDescent(_startingPrototypes=1024, _dimensions=4)
 
     def step(self, params):
@@ -157,7 +157,7 @@ class TDR_Kanerva(TDR):
         phi = self.mgd.get_features(phi)
         phinext = self.mgd.get_features(phinext)
 
-        effective_step_size = g * self.alpha * self.z * phi
+        effective_step_size = self.alpha * self.z * phi
         delta = r + gnext * np.dot(phinext, self.th) - np.dot(phi, self.th)
         self.v = np.maximum(
             np.abs(delta * phi * self.h),
