@@ -103,6 +103,7 @@ def main():
 
     config_prob['return'] = calculated_return
 
+
     c = reduce(lambda x, y: dict(x, **y), (config_alg[0], config_prob))                 # concat the dicts
     prob = problems[args.prob](c)                                                       # construct a config
     config_prob['normalizer'] = generate_normalizer(file_loader.data_stream, prob=prob) # array for normalizing states
@@ -112,7 +113,17 @@ def main():
     # ==================================================================================================================
 
     for config in config_alg:                                               # for the parameters we're interested in
-        config.update(config_prob)                                          # add the problem-specific configs
+        configNumFeatures = 0
+
+        if config['nf']:
+            configNumFeatures = config['nf']
+
+        config.update(config_prob)
+
+        if configNumFeatures > 0:                                          # add the problem-specific configs
+            config['nf'] = configNumFeatures
+            config['memory_size'] = configNumFeatures
+
         prob = problems[args.prob](config)                                  # construct a problem
         config['active_features'] =\
             prob.get_num_active_features(file_loader.data_stream[0])
@@ -125,6 +136,7 @@ def main():
         config['error'] = \
             np.array(config['return']) - prediction[:len(config['return'])]
         pickle.dump(config, f, -1)
+
     f.close()
 
 if __name__ == '__main__':

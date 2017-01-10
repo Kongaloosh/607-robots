@@ -94,11 +94,11 @@ class TDR_MGD(TDR):
         self.ones = np.ones(self.nf)
         self.z = np.zeros(self.nf)
         try:
-          self.initalpha = config['alpha'] / 1024
+          self.initalpha = config['alpha'] / config['nf']
         except KeyError:
           self.initalpha = config['alpha']
         self.alpha = np.ones(self.nf) * self.initalpha
-        self.mgd = MetaGradientDescent(_startingPrototypes=1024, _dimensions=4)
+        self.mgd = MetaGradientDescent(_startingPrototypes=config['nf'], _dimensions=4)
 
     def step(self, params):
         phi = params['phi']

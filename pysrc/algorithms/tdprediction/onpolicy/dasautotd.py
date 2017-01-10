@@ -142,7 +142,7 @@ class TDR_Kanerva(TDR):
           self.initalpha = config['initalpha']
 
         self.alpha = np.ones(self.nf) * self.initalpha
-        self.mgd = MetaGradientDescent(_startingPrototypes=1024, _dimensions=4)
+        self.mgd = MetaGradientDescent(_startingPrototypes=self.nf, _dimensions=4)
 
     def step(self, params):
         phi = params['phi']
