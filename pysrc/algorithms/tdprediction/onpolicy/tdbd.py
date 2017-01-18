@@ -37,7 +37,7 @@ class TDBD(TDPrediction):
 
 
 class TDBDR(TDPrediction):
-    """ TD REPLACING TRACES """
+    """TD-based Incremental Delta Bar Delta"""
 
     def __init__(self, config):
         '''Constructor'''
@@ -46,7 +46,7 @@ class TDBDR(TDPrediction):
         self.z = np.zeros(self.nf)
         self.beta = np.zeros(self.nf)
         self.h = np.zeros(self.nf)
-        self.meta_weight = 0                # todo: pull from config
+        self.meta_step_size = config['meta_step_size']                # todo: pull from config
         try:
             self.alpha = np.ones(self.nf) * config['alpha'] / config['active_features']
         except KeyError:
@@ -64,7 +64,7 @@ class TDBDR(TDPrediction):
         gnext = params['gnext']
         delta = R + gnext * np.dot(phinext, self.th) - np.dot(phi, self.th)
         self.z = g * l * self.z * (phi == 0.) + (phi != 0.) * phi
-        self.beta += self.meta_weight + delta + phi
+        self.beta += self.meta_step_size + delta + phi
         self.alpha = np.exp(self.beta)
         self.th += self.alpha * delta * self.z
         self.h = self.h * [1 - self.alpha * phi**2] + self.alpha * delta * phi
