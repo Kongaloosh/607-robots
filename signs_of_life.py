@@ -3,12 +3,13 @@ import sys
 from datetime import datetime
 import numpy as np
 
-__author__ = 'kongaloosh'
+__author__ = 'ksongaloosh'
 
 central_position = 512                  # (range: 0 to 1023)
 
 #serial_port = '/dev/tty.usbserial-AI03QD8V'
 serial_port = '/dev/ttyUSB0'
+
 serial = dynamixel.SerialStream(port=serial_port,
                                 baudrate=1000000,
                                 timeout=1)
