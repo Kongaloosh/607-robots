@@ -6,7 +6,7 @@ import sys
 sys.path.insert(0, os.getcwd())
 import argparse
 from pysrc.problems.prosthetic_problem import Prosthetic_Experiment, Biorob2012Experiment, TOTDExperiment, TOTD_kanerva
-from pysrc.algorithms.tdprediction.onpolicy import td, tdr, totd, autotd, dasautotd
+from pysrc.algorithms.tdprediction.onpolicy import td, tdr, totd, autotd, dasautotd, tdbd
 from pysrc.utilities.file_loader import FileLoader, FileLoaderApprox, FileLoaderSetEnd
 from pysrc.utilities.verifier import *
 from pysrc.utilities.max_min_finder import *
@@ -51,7 +51,6 @@ def main():
     parser.add_argument('config_number', type=int, help="the number of the desired config file. if none, then unumbered is used")
     args = parser.parse_args()
 
-
     config_prob_path = 'results/robot-experiments/{prob}/configprob.pkl'.format(prob=args.prob)
     config_prob = pickle.load(open(config_prob_path, 'rb'))   # we load a configuration file with all of the data
     num = args.config_number
@@ -75,6 +74,8 @@ def main():
         'tdr': tdr.TDR,
         'tdr_kanerva': tdr.TDR_Kanerva,
         'tdr_mgd': tdr.TDR_MGD,
+        'tdbdr': tdbd.TDBDR,
+        'tdbd': tdbd.TDBD,
        # 'utd': utd.UTD,
        # 'utotd': utotd.UTOTD,
        # 'utdr': utdr.UTDR
@@ -103,7 +104,6 @@ def main():
 
     config_prob['return'] = calculated_return
 
-
     c = reduce(lambda x, y: dict(x, **y), (config_alg[0], config_prob))                 # concat the dicts
     prob = problems[args.prob](c)                                                       # construct a config
     config_prob['normalizer'] = generate_normalizer(file_loader.data_stream, prob=prob) # array for normalizing states
@@ -111,30 +111,17 @@ def main():
     # ==================================================================================================================
     #                                              RUN EXPERIMENT
     # ==================================================================================================================
-
     for config in config_alg:                                               # for the parameters we're interested in
-        configNumFeatures = 0
-
-        if config['nf']:
-            configNumFeatures = config['nf']
-
         config.update(config_prob)
-
-        if configNumFeatures > 0:                                          # add the problem-specific configs
-            config['nf'] = configNumFeatures
-            config['memory_size'] = configNumFeatures
-
+        config['memory_size'] = config['nf']
         prob = problems[args.prob](config)                                  # construct a problem
-        config['active_features'] =\
-            prob.get_num_active_features(file_loader.data_stream[0])
+        config['active_features'] = prob.get_num_active_features(file_loader.data_stream[0])
         alg = algs[args.algname](config)                                    # build our instance of an algorithm
-        print(config)
-        (prediction, signal) = \
-            run_one_config(file_loader=file_loader, prob=prob, alg=alg)     # grab results of run
+        (prediction, signal) = run_one_config(file_loader=file_loader, prob=prob, alg=alg)     # grab results of run
         config['signal'] = signal                                           # adding the config so we can save results
         config['prediction'] = prediction
-        config['error'] = \
-            np.array(config['return']) - prediction[:len(config['return'])]
+        config['error'] = np.array(config['return']) - prediction[:len(config['return'])]
+
         pickle.dump(config, f, -1)
 
     f.close()

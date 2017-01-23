@@ -9,7 +9,7 @@ class TDBD(TDPrediction):
     """ classdocs """
 
     def __init__(self, config):
-        """    Constructor """
+        '''Constructor'''
         self.nf = config['nf']
         self.th = np.zeros(self.nf)
         self.z = np.zeros(self.nf)
@@ -17,27 +17,33 @@ class TDBD(TDPrediction):
         self.h = np.zeros(self.nf)
         self.meta_step_size = config['meta_step_size']                # todo: pull from config
         try:
-            self.alpha = np.ones(self.nf) * config['alpha'] / config['active_features']
+            val = np.exp(config['beta']) / config['active_features']
+            self.beta = np.ones(self.nf) * np.log(val)
         except KeyError:
-            self.alpha = np.ones(self.nf) * config['alpha']
+            self.beta = np.ones(self.nf) * config['beta']
+
+        self.alpha = np.exp(self.beta)
 
     def initepisode(self):
         self.z = np.zeros(self.nf)
 
     def step(self, params):
         phi = params['phi']
-        r = params['R']
+        R = params['R']
         phinext = params['phinext']
         g = params['g']
         l = params['l']
         gnext = params['gnext']
-
-        delta = r + gnext * np.dot(phinext, self.th) - np.dot(phi, self.th)
+        delta = R + gnext * np.dot(phinext, self.th) - np.dot(phi, self.th)
         self.z = g * l * self.z + phi
-        self.beta += self.meta_step_size + delta + phi
+        self.beta += phi * self.meta_step_size * delta
         self.alpha = np.exp(self.beta)
         self.th += self.alpha * delta * self.z
-        self.h = self.h * [1 - self.alpha * phi**2] + self.alpha * delta * phi
+        h_update = [1 - self.alpha * phi**2]
+        if h_update > 0:
+            self.h = self.h * h_update + self.alpha * delta * phi
+        else:
+            self.h = self.h * 0 + self.alpha * delta * phi
 
 
 class TDBDR(TDPrediction):
@@ -51,10 +57,8 @@ class TDBDR(TDPrediction):
         self.beta = np.zeros(self.nf)
         self.h = np.zeros(self.nf)
         self.meta_step_size = config['meta_step_size']                # todo: pull from config
-        try:
-            self.alpha = np.ones(self.nf) * config['alpha'] / config['active_features']
-        except KeyError:
-            self.alpha = np.ones(self.nf) * config['alpha']
+        self.beta = np.ones(self.ones) * config['beta']
+        self.alpha = np.exp(self.beta)
 
     def initepisode(self):
         self.z = np.zeros(self.nf)
@@ -68,7 +72,11 @@ class TDBDR(TDPrediction):
         gnext = params['gnext']
         delta = R + gnext * np.dot(phinext, self.th) - np.dot(phi, self.th)
         self.z = g * l * self.z * (phi == 0.) + (phi != 0.) * phi
-        self.beta += self.meta_step_size + delta + phi
+        self.beta += phi * self.meta_step_size * delta
         self.alpha = np.exp(self.beta)
         self.th += self.alpha * delta * self.z
-        self.h = self.h * [1 - self.alpha * phi**2] + self.alpha * delta * phi
+        h_update = [1 - self.alpha * phi**2]
+        if h_update > 0:
+            self.h = self.h * h_update + self.alpha * delta * phi
+        else:
+            self.h = self.h * 0 + self.alpha * delta * phi
