@@ -1,0 +1,12 @@
+float64 load_2
+float64 speed_2
+float64 temperature_2
+float64 is_moving_2
+float64 goal_2
+float64 position_2
+float64 load_3
+float64 speed_3
+float64 temperature_3
+float64 is_moving_3
+float64 goal_3
+float64 position_3

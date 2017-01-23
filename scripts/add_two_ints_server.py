@@ -15,3 +15,9 @@ def add_two_ints_server():
 
 if __name__ == "__main__":
     add_two_ints_server()
+
+'''
+Because we've declared the type of the service to be AddTwoInts, it does the work of generating the AddTwoIntsRequest
+object for you (you're free to pass in your own instead). The return value is an AddTwoIntsResponse object.
+If the call fails, a rospy.ServiceException may be thrown, so you should setup the appropriate try/except block.
+'''

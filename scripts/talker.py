@@ -40,14 +40,14 @@ import rospy
 from std_msgs.msg import String
 
 def talker():
-    pub = rospy.Publisher('chatter', String, queue_size=10)
-    rospy.init_node('talker', anonymous=True)
-    rate = rospy.Rate(10) # 10hz
+    pub = rospy.Publisher('chatter', String, queue_size=10)     # publishing to 'chatter' topic with string type
+    rospy.init_node('talker', anonymous=True)                   # initializes node with name
+    rate = rospy.Rate(10)                                       # rate of sending messages (10hz)
     while not rospy.is_shutdown():
         hello_str = "hello world %s" % rospy.get_time()
-        rospy.loginfo(hello_str)
-        pub.publish(hello_str)
-        rate.sleep()
+        rospy.loginfo(hello_str)                                # logs the message to the local
+        pub.publish(hello_str)                                  # publishes the message
+        rate.sleep()                                            # sleeps to achieve right frequency
 
 if __name__ == '__main__':
     try:
