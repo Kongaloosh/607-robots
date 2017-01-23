@@ -1,15 +1,14 @@
+#!/usr/bin/env python
+
 import sys
 import rospy
-from beginner_tutorials.srv import *
+from srv import robot_command
 
-__author__ = 'kongaloosh'
-
-def add_two_ints_client(x, y):
-    rospy.wait_for_service('add_two_ints')
+def robot_command_client(x, y):
+    rospy.wait_for_service('robot_command')
     try:
-        add_two_ints = rospy.ServiceProxy('add_two_ints', AddTwoInts)
-        resp1 = add_two_ints(x, y)
-        return resp1.sum
+        command_service = rospy.ServiceProxy('robot_command', robot_command)
+        resp1 = command_service(x, y)
     except rospy.ServiceException, e:
         print "Service call failed: %s"%e
 
@@ -23,5 +22,4 @@ if __name__ == "__main__":
     else:
         print usage()
         sys.exit(1)
-    print "Requesting %s+%s"%(x, y)
-    print "%s + %s = %s"%(x, y, add_two_ints_client(x, y))
+    robot_command_client(x, y)
