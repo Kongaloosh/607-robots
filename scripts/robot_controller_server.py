@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from srv import robot_command
+from beginner_tutorials.srv import robot_command
 import rospy
 import sys
 import dynamixel
@@ -27,14 +27,14 @@ for actuator in net.get_dynamixels():
 
 
 def handle_command(request):
-    actuator = net.get_dynamixels()[2]
+    actuator = net.get_dynamixels()[0]
     actuator.moving_speed = 100
     actuator.torque_enable = 1
     actuator.torque_limit = 800
     actuator.max_torque = 800
     actuator.goal_position = request.goal_pos_2
 
-    actuator = net.get_dynamixels()[3]
+    actuator = net.get_dynamixels()[1]
     actuator.moving_speed = 100
     actuator.torque_enable = 1
     actuator.torque_limit = 800
@@ -45,7 +45,7 @@ def handle_command(request):
 
 def add_two_ints_server():
     rospy.init_node('robot_command_servo')
-    s = rospy.Service('robot_command', robot_command, handlecommand)
+    s = rospy.Service('robot_command', robot_command, handle_command)
     rospy.spin()
 
 
