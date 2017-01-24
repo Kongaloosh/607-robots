@@ -17,9 +17,10 @@ def get_observations(net):
             actuator.current_load,
             actuator.current_speed,
             actuator.current_temperature,
+            actuator.current_voltage,
             actuator.moving,
             actuator.goal_position,
-            actuator.current_voltage
+            actuator.current_position
         )
     return state
 
