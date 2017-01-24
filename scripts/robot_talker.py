@@ -1,10 +1,10 @@
-
+#!/usr/bin/env python
 __author__ = 'kongaloosh'
 
 import dynamixel
 import sys
 import rospy
-from msg import servo_state
+from beginner_tutorials.msg import servo_state
 #serial_port = '/dev/tty.usbserial-AI03QD8V'
 serial_port = '/dev/ttyUSB0'
 
@@ -41,11 +41,11 @@ def talker():
         print("no servos found")
         sys.exit(0)
 
-    pub = rospy.Publisher('robot obeservation', robot_obs, queue_size=10)     # publishing to 'chatter' topic with string type
+    pub = rospy.Publisher('robot_obeservation', servo_state, queue_size=10)     # publishing to 'chatter' topic with string type
     rospy.init_node('talker', anonymous=True)                   # initializes node with name
     rate = rospy.Rate(10)                                       # rate of sending messages (10hz)
     while not rospy.is_shutdown():
-        pub.publish(*get_observations())
+        pub.publish(*get_observations(net))
         rate.sleep()                                            # sleeps to achieve right frequency
 
 if __name__ == '__main__':
