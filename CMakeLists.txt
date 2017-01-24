@@ -48,12 +48,14 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
    FILES
    Num.msg
+   servo_state.msg
  )
 
 ## Generate services in the 'srv' folder
  add_service_files(
    FILES
    AddTwoInts.srv
+   robot_command.srv
  )
 
 ## Generate actions in the 'action' folder
@@ -82,6 +84,7 @@ catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES beginner_tutorials
   CATKIN_DEPENDS roscpp rospy std_msgs
+  CATKIN_DEPENDS message_runtime
 #  DEPENDS system_lib
 )
 
