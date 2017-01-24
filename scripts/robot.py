@@ -35,8 +35,11 @@ class Robot(object):
             actuator._set_cw_compliance_margin(0)
 
         rospy.init_node('robot', anonymous=True)
+        # Publishes robot state
         self.observation_publisher = rospy.Publisher('robot_observations', servo_state, queue_size=10)
-
+        # service for controlling servos
+        self.robot_controller_server = rospy.Service('robot_controller', robot_command, self.command_handler)
+        # timer which defines callback for the publisher
         rospy.Timer(rospy.Duration(1.0/10), self.observation_callback)
 
     def observation_callback(self):
@@ -56,5 +59,29 @@ class Robot(object):
                 actuator.goal_position,
                 actuator.current_position
             )
-
         return state
+
+    def command_handler(self, request):
+        actuator = self.net.get_dynamixels()[0]
+        actuator.moving_speed = 100
+        actuator.torque_enable = 1
+        actuator.torque_limit = 800
+        actuator.max_torque = 800
+        actuator.goal_position = request.goal_pos_2
+
+        actuator = request.net.get_dynamixels()[1]
+        actuator.moving_speed = 100
+        actuator.torque_enable = 1
+        actuator.torque_limit = 800
+        actuator.max_torque = 800
+        actuator.goal_position = request.goal_pos_3
+
+        self.net.synchronize()
+        return request.goal_pos_2, request.goal_pos_3
+
+if __name__ == '__main__':
+    try:
+        robot = Robot()
+        rospy.spin()
+    except rospy.ROSInterruptException:
+        pass
