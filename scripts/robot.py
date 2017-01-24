@@ -35,6 +35,8 @@ class Robot(object):
             actuator._set_cw_compliance_margin(0)
 
         rospy.init_node('robot', anonymous=True)
+        rospy.wait_for_service('robot_controller')
+        self.start_controller = rospy.ServiceProxy('robot_controller', robot_command )
         # Publishes robot state
         self.observation_publisher = rospy.Publisher('robot_observations', servo_state, queue_size=10)
         # service for controlling servos
