@@ -42,7 +42,7 @@ class Robot(object):
         # timer which defines callback for the publisher
         rospy.Timer(rospy.Duration(1.0/10), self.observation_callback)
 
-    def observation_callback(self):
+    def observation_callback(self, timer):
         # Make a header ???
         self.observation_publisher.publish(*self.get_observations())
 
