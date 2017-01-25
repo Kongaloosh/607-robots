@@ -5,9 +5,9 @@ import rospy
 from beginner_tutorials.srv import robot_command
 
 def robot_command_client(x, y):
-    rospy.wait_for_service('robot_command')
+    rospy.wait_for_service('robot_controller')
     try:
-        command_service = rospy.ServiceProxy('robot_command', robot_command)
+        command_service = rospy.ServiceProxy('robot_controller', robot_command)
         resp1 = command_service(x, y)
     except rospy.ServiceException, e:
         print "Service call failed: %s"%e
