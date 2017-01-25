@@ -36,14 +36,13 @@ class Robot(object):
             actuator._set_cw_compliance_margin(0)
 
         rospy.init_node('robot', anonymous=True)
-	
         # Publishes robot state
         self.observation_publisher = rospy.Publisher('robot_observations', servo_state, queue_size=10)
         # service for controlling servos
         self.robot_controller_server = rospy.Service('robot_controller', robot_command, self.command_handler)
         rospy.wait_for_service('robot_controller')
         self.start_controller = rospy.ServiceProxy('robot_controller', robot_command, self.command_handler)
-	self.start_controller(512,512)
+        self.start_controller(512,512)
 	# timer which defines callback for the publisher
         rospy.Timer(rospy.Duration(1.0/10), self.observation_callback)
 
@@ -67,7 +66,6 @@ class Robot(object):
         return state
 
     def command_handler(self, request):
-	print(request)
         actuator = self.net.get_dynamixels()[0]
         actuator.moving_speed = 100
         actuator.torque_enable = 1

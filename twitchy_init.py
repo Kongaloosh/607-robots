@@ -49,43 +49,43 @@ s1.enable_torque()
 # They need to have unique names or confusion will fill the serial bus
 # Set this servo to ID "2"
 s1.write_id(2)
-#
-# # 5) Initialize the second servo
-# while True:
-#     val = raw_input('waiting')
-#     if val == 'enter':
-#         break
-# # Plug in the next/remaining servo on your bus
-#
-# # Rescan for servos
-# # Should return:
-# # "FOUND A SERVO @ ID 1"
-# # "FOUND A SERVO @ ID 2"
-# s_list = find_servos(D)
-#
-# # Rename the second servo
-# # Set this servo to ID "3"
-# # Why, you ask? So that you can always plug in a new servo and have immediate access to it as ID "1" without overlapping with an existing servo on the bus
-# s1 = Robotis_Servo(D,s_list[0])
-# s1.write_id(3)
-#
-# # Rescan for the new servo names
-# # Should return:
-# # "FOUND A SERVO @ ID 2"
-# # "FOUND A SERVO @ ID 3"
-# s_list = find_servos(D)
-# s1 = Robotis_Servo(D,s_list[0])
-# s2 = Robotis_Servo(D,s_list[1])
-#
-# # 6) Test out both servos to make sure your robot is working as expected
-# s1.read_angle()
-# s1.read_load()
-# s2.read_angle()
-# s2.read_load()
-#
-# s1.move_angle(0.0); s2.move_angle(0.0)
-# s1.move_angle(0.5); s2.move_angle(-0.5)
-# s1.move_angle(-0.5); s2.move_angle(0.5)
-#
-# # Congratulations! You have now completed the robot initialization process.
-#
+
+# 5) Initialize the second servo
+while True:
+    val = raw_input('waiting')
+    if val == 'enter':
+        break
+# Plug in the next/remaining servo on your bus
+
+# Rescan for servos
+# Should return:
+# "FOUND A SERVO @ ID 1"
+# "FOUND A SERVO @ ID 2"
+s_list = find_servos(D)
+
+# Rename the second servo
+# Set this servo to ID "3"
+# Why, you ask? So that you can always plug in a new servo and have immediate access to it as ID "1" without overlapping with an existing servo on the bus
+s1 = Robotis_Servo(D,s_list[0])
+s1.write_id(3)
+
+# Rescan for the new servo names
+# Should return:
+# "FOUND A SERVO @ ID 2"
+# "FOUND A SERVO @ ID 3"
+s_list = find_servos(D)
+s1 = Robotis_Servo(D,s_list[0])
+s2 = Robotis_Servo(D,s_list[1])
+
+# 6) Test out both servos to make sure your robot is working as expected
+s1.read_angle()
+s1.read_load()
+s2.read_angle()
+s2.read_load()
+
+s1.move_angle(0.0); s2.move_angle(0.0)
+s1.move_angle(0.5); s2.move_angle(-0.5)
+s1.move_angle(-0.5); s2.move_angle(0.5)
+
+# Congratulations! You have now completed the robot initialization process.
+

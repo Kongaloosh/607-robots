@@ -9,20 +9,6 @@ from beginner_tutorials.msg import servo_state
 serial_port = '/dev/ttyUSB0'
 
 
-def get_observations(net):
-    """Turns the Current Values of the Robot Servos Into a Tuple to be Passed as a Message"""
-    state = ()
-    for actuator in net.get_dynamixels():
-        state += (
-            actuator.current_load,
-            actuator.current_speed,
-            actuator.current_temperature,
-            actuator.current_voltage,
-            actuator.moving,
-            actuator.goal_position,
-            actuator.current_position
-        )
-    return state
 
 
 def talker():
