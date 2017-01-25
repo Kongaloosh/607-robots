@@ -43,8 +43,8 @@ class Robot(object):
         rospy.wait_for_service('robot_controller')
         self.start_controller = rospy.ServiceProxy('robot_controller', robot_command, self.command_handler)
         self.start_controller(512,512)
-	# timer which defines callback for the publisher
-        rospy.Timer(rospy.Duration(1.0/10), self.observation_callback)
+        # timer which defines callback for the publisher
+        #  rospy.Timer(rospy.Duration(1.0/10), self.observation_callback)
 
     def observation_callback(self, timer):
         # Make a header ???
@@ -52,35 +52,41 @@ class Robot(object):
 
     def get_observations(self):
         """Turns the Current Values of the Robot Servos Into a Tuple to be Passed as a Message"""
-        state = ()
-        for actuator in self.net.get_dynamixels():
-            state += (
-                actuator.current_load,
-                actuator.current_speed,
-                actuator.current_temperature,
-                actuator.current_voltage,
-                actuator.moving,
-                actuator.goal_position,
-                actuator.current_position
-            )
-        return state
+        while True:
+            try:
+                state = ()
+                for actuator in self.net.get_dynamixels():
+                    state += (
+                        actuator.current_load,
+                        actuator.current_speed,
+                        actuator.current_temperature,
+                        actuator.current_voltage,
+                        actuator.moving,
+                        actuator.goal_position,
+                        actuator.current_position
+                    )
+                return state
+            except: pass
 
     def command_handler(self, request):
-        actuator = self.net.get_dynamixels()[0]
-        actuator.moving_speed = 100
-        actuator.torque_enable = 1
-        actuator.torque_limit = 800
-        actuator.max_torque = 800
-        actuator.goal_position = request.goal_pos_2
+        while True:
+            try:
+                actuator = self.net.get_dynamixels()[0]
+                actuator.moving_speed = 100
+                actuator.torque_enable = 1
+                actuator.torque_limit = 800
+                actuator.max_torque = 800
+                actuator.goal_position = request.goal_pos_2
 
-        actuator = self.net.get_dynamixels()[1]
-        actuator.moving_speed = 100
-        actuator.torque_enable = 1
-        actuator.torque_limit = 800
-        actuator.max_torque = 800
-        actuator.goal_position = request.goal_pos_3
-
-        self.net.synchronize()
+                actuator = self.net.get_dynamixels()[1]
+                actuator.moving_speed = 100
+                actuator.torque_enable = 1
+                actuator.torque_limit = 800
+                actuator.max_torque = 800
+                actuator.goal_position = request.goal_pos_3
+                self.net.synchronize()
+                break
+            except: pass
         return request.goal_pos_2, request.goal_pos_3
 
 if __name__ == '__main__':

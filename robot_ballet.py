@@ -1,14 +1,19 @@
-import dynamixel
-import sys
-from datetime import datetime
-import numpy as np
+#
+# This is a script which demonstrates all of the functionality requested in the assignment
+#
 
 __author__ = 'ksongaloosh'
 
+import dynamixel
+import sys
+from datetime import datetime
+from updated_lib_robotis_hack import *
+import numpy as np
+
 central_position = 512                  # (range: 0 to 1023)
 
-#serial_port = '/dev/tty.usbserial-AI03QD8V'
-serial_port = '/dev/ttyUSB0'
+serial_port = '/dev/tty.usbserial-AI03QD8V'
+# serial_port = '/dev/ttyUSB0'
 
 serial = dynamixel.SerialStream(port=serial_port,
                                 baudrate=1000000,
@@ -77,6 +82,21 @@ while goal_pos > 300:
 
 
 # ===================================================================================================================
+#                                           Move the Servos (angular)
+# ===================================================================================================================
+print("Moving with angles")
+D = USB2Dynamixel_Device(dev_name="/dev/tty.usbserial-AI03QD8V", baudrate=1000000)
+s_list = find_servos(D)
+s1 = Robotis_Servo(D,s_list[0])
+s2 = Robotis_Servo(D,s_list[1])
+
+# 6) Test out both servos to make sure your robot is working as expected
+
+s1.move_angle(0.0); s2.move_angle(0.0)
+s1.move_angle(0.5); s2.move_angle(-0.5)
+s1.move_angle(-0.5); s2.move_angle(0.5)
+
+# ===================================================================================================================
 #                                           changing torque
 # ===================================================================================================================
 
@@ -131,7 +151,7 @@ while(datetime.now()-start).seconds < 30:
     elif goal_pos < 300:
         amount = 20
 
-print("wating for a minute with maxed compliance and 20")
+print("wating for a minute with maxed compliance and disabled torque")
 for actuator in net.get_dynamixels():
     actuator._set_torque_enable(0)
 start = datetime.now()
