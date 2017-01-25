@@ -2,8 +2,7 @@
 
 import sys
 import rospy
-from srv import robot_command
-from keys
+from beginner_tutorials.srv import robot_command
 
 def robot_command_client(x, y):
     rospy.wait_for_service('robot_controller')
