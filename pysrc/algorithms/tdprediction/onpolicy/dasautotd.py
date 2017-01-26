@@ -36,8 +36,8 @@ class TD(TDPrediction):
         g = params['g']
         l = params['l']
         gnext = params['gnext']
-
-        effective_step_size = self.alpha * self.z * phinext
+        effective_step_size = np.dot(self.alpha * phi, phi) - np.dot(g * self.alpha * phi, phinext)
+        # print(np.nonzero(effective_step_size))
         delta = r + gnext*np.dot(phinext, self.th) - np.dot(phi, self.th)
         self.v = np.maximum(
             np.abs(delta*phi*self.h),
@@ -83,7 +83,7 @@ class TDR(TDPrediction):
         l = params['l']
         gnext = params['gnext']
 
-        effective_step_size = self.alpha * self.z * phinext
+        effective_step_size = np.dot(self.alpha * phi, phi) - np.dot(g * self.alpha * phi, phinext)
         delta = r + gnext*np.dot(phinext, self.th) - np.dot(phi, self.th)
         self.v = np.maximum(
             np.abs(delta*phi*self.h),
@@ -104,7 +104,7 @@ class TDR(TDPrediction):
         l = params['l']
         gnext = params['gnext']
 
-        effective_step_size = g * self.alpha * self.z * phinext
+        effective_step_size = np.dot(self.alpha * phi, phi) - np.dot(g * self.alpha * phi, phinext)
         delta = r + gnext*np.dot(phinext, self.th) - np.dot(phi, self.th)
         self.v = np.maximum(
             np.abs(delta*phi*self.h),
@@ -139,9 +139,9 @@ class TDR_Kanerva(TDR):
           self.initalpha = config['initalpha'] / config['active_features']
         except KeyError:
           self.initalpha = config['initalpha']
+
         self.alpha = np.ones(self.nf) * self.initalpha
-#        self.kanerva = BaseKanervaCoder(_startingPrototypes=1024, _dimensions=4, _numActiveFeatures=config['active_features'])
-        self.mgd = MetaGradientDescent(_startingPrototypes=1024, _dimensions=4)
+        self.mgd = MetaGradientDescent(_startingPrototypes=self.nf, _dimensions=4)
 
     def step(self, params):
         phi = params['phi']
@@ -156,7 +156,7 @@ class TDR_Kanerva(TDR):
         phi = self.mgd.get_features(phi)
         phinext = self.mgd.get_features(phinext)
 
-        effective_step_size = self.alpha * self.z * phinext
+        effective_step_size = np.dot(self.alpha * phi, phi) - np.dot(g * self.alpha * phi, phinext)
         delta = r + gnext * np.dot(phinext, self.th) - np.dot(phi, self.th)
         self.v = np.maximum(
             np.abs(delta * phi * self.h),
