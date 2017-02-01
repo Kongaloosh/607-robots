@@ -84,10 +84,10 @@ class Robot(object):
                 actuator.torque_limit = 800
                 actuator.max_torque = 800
                 actuator.goal_position = request.goal_pos_3
+
                 self.net.synchronize()
-                break
+                return request.goal_pos_2, request.goal_pos_3
             except: pass
-        return request.goal_pos_2, request.goal_pos_3
 
 if __name__ == '__main__':
     try:
