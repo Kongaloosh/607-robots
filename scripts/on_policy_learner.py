@@ -1,5 +1,7 @@
-from beginner_tutorials.pysrc.algorithms.tdprediction.onpolicy.tdr import TDR
-from beginner_tutorials.pysrc.utilities.tiles import loadTiles, getTiles
+#!/usr/bin/env python
+
+from pysrc.algorithms.tdprediction.onpolicy.tdr import TDR
+from pysrc.utilities.tiles import loadTiles, getTiles
 import rospy
 import numpy as np
 from beginner_tutorials.msg import servo_state
@@ -48,8 +50,9 @@ class OnPolicyPredictor(object):
         for i in f:                                         # update phi so that...
             phi_next[i] = 1                                 # all active features are 1
 
-        if self.phi:
+        if self.phi is not None:
             self.tdr.step(self.phi, data.load_2, phi_next, self.gamma, self.lmbda, self.gamma)
+	    print(data.load_2, np.dot(self.tdr.estimate(), self.phi))
         self.phi = phi_next                                 # update phi
 
 

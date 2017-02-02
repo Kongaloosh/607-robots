@@ -1,5 +1,4 @@
 import numpy as np
-from scipy.sparse import csc_matrix as sp
 from pysrc.algorithms.tdprediction.tdprediction import TDPrediction
 from pysrc.utilities.kanerva_coding import BaseKanervaCoder
 from pysrc.utilities.Prototype_MetaGradientDescent import MetaGradientDescent
