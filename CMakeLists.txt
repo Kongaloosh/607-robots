@@ -49,6 +49,7 @@ add_message_files(
    FILES
    Num.msg
    servo_state.msg
+   robot_command_state.msg
  )
 
 ## Generate services in the 'srv' folder
