@@ -3,6 +3,7 @@
 import sys
 import rospy
 from beginner_tutorials.srv import robot_command
+import random
 
 __author__ = 'kongaloosh'
 
@@ -18,20 +19,16 @@ if __name__ == "__main__":
     x = 512
     y = 512
 
-    print("ROBOT ARCADE: \nTo use this, press q or w to move the first servo and o or p to move the second servo."+
-          "\npress b to break and exit.")
     while True:
-        command = getKey()
-        if command == 'q':
+        command = random.randint(4)
+        if command == 1:
             x += 30
-        elif command == 'w':
+        elif command == 2:
             x -= 30
-        elif command == 'o':
-            y += 10
-        elif command == 'p':
-            y -= 10
-        elif command == 'b':
-            break
+        elif command == 3:
+            y += 30
+        elif command == 4:
+            y -= 30
 
         robot_command_client(x, y)
 
