@@ -1,0 +1,10 @@
+float64 load_2
+float64 temperature_2
+float64 voltage_2
+boolean is_moving_2
+float64 position_2
+float64 load_3
+float64 temperature_3
+float64 voltage_3
+boolean is_moving_3
+float64 position_3

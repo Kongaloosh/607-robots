@@ -23,22 +23,22 @@ def robot_command_client(x, y):
 
 
 if __name__ == "__main__":
-    x = 512
-    y = 512
+    x = 0
+    y = 0
 
     while True:
         command = random.randint(0, 3)
         print command
         if command == 0:
-            x += 70
+            x += 1
         elif command == 1:
-            x -= 70
+            x -= 1
         elif command == 2:
-            y += 70
+            y += 1
         elif command == 3:
-            y -= 70
+            y -= 1
 
         robot_command_client(x, y)
-        pub.Publish(4, command)
+        pub.publish(4, command)
         time.sleep(0.2)
     sys.exit(1)
