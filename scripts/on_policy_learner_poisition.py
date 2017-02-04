@@ -10,11 +10,6 @@ from beginner_tutorials.msg import servo_state, verifier, gvf
 __author__ = 'kongaloosh'
 
 
-# todo: publish values
-# todo: integrate online verifier
-# todo: give the messages the right info
-
-
 class OnPolicyPredictor(object):
     def __init__(self):
         self.num_tilings = 10
@@ -36,26 +31,25 @@ class OnPolicyPredictor(object):
         """ takes the observations from the words """
         # todo: norm the values
         state = [
-            data.voltage_2,
-            data.voltage_3,
-            data.load_2,
-            data.load_3,
+            data.voltage_2 / 10.,
+            data.load_2 / 1024.,
+            data.position_2 / 1024.,
             data.is_moving_2,
-            data.is_moving_3
-        ]                                       # form a state from new observations
-                                                # todo: multiply by the number of bins
+        ]  # form a state from new observations
+        print(state)
+        state *= 8  # multiply by the number of bins
         f = np.array(
             getTiles(
-                numtilings=self.num_tilings,    # the number of tilings in your tilecoder
-                memctable=self.memory_size,     # the amount of memory for each tilecoder
-                floats=state                    # the observations from the robot
+                numtilings=self.num_tilings,  # the number of tilings in your tilecoder
+                memctable=self.memory_size,  # the amount of memory for each tilecoder
+                floats=state  # the observations from the robot
             )
         )
-        f = np.concatenate(([1], f))            # add a bias
+        f = np.concatenate(([1], f))  # add a bias
 
-        phi_next = np.zeros(self.memory_size)   # make a new feature vector
-        for i in f:                             # update phi so that...
-            phi_next[i] = 1                     # all active features are 1
+        phi_next = np.zeros(self.memory_size)  # make a new feature vector
+        for i in f:  # update phi so that...
+            phi_next[i] = 1  # all active features are 1
 
         if self.phi is not None:
             reward = data.load_2
@@ -69,31 +63,32 @@ class OnPolicyPredictor(object):
             )
 
             prediction = self.tdr.estimate(self.phi)
-	    try:
-            	self.verifier.update_reward(reward)
-            	self.verifier.update_prediction(prediction)     # update the prediction
-            	self.verifier_publisher.publish(                # publish the verifier's info (offset by horizon)
-            	    	self.verifier.synced_prediction(),
-                	self.verifier.calculate_currente_return(),
-                	self.verifier.calculate_current_error()
-            )
-	    except:
-		pass
             try:
-	    	self.gvf_publisher.publish(             # publish the most recent predictions
-                	prediction,
-                	prediction/(1./(1.-self.gamma))     # prediction normalized by the timescale of the horizon
-            	)
-	    except:
-		pass
-        self.phi = phi_next                         # update phi
+                self.verifier.update_reward(reward)
+                self.verifier.update_prediction(prediction)  # update the prediction
+                self.verifier_publisher.publish(  # publish the verifier's info (offset by horizon)
+                                                  self.verifier.synced_prediction(),
+                                                  self.verifier.calculate_currente_return(),
+                                                  self.verifier.calculate_current_error()
+                                                  )
+            except:
+                pass
+            try:
+                self.gvf_publisher.publish(  # publish the most recent predictions
+                                             prediction,
+                                             prediction / (1. / (1. - self.gamma))
+                                             # prediction normalized by the timescale of the horizon
+                                             )
+            except:
+                pass
+        self.phi = phi_next  # update phi
 
 
 def listener(predictor):
     rospy.init_node('on_policy_listener', anonymous=True)  # anon means that multiple can subscribe to the same topic
     rospy.Subscriber('robot_observations', servo_state,
-                     predictor.handle_obs)                 # subscribes to chatter and calls the callback
-    rospy.spin()                                           # keeps python from exiting until this node is stopped
+                     predictor.handle_obs)  # subscribes to chatter and calls the callback
+    rospy.spin()  # keeps python from exiting until this node is stopped
 
 
 if __name__ == '__main__':
