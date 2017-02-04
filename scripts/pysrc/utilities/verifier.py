@@ -46,7 +46,7 @@ class OnlineVerifier(object):
 
     def calculate_current_error(self):
         """Gets the difference between the calculated return and the prediction"""
-        return self.calculateReturn() - self.getSyncedPrediction()
+        return self.calculate_currente_return() - self.synced_prediction()
 
 
 def calculate_discounted_return_backwards(config, obs, reward_calculator):

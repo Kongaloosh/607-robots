@@ -30,10 +30,7 @@ class OnPolicyPredictor(object):
         self.verifier = OnlineVerifier(rlGamma=self.gamma)
 
         self.verifier_publisher = rospy.Publisher('position_verifier', verifier, queue_size=10)
-        rospy.init_node('position_verifier', anonymous=True)
-
         self.gvf_publisher = rospy.Publisher('position_predictor', gvf, queue_size=10)
-        rospy.init_node('position_predictor', anonymous=True)
 
     def handle_obs(self, data):
         """ takes the observations from the words """
@@ -72,19 +69,23 @@ class OnPolicyPredictor(object):
             )
 
             prediction = self.tdr.estimate(self.phi)
-
-            self.verifier.update_reward(reward)
-            self.verifier.update_prediction(prediction)     # update the prediction
-            self.verifier_publisher.Publish(                # publish the verifier's info (offset by horizon)
-                self.verifier.synced_prediction(),
-                self.verifier.calculate_currente_return(),
-                self.verifier.calculate_current_error()
+	    try:
+            	self.verifier.update_reward(reward)
+            	self.verifier.update_prediction(prediction)     # update the prediction
+            	self.verifier_publisher.publish(                # publish the verifier's info (offset by horizon)
+            	    	self.verifier.synced_prediction(),
+                	self.verifier.calculate_currente_return(),
+                	self.verifier.calculate_current_error()
             )
-
-            self.gvf_publisher.Publish(             # publish the most recent predictions
-                prediction,
-                prediction/(1./(1.-self.gamma))     # prediction normalized by the timescale of the horizon
-            )
+	    except:
+		pass
+            try:
+	    	self.gvf_publisher.publish(             # publish the most recent predictions
+                	prediction,
+                	prediction/(1./(1.-self.gamma))     # prediction normalized by the timescale of the horizon
+            	)
+	    except:
+		pass
         self.phi = phi_next                         # update phi
 
 
