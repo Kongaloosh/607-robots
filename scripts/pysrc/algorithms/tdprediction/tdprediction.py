@@ -1,19 +1,11 @@
-'''
-Created on Mar 31, 2015
-
-@author: A. Rupam Mahmood
-'''
-
 import numpy as np
 
-class TDPrediction(object):
-  '''
-  TDPrediction abstract class 
-  '''
-  
-  def __init__(self, config):
-    self.nf   = config['nf']
-    self.th   = np.zeros(self.nf)
 
-  def estimate(self):
-    return self.th
+class TDPrediction(object):
+
+    def __init__(self, number_of_features):
+        self.number_of_features = number_of_features
+        self.th = np.zeros(self.number_of_features)
+
+    def estimate(self, state):
+        return np.dot(self.th, state)
