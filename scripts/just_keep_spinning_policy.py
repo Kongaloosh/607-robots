@@ -27,16 +27,16 @@ if __name__ == "__main__":
     y = 0
 
     while True:
-        command = random.randint(0, 3)
+        command = 2
         print command
         if command == 0:
-            x = 10
+            x = 2
         elif command == 1:
-            x = -10
+            x = -2
         elif command == 2:
-            y = 10
+            y = 2
         elif command == 3:
-            y = -10
+            y = -2
 
         robot_command_client(x, y)
         pub.publish(4, command)
