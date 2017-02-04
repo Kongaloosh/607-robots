@@ -12,10 +12,10 @@ __author__ = 'kongaloosh'
 
 class OnPolicyPredictor(object):
     def __init__(self):
-        self.num_tilings = 10
-        self.memory_size = 2 * 10
-        self.lmbda = 0.999
-        self.gamma = 0.9
+        self.num_tilings = 8
+        self.memory_size = 2 ** 10
+        self.lmbda = 0.99
+        self.gamma = 0.97
         self.phi = None
         self.tdr = TDR(
             number_of_features=self.memory_size,
@@ -30,13 +30,13 @@ class OnPolicyPredictor(object):
     def handle_obs(self, data):
         """ takes the observations from the words """
         # todo: norm the values
-        state = [
-            data.voltage_2 / 10.,
+        state = np.array([
+            data.voltage_2 / 16.,
             data.load_2 / 1024.,
             data.position_2 / 1024.,
-            data.is_moving_2,
-        ]  # form a state from new observations
-        print(state)
+            int(data.is_moving_2),
+        ])  # form a state from new observations
+        
         state *= 8  # multiply by the number of bins
         f = np.array(
             getTiles(
@@ -52,7 +52,7 @@ class OnPolicyPredictor(object):
             phi_next[i] = 1  # all active features are 1
 
         if self.phi is not None:
-            reward = data.load_2
+            reward = data.position_2
             self.tdr.step(
                 self.phi,
                 reward,
