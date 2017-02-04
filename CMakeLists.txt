@@ -50,6 +50,8 @@ add_message_files(
    Num.msg
    servo_state.msg
    robot_command_state.msg
+   verifier.msg
+   gvf.msg
  )
 
 ## Generate services in the 'srv' folder
