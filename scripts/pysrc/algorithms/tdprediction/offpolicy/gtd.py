@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.sparse import csc_matrix as sp
-from beginner_tutorials.pysrc.algorithms.tdprediction.tdprediction import TDPrediction
+from pysrc.algorithms.tdprediction.tdprediction import TDPrediction
 
 
 class GTD(TDPrediction):
@@ -47,15 +47,20 @@ class GTDR(TDPrediction):
         self.z = np.zeros(self.nf)
         self.w = np.zeros(self.nf)
         self.alpha = step_size / number_of_active_features
+        self.beta = 0.1
         self.target_policy = target_policy
 
     def initepisode(self):
         self.z = np.zeros(self.nf)
 
-    def step(self, reward, phi, phinext, gamma, lmbda, gamma_next, behaviour_policy, action):
+    def step(self, phi, reward, phinext, gamma, lmbda, gamma_next, behaviour_policy, action):
         delta = reward + gamma_next * np.dot(phinext, self.th) - np.dot(phi, self.th)
-        rho = self.target_policy.probability_of_action_given_state(action, phi) / \
-            behaviour_policy.probability_of_action_given_state(action, phi)
+        if action == 1:
+            rho = 1/behaviour_policy.probability_of_action_given_state(action, phi)
+        if action == 0:
+            rho = 0
+        # rho = self.target_policy.probability_of_action_given_state(action, phi) / \
+        #     behaviour_policy.probability_of_action_given_state(action, phi)
 
         self.z = rho * (phi + gamma * lmbda * self.z)
         self.th += self.alpha * (delta * self.z - gamma * (1 - lmbda) * np.dot(self.z, self.w) * phinext)

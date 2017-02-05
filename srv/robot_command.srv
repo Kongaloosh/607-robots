@@ -1,5 +1,6 @@
 int64 goal_pos_2
 int64 goal_pos_3
+int8 command
 ---
 int64 goal_pos_2
 int64 goal_pos_3
