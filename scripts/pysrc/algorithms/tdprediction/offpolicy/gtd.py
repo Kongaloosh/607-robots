@@ -27,10 +27,10 @@ class GTD(TDPrediction):
         delta = reward + gamma_next * np.dot(phinext, self.th) - np.dot(phi, self.th)
         rho = self.target_policy.probability_of_action_given_state(action, phi) / \
             behaviour_policy.probability_of_action_given_state(action, phi)
-        self.z = rho * (gamma * lmbda * self.z * (phi == 0.) + (phi != 0.)*phi)
+
+        self.z = rho * (phi + gamma * lmbda * self.z)
         self.th += self.alpha * (delta * self.z - gamma * (1 - lmbda) * np.dot(self.z, self.w) * phinext)
         self.w += self.beta * (delta * self.z - np.dot(phi, self.w) * phi)
-
 
 class GTDR(TDPrediction):
     """ classdocs """
@@ -57,6 +57,6 @@ class GTDR(TDPrediction):
         rho = self.target_policy.probability_of_action_given_state(action, phi) / \
             behaviour_policy.probability_of_action_given_state(action, phi)
 
-        self.z = rho * (phi + gamma * lmbda * self.z)
+        self.z = rho * ((phi != 0.) * phi + gamma * lmbda * self.z * (phi == 0.) )
         self.th += self.alpha * (delta * self.z - gamma * (1 - lmbda) * np.dot(self.z, self.w) * phinext)
         self.w += self.beta * (delta * self.z - np.dot(phi, self.w) * phi)
