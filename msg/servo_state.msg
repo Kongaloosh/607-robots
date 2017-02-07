@@ -3,8 +3,13 @@ float64 temperature_2
 float64 voltage_2
 bool is_moving_2
 float64 position_2
+float64 angle_2
+float64 vel_command_2
 float64 load_3
 float64 temperature_3
 float64 voltage_3
 bool is_moving_3
 float64 position_3
+float64 angle_3
+float64 vel_command_3
+float64 command

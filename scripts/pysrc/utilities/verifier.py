@@ -10,7 +10,7 @@ class OnlineVerifier(object):
     """Calculates the true return"""
 
     def __init__(self, rlGamma):
-        self.rlGamma = rlGamma  # todo: make gamma a function
+        self.rlGamma = list()# todo: make gamma a function
         self.rewardHistory = list()  # a list of rewards we use to calculate true return
         self.predictionHistory = list()  # a list of predictions to sync our error calculation
         precision = 0.01
@@ -23,9 +23,18 @@ class OnlineVerifier(object):
             returnValue = 0
             for idx, val in enumerate(reversed(self.rewardHistory)):
                 idx = len(self.rewardHistory) - idx - 1  # true idx
-                returnValue += self.rewardHistory[idx] * (self.rlGamma) ** (((len(self.rewardHistory) - 1)) - idx)
+                if idx == 0:
+                    returnValue += self.rewardHistory[idx]
+                else:
+                # returnValue += self.rewardHistory[idx] * (self.rlGamma[idx]) ** (((len(self.rewardHistory) - 1)) - idx)
+                    returnValue += self.rewardHistory[idx] * reduce(lambda x, y: x*y, reversed(self.rlGamma[idx-1:]))
             return returnValue
         return None
+
+    def update_gamma(self, gamma):
+        self.rlGamma.append(gamma)
+        if len(self.rlGamma) > int(self.horizon):
+            self.rlGamma.pop(0)
 
     def update_reward(self, reward):
         """Adds the new reward"""

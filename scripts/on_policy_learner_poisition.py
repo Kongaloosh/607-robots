@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from pysrc.algorithms.tdprediction.onpolicy.tdr import TDR
+from pysrc.algorithms.tdprediction.onpolicy.tdbd import TDBD
 from pysrc.utilities.tiles import loadTiles, getTiles
 from pysrc.utilities.verifier import OnlineVerifier
 import rospy
@@ -13,9 +14,9 @@ __author__ = 'kongaloosh'
 class OnPolicyPredictor(object):
     def __init__(self):
         self.num_tilings = 10
-        self.memory_size = 2 * 10
-        self.lmbda = 0.999
-        self.gamma = 0.9
+        self.memory_size = 2 ** 10
+        self.lmbda = 0.99
+        self.gamma = 0.95
         self.phi = None
         self.tdr = TDR(
             number_of_features=self.memory_size,
@@ -27,17 +28,24 @@ class OnPolicyPredictor(object):
         self.verifier_publisher = rospy.Publisher('position_verifier', verifier, queue_size=10)
         self.gvf_publisher = rospy.Publisher('position_predictor', gvf, queue_size=10)
 
+        self.position_trace = 0
+
     def handle_obs(self, data):
         """ takes the observations from the words """
-        # todo: norm the values
-        state = [
-            data.voltage_2 / 10.,
-            data.load_2 / 1024.,
+
+        self.position_trace = 0.95 * self.position_trace + (1-0.95)* data.position_2
+
+
+        state = np.array([
+            # data.voltage_2 / 16.,
+            # data.load_2 / 1024.,
             data.position_2 / 1024.,
-            data.is_moving_2,
-        ]  # form a state from new observations
-        print(state)
-        state *= 8  # multiply by the number of bins
+            self.position_trace / 800,
+            (data.vel_command_2 + 2)/4.,
+            data.command
+        ])  # form a state from new observations
+        state *= 10  # multiply by the number of bins
+        print state
         f = np.array(
             getTiles(
                 numtilings=self.num_tilings,  # the number of tilings in your tilecoder
@@ -52,7 +60,7 @@ class OnPolicyPredictor(object):
             phi_next[i] = 1  # all active features are 1
 
         if self.phi is not None:
-            reward = data.load_2
+            reward = data.position_2
             self.tdr.step(
                 self.phi,
                 reward,
@@ -69,7 +77,7 @@ class OnPolicyPredictor(object):
                 self.verifier_publisher.publish(  # publish the verifier's info (offset by horizon)
                                                   self.verifier.synced_prediction(),
                                                   self.verifier.calculate_currente_return(),
-                                                  self.verifier.calculate_current_error()
+                                                  abs(self.verifier.calculate_current_error())
                                                   )
             except:
                 pass

@@ -13,11 +13,11 @@ pub = rospy.Publisher('robot_obeservation', robot_command_state, queue_size=10) 
 rospy.init_node('robot_command_talker', anonymous=True)                             # initializes node with name
 
 
-def robot_command_client(x, y):
+def robot_command_client(x, y, command):
     rospy.wait_for_service('robot_controller')
     try:
         command_service = rospy.ServiceProxy('robot_controller', robot_command)
-        resp1 = command_service(x, y)
+        resp1 = command_service(x, y, command)
     except rospy.ServiceException, e:
         print "Service call failed: %s" % e
 
@@ -27,7 +27,7 @@ if __name__ == "__main__":
     y = 0
 
     while True:
-        command = random.randint(0, 3)
+        command = random.randint(0, 1)
         print command
         if command == 0:
             x = 10
@@ -37,8 +37,8 @@ if __name__ == "__main__":
             y = 10
         elif command == 3:
             y = -10
-
-        robot_command_client(x, y)
+        print(command)
+        robot_command_client(x, y, command)
         pub.publish(4, command)
         time.sleep(0.2)
     sys.exit(1)
