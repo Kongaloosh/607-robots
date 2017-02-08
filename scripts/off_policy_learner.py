@@ -34,7 +34,7 @@ class OnPolicyPredictor(object):
     def handle_obs(self, data):
         """ takes the observations from the words """
 
-        self.position_trace = data.position_2 - self.las_pos + self.position_trace (0.8)
+        self.position_trace = data.position_2 - self.las_pos + self.position_trace * 0.8
 
         state = np.array([
             # data.voltage_2 / 16.,
