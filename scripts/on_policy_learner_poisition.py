@@ -20,7 +20,7 @@ class OnPolicyPredictor(object):
         self.phi = None
         self.tdr = TDR(
             number_of_features=self.memory_size,
-            step_size=0.01,
+            step_size=0.1,
             active_features=self.num_tilings
         )
         self.verifier = OnlineVerifier(rlGamma=self.gamma)
@@ -29,20 +29,21 @@ class OnPolicyPredictor(object):
         self.gvf_publisher = rospy.Publisher('position_predictor', gvf, queue_size=10)
         self.las_pos = 0
         self.position_trace = 0
+	self.vel_trace =0 
 
     def handle_obs(self, data):
         """ takes the observations from the words """
-
-        self.position_trace = data.position_2 - self.las_pos + self.position_trace * 0.8
+	self.vel_trace = data.position_2 - self.las_pos + self.vel_trace * 0.8
+        self.position_trace = data.position_2 + self.position_trace * 0.8
 
 
         state = np.array([
             # data.voltage_2 / 16.,
             # data.load_2 / 1024.,
             data.position_2 / 1024.,
-            self.position_trace / 800,
-            (data.vel_command_2 + 2)/4.,
-            data.command
+            (self.position_trace+1024.) / 2048.,
+            (self.vel_trace+1024.) / 2048.,
+            # data.command
         ])  # form a state from new observations
         state *= 10  # multiply by the number of bins
         print state
@@ -74,7 +75,8 @@ class OnPolicyPredictor(object):
             try:
                 self.verifier.update_reward(reward)
                 self.verifier.update_prediction(prediction)  # update the prediction
-                self.verifier_publisher.publish(  # publish the verifier's info (offset by horizon)
+		self.verifier.update_gamma(self.gamma)           
+		self.verifier_publisher.publish(  # publish the verifier's info (offset by horizon)
                                                   self.verifier.synced_prediction(),
                                                   self.verifier.calculate_currente_return(),
                                                   abs(self.verifier.calculate_current_error())

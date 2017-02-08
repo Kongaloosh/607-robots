@@ -16,13 +16,13 @@ class OnPolicyPredictor(object):
     def __init__(self):
         self.num_tilings = 10
         self.memory_size = 2 ** 10
-        self.lmbda = 0.9
+        self.lmbda = 0.99
         self.gamma = 0.95
         self.phi = None
         self.behavior_policy = Policy(self.memory_size, 2)
         self.tdr = GTDR(
             number_of_features=self.memory_size,
-            step_size=0.01,
+            step_size=0.1,
             target_policy=None,
             number_of_active_features=self.num_tilings
         )
@@ -30,18 +30,21 @@ class OnPolicyPredictor(object):
 
         self.position_trace = 0
         self.las_pos = 0
+	self.vel_trace =0 
 
     def handle_obs(self, data):
         """ takes the observations from the words """
 
         self.position_trace = data.position_2 - self.las_pos + self.position_trace * 0.8
+	self.vel_trace = data.position_2 - self.las_pos + self.vel_trace * 0.8
 
         state = np.array([
             # data.voltage_2 / 16.,
             # data.load_2 / 1024.,
             data.position_2 / 1024.,
-             (self.position_trace + 1024) /2048. ,
-            data.command
+            (self.position_trace+1024.) / 2048.,
+            (self.vel_trace+1024.) / 2048.,
+            # data.command
         ])  # form a state from new observations
         print(state)
 	state *= 10  # multiply by the number of bins
@@ -59,7 +62,7 @@ class OnPolicyPredictor(object):
             phi_next[i] = 1  # all active features are 1
 
         if self.phi is not None:
-            reward = data.load_2
+            reward = data.position_2
             self.behavior_policy.action_state_update(data.command, self.phi)
             self.tdr.step(
                 self.phi,
