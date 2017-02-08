@@ -1,5 +1,4 @@
 import numpy as np
-from scipy.sparse import csc_matrix as sp
 from pysrc.algorithms.tdprediction.tdprediction import TDPrediction
 
 
