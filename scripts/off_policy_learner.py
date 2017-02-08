@@ -16,7 +16,7 @@ class OnPolicyPredictor(object):
     def __init__(self):
         self.num_tilings = 10
         self.memory_size = 2 ** 10
-        self.lmbda = 0.99
+        self.lmbda = 0.9
         self.gamma = 0.95
         self.phi = None
         self.behavior_policy = Policy(self.memory_size, 2)
@@ -38,13 +38,13 @@ class OnPolicyPredictor(object):
 
         state = np.array([
             # data.voltage_2 / 16.,
-            data.load_2 / 1024.,
+            # data.load_2 / 1024.,
             data.position_2 / 1024.,
-            # self.position_trace / 800,
-            (data.vel_command_2 + 2)/4.,
+             (self.position_trace + 1024) /2048. ,
             data.command
         ])  # form a state from new observations
-        state *= 10  # multiply by the number of bins
+        print(state)
+	state *= 10  # multiply by the number of bins
         f = np.array(
             getTiles(
                 numtilings=self.num_tilings,  # the number of tilings in your tilecoder

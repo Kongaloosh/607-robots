@@ -55,7 +55,8 @@ class GTDR(TDPrediction):
     def step(self, phi, reward, phinext, gamma, lmbda, gamma_next, behaviour_policy, action):
         delta = reward + gamma_next * np.dot(phinext, self.th) - np.dot(phi, self.th)
         if action == 1:
-            rho = 1/behaviour_policy.probability_of_action_given_state(action, phi)
+	    rho = 1
+#            rho = 1/behaviour_policy.probability_of_action_given_state(action, phi)
         if action == 0:
             rho = 0
         # rho = self.target_policy.probability_of_action_given_state(action, phi) / \
