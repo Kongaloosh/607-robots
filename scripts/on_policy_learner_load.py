@@ -29,11 +29,12 @@ class OnPolicyPredictor(object):
         self.gvf_publisher = rospy.Publisher('load_predictor', gvf, queue_size=10)
 
         self.position_trace = 0
+        self.last_load = 0
 
     def handle_obs(self, data):
         """ takes the observations from the words """
 
-        self.position_trace = 0.95 * self.position_trace + (1-0.95)* data.position_2
+        self.position_trace = data.load_2 - self.last_load + self.position_trace * 0.8
 
         if data.command > 0:
             gnext = 0
@@ -44,8 +45,8 @@ class OnPolicyPredictor(object):
             # data.voltage_2 / 16.,
             data.load_2 / 1024.,
             data.position_2 / 1024.,
-            # self.position_trace / 800,
-            (data.vel_command_2 + 2)/4.,
+            self.position_trace + 1024 / 2048,
+            # (data.vel_command_2 + 2)/4.,
             data.command
         ])  # form a state from new observations
         state *= 10  # multiply by the number of bins
@@ -96,6 +97,7 @@ class OnPolicyPredictor(object):
                 pass
         self.phi = phi_next  # update phi
         self.gamma = gnext
+        self.last_load = data.load_2
 
 
 def listener(predictor):
