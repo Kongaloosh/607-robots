@@ -29,7 +29,7 @@ class OnPolicyPredictor(object):
         self.gvf_publisher = rospy.Publisher('position_predictor', gvf, queue_size=10)
 
         self.position_trace = 0
-        self.las_pos
+        self.las_pos = 0
 
     def handle_obs(self, data):
         """ takes the observations from the words """
