@@ -29,11 +29,12 @@ class OnPolicyPredictor(object):
         self.gvf_publisher = rospy.Publisher('position_predictor', gvf, queue_size=10)
 
         self.position_trace = 0
+        self.las_pos
 
     def handle_obs(self, data):
         """ takes the observations from the words """
 
-        self.position_trace = 0.95 * self.position_trace + (1-0.95)* data.position_2
+        self.position_trace = data.position_2 - self.las_pos + self.position_trace (0.8)
 
         state = np.array([
             # data.voltage_2 / 16.,
@@ -81,6 +82,7 @@ class OnPolicyPredictor(object):
             except:
                 pass
         self.phi = phi_next  # update phi
+        self.las_pos = data.position_2
 
 
 def listener(predictor):

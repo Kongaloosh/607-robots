@@ -46,7 +46,7 @@ class GTDR(TDPrediction):
         self.z = np.zeros(self.nf)
         self.w = np.zeros(self.nf)
         self.alpha = step_size / number_of_active_features
-        self.beta = 0.1
+        self.beta = self.alpha / number_of_active_features
         self.target_policy = target_policy
 
     def initepisode(self):
