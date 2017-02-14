@@ -1,0 +1,29 @@
+----------------------------------------
+Begin PBS Prologue Wed Nov 16 13:12:39 PST 2016 1479330759
+Job ID:		46525832.moab01.westgrid.uvic.ca
+Username:	kearney
+Group:		kearney
+Nodes:		hermes-kvm038
+End PBS Prologue Wed Nov 16 13:12:39 PST 2016 1479330759
+----------------------------------------
+Current working directory is /home/kearney/usage-td-experiments-robot
+Collecting tdr
+Over subject s4
+Over trial na3
+done
+----------------------------------------
+Begin PBS Epilogue Wed Nov 16 13:17:47 PST 2016 1479331067
+Job ID:		46525832.moab01.westgrid.uvic.ca
+Username:	kearney
+Group:		kearney
+Job Name:	collect_results.pbs
+Session:	12349
+Limits:		neednodes=hermes-general,pmem=512mb,walltime=02:00:00
+Resources:	cput=00:03:40,mem=74000kb,vmem=236172kb,walltime=00:05:02
+Queue:		hermes
+Account:		
+Nodes:	hermes-kvm038
+Killing leftovers...
+
+End PBS Epilogue Wed Nov 16 13:17:48 PST 2016 1479331068
+----------------------------------------

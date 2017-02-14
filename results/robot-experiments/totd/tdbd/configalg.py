@@ -2,11 +2,12 @@
 import numpy as np
 import cPickle as pickle
 
-alphas = [0.05, 0.1, 0.2, 0.3, 0.6, 1.0, 1.5, 2.0]
-# alphas = [0.01]
-# lambdas = [0.998]
-lambdas = [0, 0.2, 0.4, 0.6, 0.8, 0.9, 0.95, 0.98, 0.99, 0.995, 0.998, 0.999, 1]
-configs =[{'alpha': alpha, 'lmbda': lm} for alpha in alphas for lm in lambdas]
+meta_step_size  = [0]
+lambdas = [0.998]
+beta            = np.log(0.01)
+configs         = [{'meta_step_size': step_size, 'lmbda': lm, 'beta': beta}
+                       for step_size in meta_step_size for lm in lambdas]
+
 print len(configs)
 f = open('configalg.pkl', 'wb')
 pickle.dump(configs, f)
