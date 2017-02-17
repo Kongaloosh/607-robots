@@ -31,6 +31,7 @@ class TDBD(TDPrediction):
             self.beta = np.ones(self.nf) * config['beta']
 
         self.alpha = np.exp(self.beta)
+        print(self.alpha)
 
     def initepisode(self):
         self.z = np.zeros(self.nf)
@@ -65,7 +66,16 @@ class TDBDR(TDPrediction):
         self.h = np.zeros(self.nf)
         self.meta_step_size = config['meta_step_size']                # todo: pull from config
         self.beta = np.ones(self.nf) * config['beta']
+        print(config['active_features'])
+        try:
+            val = np.exp(config['beta']) / config['active_features']
+            self.beta = np.ones(self.nf) * np.log(val)
+        except KeyError:
+            self.beta = np.ones(self.nf) * config['beta']
         self.alpha = np.exp(self.beta)
+        print(self.alpha)
+
+
 
     def initepisode(self):
         self.z = np.zeros(self.nf)
