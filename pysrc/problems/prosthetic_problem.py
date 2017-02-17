@@ -376,7 +376,7 @@ class TOTDExperiment(Prosthetic_Experiment):
         :returns number of active features: the number of active features we have for this problem
         """
         # the nuber of tilings by number of tiles plus the bias
-        return len(self.get_phi(self.get_state(fake_obs))[0]) + 1
+        return len(self.get_phi(self.get_state(fake_obs))[0])
 
     def get_phi(self, state):
         """Multiple tile-coders used. We Compose our position features with every other value in our state.
