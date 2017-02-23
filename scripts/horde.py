@@ -2,6 +2,9 @@
 
 from pysrc.utilities.tiles import loadTiles, getTiles
 from pysrc.utilities.kanerva_coding import BaseKanervaCoder
+from pysrc.algorithms.tdprediction.onpolicy.tdr import TDR
+from pysrc.algorithms.tdprediction.offpolicy.gtd import GTD, GTDR
+from pysrc.algorithms.tdprediction.offpolicy.policy import *
 from pysrc.algorithms.tdprediction.discount_rates import *
 from pysrc.algorithms.tdprediction.reward_functions import *
 from pysrc.utilities.verifier import OnlineVerifier, UDE, RUPEE
@@ -16,9 +19,9 @@ class Horde(object):
     def __init__(self):
         self.predictors = []
 
-    def add_learner(self, step_size, elegibility_lambda, gamma, learner):
+    def add_learner(self, learner):
         # each should have a v
-        self.predictors.append(learner(step_size, elegibility_lambda, gamma, learner))
+        self.predictors.append(learner)
 
     def update(self, data):
         """"""
@@ -30,6 +33,7 @@ class Horde(object):
 
 
 class RobotHorde(Horde):
+
     def construct_obs(self, data):
         # also want to construc long-term stuff
         data = [
@@ -57,18 +61,22 @@ class GVF(object):
     def __init__(self, step_size, elegibility_lambda, gamma, learner):
         self.memory_size = 2 ** 10
         self.lmbda = elegibility_lambda
+        self.step_size = step_size
         self.gamma = gamma
         self.phi = None
-        self.verfier = OnlineVerifier(rlGamma=self.gamma)
-        self.learner = learner()
-        self.kanerva = BaseKanervaCoder()
+        self.verfier = OnlineVerifier(rlGamma=self.init_gamma)
+        self.learner = learner
+        self.kanerva = BaseKanervaCoder(
+            _startingPrototypes=self.memory_size,
+            _dimensions=1,
+            _numActiveFeatures=self.active_features)
 
 
 class OnPolicyGVF(GVF):
-    def __init__(self, step_size, elegibility_lambda, learner, reward, gamma):
-        super.__init__(step_size, elegibility_lambda, learner)
-        self.reward_factory = reward
-        self.gamma_factory = gamma
+    def __init__(self, step_size, elegibility_lambda, learner, reward_factory, gamma, gamma_factory):
+        super.__init__(step_size, elegibility_lambda, gamma, learner)
+        self.reward_factory = reward_factory
+        self.gamma_factory = gamma_factory
         self.gvf_publisher = rospy.Publisher('position_predictor', gvf, queue_size=10)
         self.gvf_verifier_publisher = rospy.Publisher('position_verifier', verifier, queue_size=10)
         self.verfier = OnlineVerifier(self.gamma)
@@ -105,9 +113,9 @@ class OnPolicyGVF(GVF):
 
 class OffPolicyGVF(GVF):
 
-    def __init__(self, step_size, elegibility_lambda, learner, reward, gamma):
-        super.__init__(step_size, elegibility_lambda, learner)
-        self.reward_factory = reward
+    def __init__(self, step_size, elegibility_lambda, learner, reward_factory, gamma, gamma_factory):
+        super.__init__(step_size, elegibility_lambda, gamma, learner)
+        self.reward_factory = reward_factory
         self.gamma_factory = gamma
         self.gvf_publisher = rospy.Publisher('position_predictor', gvf, queue_size=10)
         self.gvf_verifier_publisher = rospy.Publisher('position_verifier', verifier, queue_size=10)
@@ -141,3 +149,17 @@ class OffPolicyGVF(GVF):
 
         self.gamma = gnext
         self.phi = phinext
+
+
+def listener(predictor):
+    horde = RobotHorde()
+    # horde.add_learner(learner=OffPolicyGVF(0.3, 0.9, TDR, poisiton_2, end_when_stationary_2))
+    # horde.add_learner(learner=OffPolicyGVF(0.3, 0.9, TDR, poisiton_2, end_when_stationary_3))
+    rospy.init_node('on_policy_listener', anonymous=True)  # anon means that multiple can subscribe to the same topic
+    rospy.Subscriber('robot_observations', servo_state,
+                     horde.update)  # subscribes to chatter and calls the callback
+    rospy.spin()  # keeps python from exiting until this node is stopped
+
+
+if __name__ == '__main__':
+   listener()
