@@ -153,7 +153,7 @@ class OffPolicyGVF(GVF):
 
 def listener():
     horde = RobotHorde()
-    # horde.add_learner(learner=OffPolicyGVF(0.3, 0.9, TDR, poisiton_2, end_when_stationary_2))
+    horde.add_learner(learner=OnPolicyGVF(0.3, 0.9, TDR(2**10, 0.3, 10), poisiton_2, 0.98, end_when_stationary_2))
     # horde.add_learner(learner=OffPolicyGVF(0.3, 0.9, TDR, poisiton_2, end_when_stationary_3))
     rospy.init_node('on_policy_listener', anonymous=True)  # anon means that multiple can subscribe to the same topic
     rospy.Subscriber('robot_observations', servo_state,
