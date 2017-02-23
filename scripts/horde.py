@@ -65,7 +65,7 @@ class GVF(object):
         self.step_size = step_size
         self.gamma = gamma
         self.phi = None
-        self.verfier = OnlineVerifier(rlGamma=self.gamma)
+        self.verifier = OnlineVerifier(rlGamma=self.gamma)
         self.learner = learner
         self.last_estimate = 0
 	self.kanerva = BaseKanervaCoder(
@@ -85,11 +85,11 @@ class OnPolicyGVF(GVF):
 
     def update(self, data):
         # get the new gamma
-        print data
 	gnext = self.gamma_factory(self.gamma, data)
         reward = self.reward_factory(data)
-        phinext = self.kanerva.calculate_f(data)
-        if self.phi is not None:
+        phinext = self.kanerva.get_features(data)
+        print phinext
+	if self.phi is not None:
             self.learner.step(self.phi, reward, phinext, self.gamma, self.lmbda, gnext)
             self.last_setimate = self.learner.estimate(phinext)
             self.verfier.update_all(gamma=gnext, reward=reward, prediction=self.last_estimate)
@@ -98,7 +98,7 @@ class OnPolicyGVF(GVF):
                     self.last_estimate,
                     self.last_estimate / (1. / (1. - gnext))
                 )
-            except:
+            except IndexError:
                 pass
 
             try:
@@ -107,7 +107,7 @@ class OnPolicyGVF(GVF):
                     self.verfier.calculate_currente_return(),
                     abs(self.verfier.calculate_current_error())
                 )
-            except:
+            except IndexError:
                 pass
 
         self.gamma = gnext
