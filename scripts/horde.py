@@ -54,19 +54,21 @@ class RobotHorde(Horde):
             data.command,
         ]
         for learner in self.predictors:
-            data.append(learner.last_estimate())
-
+            data.append(learner.last_estimate)
+	return data
 
 class GVF(object):
     def __init__(self, step_size, elegibility_lambda, gamma, learner):
         self.memory_size = 2 ** 10
-        self.lmbda = elegibility_lambda
+        self.active_features = 10
+	self.lmbda = elegibility_lambda
         self.step_size = step_size
         self.gamma = gamma
         self.phi = None
-        self.verfier = OnlineVerifier(rlGamma=self.init_gamma)
+        self.verfier = OnlineVerifier(rlGamma=self.gamma)
         self.learner = learner
-        self.kanerva = BaseKanervaCoder(
+        self.last_estimate = 0
+	self.kanerva = BaseKanervaCoder(
             _startingPrototypes=self.memory_size,
             _dimensions=1,
             _numActiveFeatures=self.active_features)
@@ -74,7 +76,7 @@ class GVF(object):
 
 class OnPolicyGVF(GVF):
     def __init__(self, step_size, elegibility_lambda, learner, reward_factory, gamma, gamma_factory):
-        super.__init__(step_size, elegibility_lambda, gamma, learner)
+        super(OnPolicyGVF, self).__init__(step_size, elegibility_lambda, gamma, learner)
         self.reward_factory = reward_factory
         self.gamma_factory = gamma_factory
         self.gvf_publisher = rospy.Publisher('position_predictor', gvf, queue_size=10)
@@ -83,17 +85,18 @@ class OnPolicyGVF(GVF):
 
     def update(self, data):
         # get the new gamma
-        gnext = self.gamma_factory(data)
+        print data
+	gnext = self.gamma_factory(self.gamma, data)
         reward = self.reward_factory(data)
-        phinext = self.kanerva(data)
+        phinext = self.kanerva.calculate_f(data)
         if self.phi is not None:
             self.learner.step(self.phi, reward, phinext, self.gamma, self.lmbda, gnext)
-            prediction = self.learner.estimate(phinext)
-            self.verfier.update_all(gamma=gnext, reward=reward, prediction=prediction)
+            self.last_setimate = self.learner.estimate(phinext)
+            self.verfier.update_all(gamma=gnext, reward=reward, prediction=self.last_estimate)
             try:
                 self.gvf_publisher(
-                    prediction,
-                    prediction / (1. / (1. - gnext))
+                    self.last_estimate,
+                    self.last_estimate / (1. / (1. - gnext))
                 )
             except:
                 pass
