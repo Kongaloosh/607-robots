@@ -86,19 +86,21 @@ class OnPolicyGVF(GVF):
     def update(self, data):
         # get the new gamma
 	gnext = self.gamma_factory(self.gamma, data)
-        reward = self.reward_factory(data)
+        print self.last_estimate
+	reward = self.reward_factory(data)
         phinext = self.kanerva.get_features(data)
-        print phinext
+	print np.where(phinext > 0)
+	print reward
 	if self.phi is not None:
             self.learner.step(self.phi, reward, phinext, self.gamma, self.lmbda, gnext)
             self.last_setimate = self.learner.estimate(phinext)
             self.verfier.update_all(gamma=gnext, reward=reward, prediction=self.last_estimate)
             try:
-                self.gvf_publisher(
+                self.gvf_publisher.publish(
                     self.last_estimate,
                     self.last_estimate / (1. / (1. - gnext))
                 )
-            except IndexError:
+            except TypeError:
                 pass
 
             try:
@@ -109,6 +111,8 @@ class OnPolicyGVF(GVF):
                 )
             except IndexError:
                 pass
+	    except TypeError:
+		pass
 
         self.gamma = gnext
         self.phi = phinext
@@ -156,7 +160,7 @@ class OffPolicyGVF(GVF):
 
 def listener():
     horde = RobotHorde()
-    horde.add_learner(learner=OnPolicyGVF(0.3, 0.9, TDR(2**10, 0.3, 10), poisiton_2, 0.98, end_when_stationary_2))
+    horde.add_learner(learner=OnPolicyGVF(0.3, 0.9, TDR(2**10, 0.3, 10), angle_2, 0.98, constant))
     # horde.add_learner(learner=OffPolicyGVF(0.3, 0.9, TDR, poisiton_2, end_when_stationary_3))
     rospy.init_node('on_policy_listener', anonymous=True)  # anon means that multiple can subscribe to the same topic
     rospy.Subscriber('robot_observations', servo_state,
