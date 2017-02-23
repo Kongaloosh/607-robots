@@ -151,7 +151,7 @@ class OffPolicyGVF(GVF):
         self.phi = phinext
 
 
-def listener(predictor):
+def listener():
     horde = RobotHorde()
     # horde.add_learner(learner=OffPolicyGVF(0.3, 0.9, TDR, poisiton_2, end_when_stationary_2))
     # horde.add_learner(learner=OffPolicyGVF(0.3, 0.9, TDR, poisiton_2, end_when_stationary_3))
