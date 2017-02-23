@@ -6,6 +6,29 @@ import math
 import numpy as np
 
 
+class RUPEE(object):
+
+    def __init__(self, number_of_features, beta, alpha):
+        self.h = np.zeros(number_of_features)
+        self.beta = beta
+        self.alpha = alpha
+        self.tao = 0
+        self.delta_e = 0
+
+    def update(self, delta, e, phi):
+        self.tao = (1 - self.beta) * self.tao + self.beta
+        self.beta /= self.tao
+        self.delta_e = (1-self.beta)*self.delta_e + self.beta * e * delta
+        self.h += self.alpha * (delta * e - np.dot(self.h, phi) * phi)
+        return np.sqrt(np.abs(np.dot(self.h, self.delta_e))**self.beta)
+
+
+class UDE(object):
+
+    def __init__(self):
+        pass
+
+
 class OnlineVerifier(object):
     """Calculates the true return"""
 
@@ -57,6 +80,10 @@ class OnlineVerifier(object):
         """Gets the difference between the calculated return and the prediction"""
         return self.calculate_currente_return() - self.synced_prediction()
 
+    def update_all(self, gamma, reward, prediction):
+        self.update_gamma(gamma)
+        self.update_reward(reward)
+        self.update_prediction(prediction)
 
 def calculate_discounted_return_backwards(config, obs, reward_calculator):
     """
