@@ -29,6 +29,10 @@ class UDE(object):
         self.delta_bar = 0
         self.beta
 
+    def update(self, delta, e):
+        self.delta_bar = delta + self.delta_bar * self.beta
+        return np.abs(self.delta_bar/np.var(np.sqrt(delta)))
+
 class OnlineVerifier(object):
     """Calculates the true return"""
 
