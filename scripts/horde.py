@@ -86,22 +86,20 @@ class OnPolicyGVF(GVF):
     def update(self, data):
         # get the new gamma
 	gnext = self.gamma_factory(self.gamma, data)
-        print self.last_estimate
 	reward = self.reward_factory(data)
         phinext = self.kanerva.get_features(data)
-	print np.where(phinext > 0)
-	print reward
+	#print np.where(phinext > 0)
+	#print reward
 	if self.phi is not None:
             self.learner.step(self.phi, reward, phinext, self.gamma, self.lmbda, gnext)
-            self.last_setimate = self.learner.estimate(phinext)
-            self.verfier.update_all(gamma=gnext, reward=reward, prediction=self.last_estimate)
-            try:
-                self.gvf_publisher.publish(
-                    self.last_estimate,
+            self.last_estimate = self.learner.last_estimate()
+	    print np.dot(self.learner.th, phinext)
+            self.verfier.update_all(gamma=gnext, reward=reward, prediction=self.last_estimate)  
+            self.gvf_publisher.publish(
+                   self.last_estimate,
                     self.last_estimate / (1. / (1. - gnext))
-                )
-            except TypeError:
-                pass
+	    )
+            
 
             try:
                 self.gvf_verifier_publisher.publish(
@@ -140,6 +138,7 @@ class OffPolicyGVF(GVF):
             rupee = self.verfier.update_all(self.learner.z, delta, phinext)
             try:
                 self.gvf_publisher(
+		
                     prediction,
                     prediction / (1. / (1. - gnext)),
                 )
