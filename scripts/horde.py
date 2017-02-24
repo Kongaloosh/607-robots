@@ -33,7 +33,6 @@ class Horde(object):
 
 
 class RobotHorde(Horde):
-
     def construct_obs(self, data):
         # also want to construc long-term stuff
         data = [
@@ -55,20 +54,22 @@ class RobotHorde(Horde):
         ]
         for learner in self.predictors:
             data.append(learner.last_estimate)
-	return data
+        return data
+
 
 class GVF(object):
     def __init__(self, step_size, elegibility_lambda, gamma, learner):
         self.memory_size = 2 ** 10
         self.active_features = 10
-	self.lmbda = elegibility_lambda
+        self.lmbda = elegibility_lambda
         self.step_size = step_size
         self.gamma = gamma
         self.phi = None
         self.verifier = OnlineVerifier(rlGamma=self.gamma)
+        self.ude = UDE(self.step_size * 10)
         self.learner = learner
         self.last_estimate = 0
-	self.kanerva = BaseKanervaCoder(
+        self.kanerva = BaseKanervaCoder(
             _startingPrototypes=self.memory_size,
             _dimensions=1,
             _numActiveFeatures=self.active_features)
@@ -85,21 +86,22 @@ class OnPolicyGVF(GVF):
 
     def update(self, data):
         # get the new gamma
-	gnext = self.gamma_factory(self.gamma, data)
-	reward = self.reward_factory(data)
+        gnext = self.gamma_factory(self.gamma, data)
+        reward = self.reward_factory(data)
         phinext = self.kanerva.get_features(data)
-	#print np.where(phinext > 0)
-	#print reward
-	if self.phi is not None:
+        # print np.where(phinext > 0)
+        # print reward
+        if self.phi is not None:
             self.learner.step(self.phi, reward, phinext, self.gamma, self.lmbda, gnext)
             self.last_estimate = self.learner.last_estimate()
-	    #print np.dot(self.learner.th, phinext)
-            self.verfier.update_all(gamma=gnext, reward=reward, prediction=self.last_estimate)  
+            # print np.dot(self.learner.th, phinext)
+            self.verfier.update_all(gamma=gnext, reward=reward, prediction=self.last_estimate)
+
+            # todo: you could factor all of this out
             self.gvf_publisher.publish(
-                   self.last_estimate,
-                    self.last_estimate / (1. / (1. - gnext))
-	    )
-            
+                self.last_estimate,
+                self.last_estimate / (1. / (1. - gnext))
+            )
 
             try:
                 self.gvf_verifier_publisher.publish(
@@ -109,51 +111,44 @@ class OnPolicyGVF(GVF):
                 )
             except IndexError:
                 pass
-	    except TypeError:
-		pass
+            except TypeError:
+                pass
 
         self.gamma = gnext
         self.phi = phinext
 
 
 class OffPolicyGVF(GVF):
-
     def __init__(self, step_size, elegibility_lambda, learner, reward_factory, gamma, gamma_factory):
         super(OffPolicyGVF, self).__init__(step_size, elegibility_lambda, gamma, learner)
         self.reward_factory = reward_factory
         self.gamma_factory = gamma_factory
         self.gvf_publisher = rospy.Publisher('position_predictor', gvf, queue_size=10)
         self.gvf_verifier_publisher = rospy.Publisher('position_verifier', verifier, queue_size=10)
-        self.verfier = RUPEE(self.memory_size, self.step_size*5, 0.001)
+        self.verfier = RUPEE(self.memory_size, self.step_size * 5, 0.001)
 
     def update(self, data):
-        # get the new gamma
         gnext = self.gamma_factory(self.gamma, data)
         reward = self.reward_factory(data)
         phinext = self.kanerva.get_features(data)
         if self.phi is not None:
-            #print len(phinext)
-	    #print np.where(phinext > 0)
-	    #print len(self.learner.th)
-	    self.learner.step(self.phi, reward, phinext, self.gamma, self.lmbda, gnext, data[14])
+            self.learner.step(self.phi, reward, phinext, self.gamma, self.lmbda, gnext, data[14])
             prediction = self.learner.estimate(phinext)
             delta = reward + gnext * self.learner.estimate(phinext) - self.learner.estimate(self.phi)
             rupee = self.verfier.update(self.learner.z, delta, phinext)
-            try:
-                self.gvf_publisher(
-		
-                    prediction,
-                    prediction / (1. / (1. - gnext)),
-                )
-            except:
-                pass
-
+            ude_error = self.ude.update(delta)
+            self.gvf_publisher(
+                prediction,
+                prediction / (1. / (1. - gnext)),
+            )
             try:
                 self.gvf_verifier_publisher.publish(
                     prediction,
-                    rupee
+                    0,
+                    rupee,
+                    ude_error
                 )
-            except:
+            except IndexError:
                 pass
 
         self.gamma = gnext
@@ -162,8 +157,8 @@ class OffPolicyGVF(GVF):
 
 def listener():
     horde = RobotHorde()
-    horde.add_learner(learner=OnPolicyGVF(0.3, 0.9, TDR(2**10, 0.3, 10), angle_2, 0.98, constant))
-    horde.add_learner(learner=OffPolicyGVF(0.3, 0.9, GTDR(2**10, 0.3,moving_left_1, 10), angle_2, 0.9,  constant))
+    horde.add_learner(learner=OnPolicyGVF(0.3, 0.9, TDR(2 ** 10, 0.3, 10), angle_2, 0.98, constant))
+    horde.add_learner(learner=OffPolicyGVF(0.3, 0.9, GTDR(2 ** 10, 0.3, moving_left_1, 10), angle_2, 0.9, constant))
     rospy.init_node('on_policy_listener', anonymous=True)  # anon means that multiple can subscribe to the same topic
     rospy.Subscriber('robot_observations', servo_state,
                      horde.update)  # subscribes to chatter and calls the callback
@@ -171,4 +166,4 @@ def listener():
 
 
 if __name__ == '__main__':
-   listener()
+    listener()
