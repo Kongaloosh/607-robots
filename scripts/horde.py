@@ -76,12 +76,12 @@ class GVF(object):
 
 
 class OnPolicyGVF(GVF):
-    def __init__(self, step_size, elegibility_lambda, learner, reward_factory, gamma, gamma_factory):
+    def __init__(self, step_size, elegibility_lambda, learner, reward_factory, gamma, gamma_factory, name = ""):
         super(OnPolicyGVF, self).__init__(step_size, elegibility_lambda, gamma, learner)
         self.reward_factory = reward_factory
         self.gamma_factory = gamma_factory
-        self.gvf_publisher = rospy.Publisher('position_predictor', gvf, queue_size=10)
-        self.gvf_verifier_publisher = rospy.Publisher('position_verifier', verifier, queue_size=10)
+        self.gvf_publisher = rospy.Publisher('off_policy_predictor' + name, gvf, queue_size=10)
+        self.gvf_verifier_publisher = rospy.Publisher('off_policy_verifier' + name, verifier, queue_size=10)
         self.verfier = OnlineVerifier(self.gamma)
 
     def update(self, data):
@@ -119,12 +119,12 @@ class OnPolicyGVF(GVF):
 
 
 class OffPolicyGVF(GVF):
-    def __init__(self, step_size, elegibility_lambda, learner, reward_factory, gamma, gamma_factory):
+    def __init__(self, step_size, elegibility_lambda, learner, reward_factory, gamma, gamma_factory, name=""):
         super(OffPolicyGVF, self).__init__(step_size, elegibility_lambda, gamma, learner)
         self.reward_factory = reward_factory
         self.gamma_factory = gamma_factory
-        self.gvf_publisher = rospy.Publisher('position_predictor', gvf, queue_size=10)
-        self.gvf_verifier_publisher = rospy.Publisher('position_verifier', verifier, queue_size=10)
+        self.gvf_publisher = rospy.Publisher('off_policy_predictor' + name, gvf, queue_size=10)
+        self.gvf_verifier_publisher = rospy.Publisher('off_policy_verifier' + name, verifier, queue_size=10)
         self.verfier = RUPEE(self.memory_size, self.step_size * 5, 0.001)
 
     def update(self, data):
@@ -157,8 +157,8 @@ class OffPolicyGVF(GVF):
 
 def listener():
     horde = RobotHorde()
-    horde.add_learner(learner=OnPolicyGVF(0.3, 0.9, TDR(2 ** 10, 0.3, 10), angle_2, 0.98, constant))
-    horde.add_learner(learner=OffPolicyGVF(0.3, 0.9, GTDR(2 ** 10, 0.3, moving_left_1, 10), angle_2, 0.9, constant))
+    horde.add_learner(learner=OnPolicyGVF(0.3, 0.9, TDR(2 ** 10, 0.3, 10), angle_2, 0.98, constant, name="_0"))
+    horde.add_learner(learner=OffPolicyGVF(0.3, 0.9, GTDR(2 ** 10, 0.3, moving_left_1, 10), angle_2, 0.9, constant, name="_1"))
     rospy.init_node('on_policy_listener', anonymous=True)  # anon means that multiple can subscribe to the same topic
     rospy.Subscriber('robot_observations', servo_state,
                      horde.update)  # subscribes to chatter and calls the callback

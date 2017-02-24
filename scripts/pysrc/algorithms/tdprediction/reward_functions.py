@@ -13,45 +13,53 @@ def temperature_2(data):
     return data[1]
 
 
-def moving_2(data):
+def voltage_2(data):
     return data[2]
 
 
-def poisiton_2(data):
+def is_moving_2(data):
     return data[3]
 
 
-def angle_2(data):
+def poisiton_2(data):
     return data[4]
 
 
-def vel_command_2(data):
+def angle_2(data):
     return data[5]
 
 
-def load_3(data):
+def vel_command_2(data):
     return data[6]
 
 
-def temperature_3(data):
+def load_3(data):
     return data[7]
 
 
-def moving_3(data):
+def temperature_3(data):
     return data[8]
 
 
-def poisiton_3(data):
+def voltage_3(data):
     return data[9]
 
 
-def angle_3(data):
+def moving_3(data):
     return data[10]
 
 
-def vel_command_3(data):
+def poisiton_3(data):
     return data[11]
 
 
-def command(data):
+def angle_3(data):
     return data[12]
+
+
+def vel_command_3(data):
+    return data[13]
+
+
+def command(data):
+    return data[14]

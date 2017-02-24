@@ -25,13 +25,14 @@ class RUPEE(object):
 
 class UDE(object):
 
-    def __init__(self):
+    def __init__(self, beta):
         self.delta_bar = 0
-        self.beta
+        self.beta = self.beta
 
-    def update(self, delta, e):
+    def update(self, delta):
         self.delta_bar = delta + self.delta_bar * self.beta
-        return np.abs(self.delta_bar/np.var(np.sqrt(delta)))
+        return np.abs(self.delta_bar / np.var(np.sqrt(delta)))
+
 
 class OnlineVerifier(object):
     """Calculates the true return"""
