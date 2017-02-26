@@ -38,7 +38,7 @@ class UDE(object):
         self.mean += (delta-self.mean)/self.time
         self.variance += (delta - self.mean)**2 / self.time
         self.time += 1
-        return np.abs(self.delta_bar / (np.var(np.sqrt(delta)) + 0.001))
+        return np.abs(self.delta_bar / (np.sqrt(self.variance) + 0.001))
 
 
 class OnlineVerifier(object):
