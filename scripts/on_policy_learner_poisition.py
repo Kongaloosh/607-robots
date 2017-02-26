@@ -3,7 +3,7 @@
 from pysrc.algorithms.tdprediction.onpolicy.tdr import TDR
 from pysrc.algorithms.tdprediction.onpolicy.tdbd import TDBD
 from pysrc.utilities.tiles import loadTiles, getTiles
-from pysrc.utilities.verifier import OnlineVerifier
+from pysrc.utilities.verifier import OnlineVerifier, UDE, RUPEE
 import rospy
 import numpy as np
 from beginner_tutorials.msg import servo_state, verifier, gvf
@@ -20,29 +20,29 @@ class OnPolicyPredictor(object):
         self.phi = None
         self.tdr = TDR(
             number_of_features=self.memory_size,
-            step_size=0.1,
+            step_size=0.01,
             active_features=self.num_tilings
         )
         self.verifier = OnlineVerifier(rlGamma=self.gamma)
-
+        self.ude = UDE(0.01)
+        self.rupee = RUPEE(2**10, 0.01 * 5, 0.001)
         self.verifier_publisher = rospy.Publisher('position_verifier', verifier, queue_size=10)
         self.gvf_publisher = rospy.Publisher('position_predictor', gvf, queue_size=10)
         self.las_pos = 0
         self.position_trace = 0
-	self.vel_trace =0 
+        self.vel_trace = 0
 
     def handle_obs(self, data):
         """ takes the observations from the words """
-	self.vel_trace = data.position_2 - self.las_pos + self.vel_trace * 0.8
+        self.vel_trace = data.position_2 - self.las_pos + self.vel_trace * 0.8
         self.position_trace = data.position_2 + self.position_trace * 0.8
-
 
         state = np.array([
             # data.voltage_2 / 16.,
             # data.load_2 / 1024.,
             data.position_2 / 1024.,
-            (self.position_trace+1024.) / 2048.,
-            (self.vel_trace+1024.) / 2048.,
+            (self.position_trace + 1024.) / 2048.,
+            (self.vel_trace + 1024.) / 2048.,
             # data.command
         ])  # form a state from new observations
         state *= 10  # multiply by the number of bins
@@ -70,29 +70,32 @@ class OnPolicyPredictor(object):
                 self.lmbda,
                 self.gamma
             )
-
+            delta = delta = reward + self.gamma * self.learner.estimate(phi_next) - self.learner.estimate(self.phi)
+            ude_error = self.ude.update(delta)
+            rupee_error = self.rupee(delta, self.tdr.z, self.phi)
             prediction = self.tdr.estimate(self.phi)
+            self.verifier.update_reward(reward)
+            self.verifier.update_prediction(prediction)  # update the prediction
+            self.verifier.update_gamma(self.gamma)
+
             try:
-                self.verifier.update_reward(reward)
-                self.verifier.update_prediction(prediction)  # update the prediction
-		self.verifier.update_gamma(self.gamma)           
-		self.verifier_publisher.publish(  # publish the verifier's info (offset by horizon)
+                self.verifier_publisher.publish(  # publish the verifier's info (offset by horizon)
                                                   self.verifier.synced_prediction(),
                                                   self.verifier.calculate_currente_return(),
                                                   abs(self.verifier.calculate_current_error())
+
                                                   )
-            except:
+            except IndexError:
                 pass
-            try:
+
                 self.gvf_publisher.publish(  # publish the most recent predictions
                                              prediction,
                                              prediction / (1. / (1. - self.gamma))
                                              # prediction normalized by the timescale of the horizon
                                              )
-            except:
-                pass
         self.phi = phi_next  # update phi
         self.las_pos = data.position_2
+
 
 def listener(predictor):
     rospy.init_node('on_policy_listener', anonymous=True)  # anon means that multiple can subscribe to the same topic
