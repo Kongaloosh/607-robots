@@ -36,6 +36,7 @@ class UDE(object):
     def update(self, delta):
         self.delta_bar = delta * self.beta + self.delta_bar * (1 - self.beta)
         self.mean += (delta-self.mean)/self.time
+        self.variance += (delta - self.mean)**2 / self.time
         self.time += 1
         return np.abs(self.delta_bar / (np.var(np.sqrt(delta)) + 0.001))
 
