@@ -26,20 +26,29 @@ class RUPEE(object):
 class UDE(object):
 
     def __init__(self, beta):
-        self.delta_bar = 0
+        self.delta_bar = 0.
         self.beta = beta
-        self.mean = 0
-        self.time = 1
-        self.variance = 0
+        self.mean = 0.
+        self.time = 1.
+        self.s = 0.
 
 
     def update(self, delta):
-        self.delta_bar = delta * self.beta + self.delta_bar * (1 - self.beta)
+        self.delta_bar = (delta * (1-self.beta)) + (self.delta_bar * self.beta)
         self.mean += (delta-self.mean)/self.time
-        self.variance += (delta - self.mean)**2 / self.time
-        self.time += 1
-        return np.abs(self.delta_bar / (np.sqrt(self.variance) + 0.001))
-
+        self.s += (delta)**2
+	try:
+		variance = (self.s - (self.time * self.mean**2))/(self.time-1) 
+	except ZeroDivisionError:
+		variance = 0
+	self.time += 1 
+#	print ("delta_bar, ", self.delta_bar, variance )
+#	print ("mean, ",  self.mean)
+#	print ("variance, ", variance)
+#	print ("time, ", self.time)
+        return np.abs(self.delta_bar / (np.sqrt(variance) + 0.001))
+#	print self.beta
+#	return self.beta
 
 class OnlineVerifier(object):
     """Calculates the true return"""
@@ -90,7 +99,10 @@ class OnlineVerifier(object):
 
     def calculate_current_error(self):
         """Gets the difference between the calculated return and the prediction"""
-        return self.calculate_currente_return() - self.synced_prediction()
+        try:
+	    return self.calculate_currente_return() - self.synced_prediction()
+	except TypeError:
+	    return 0
 
     def update_all(self, gamma, reward, prediction):
         self.update_gamma(gamma)
