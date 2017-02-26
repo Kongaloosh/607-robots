@@ -83,7 +83,6 @@ class OnPolicyGVF(GVF):
         self.gvf_publisher = rospy.Publisher('off_policy_predictor' + name, gvf, queue_size=10)
         self.gvf_verifier_publisher = rospy.Publisher('off_policy_verifier' + name, verifier, queue_size=10)
         self.verfier = OnlineVerifier(self.gamma)
-
     def update(self, data):
         # get the new gamma
         gnext = self.gamma_factory(self.gamma, data)
@@ -137,7 +136,7 @@ class OffPolicyGVF(GVF):
             delta = reward + gnext * self.learner.estimate(phinext) - self.learner.estimate(self.phi)
             rupee = self.verfier.update(self.learner.z, delta, phinext)
             ude_error = self.ude.update(delta)
-            self.gvf_publisher(
+            self.gvf_publisher.publish(
                 prediction,
                 prediction / (1. / (1. - gnext)),
             )
