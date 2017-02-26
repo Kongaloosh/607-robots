@@ -76,13 +76,14 @@ class GVF(object):
 
 
 class OnPolicyGVF(GVF):
-    def __init__(self, step_size, elegibility_lambda, learner, reward_factory, gamma, gamma_factory, name = ""):
+    def __init__(self, step_size, elegibility_lambda, learner, reward_factory, gamma, gamma_factory, name=""):
         super(OnPolicyGVF, self).__init__(step_size, elegibility_lambda, gamma, learner)
         self.reward_factory = reward_factory
         self.gamma_factory = gamma_factory
         self.gvf_publisher = rospy.Publisher('on_policy_predictor' + name, gvf, queue_size=10)
         self.gvf_verifier_publisher = rospy.Publisher('on_policy_verifier' + name, verifier, queue_size=10)
         self.verfier = OnlineVerifier(self.gamma)
+
     def update(self, data):
         # get the new gamma
         gnext = self.gamma_factory(self.gamma, data)
@@ -95,8 +96,8 @@ class OnPolicyGVF(GVF):
             self.last_estimate = self.learner.last_estimate()
             # print np.dot(self.learner.th, phinext)
             self.verfier.update_all(gamma=gnext, reward=reward, prediction=self.last_estimate)
-	    delta = reward + gnext * self.learner.estimate(phinext) - self.learner.estimate(self.phi)
-	    ude_error = self.ude.update(delta)
+            delta = reward + gnext * self.learner.estimate(phinext) - self.learner.estimate(self.phi)
+            ude_error = self.ude.update(delta)
             # todo: you could factor all of this out
             self.gvf_publisher.publish(
                 self.last_estimate,
@@ -109,7 +110,7 @@ class OnPolicyGVF(GVF):
                     self.verfier.calculate_currente_return(),
                     abs(self.verfier.calculate_current_error()),
                     ude_error
-		)
+                )
             except IndexError:
                 pass
 
@@ -144,8 +145,9 @@ class OffPolicyGVF(GVF):
                 self.gvf_verifier_publisher.publish(
                     prediction,
                     0,
-                    rupee,
-                    ude_error
+                    0,
+                    ude_error,
+                    rupee
                 )
             except IndexError:
                 pass
@@ -156,17 +158,19 @@ class OffPolicyGVF(GVF):
 
 def listener():
     horde = RobotHorde()
-    horde.add_learner(learner=OnPolicyGVF(0.003, 0.9, TDR(2 ** 10, 0.3, 10), angle_2, 0.98, constant, name="_0"))
-    horde.add_learner(learner=OffPolicyGVF(0.003, 0.9, GTDR(2 ** 10, 0.3, moving_left_1, 10), angle_2, 0.99, constant, name="_1"))
-    horde.add_learner(learner=OffPolicyGVF(0.003, 0.9, GTDR(2 ** 10, 0.3, moving_right_1, 10), angle_2, 0.5, constant, name="_2"))
-    horde.add_learner(learner=OffPolicyGVF(0.003, 0.9, GTDR(2 ** 10, 0.3, moving_left_2, 10), angle_2, 0.9, constant, name="_3"))
-    horde.add_learner(learner=OnPolicyGVF(0.003, 0.9, TDR(2 ** 10, 0.3, 10), is_moving_2, 0.98, constant, name="_4"))
-    horde.add_learner(learner=OnPolicyGVF(0.003, 0.9, TDR(2 ** 10, 0.3, 10), poisiton_2, 0.98, constant, name="_5"))
-    horde.add_learner(learner=OnPolicyGVF(0.003, 0.9, TDR(2 ** 10, 0.3, 10), voltage_2, 0.98, constant, name="_6"))
-    horde.add_learner(learner=OnPolicyGVF(0.003, 0.9, TDR(2 ** 10, 0.3, 10), temperature_2, 0.98, constant, name="_7"))
-    horde.add_learner(learner=OnPolicyGVF(0.003, 0.9, TDR(2 ** 10, 0.3, 10), command, 0.98, constant, name="_8"))
-    horde.add_learner(learner=OnPolicyGVF(0.003, 0.9, TDR(2 ** 10, 0.3, 10), load_2, 0.98, constant, name="_9"))
-
+    horde.add_learner(learner=OnPolicyGVF(0.03, 0.9, TDR(2 ** 10, 0.03, 10), angle_2, 0.98, constant, name="_0"))
+    horde.add_learner(
+        learner=OffPolicyGVF(0.03, 0.9, GTDR(2 ** 10, 0.03, moving_left_1, 10), angle_2, 0.99, constant, name="_1"))
+    horde.add_learner(
+        learner=OffPolicyGVF(0.03, 0.9, GTDR(2 ** 10, 0.03, moving_right_1, 10), angle_2, 0.5, constant, name="_2"))
+    horde.add_learner(
+        learner=OffPolicyGVF(0.03, 0.9, GTDR(2 ** 10, 0.03, moving_left_2, 10), angle_2, 0.9, constant, name="_3"))
+    horde.add_learner(learner=OnPolicyGVF(0.03, 0.9, TDR(2 ** 10, 0.03, 10), is_moving_2, 0.98, constant, name="_4"))
+    horde.add_learner(learner=OnPolicyGVF(0.03, 0.9, TDR(2 ** 10, 0.03, 10), poisiton_2, 0.98, constant, name="_5"))
+    horde.add_learner(learner=OnPolicyGVF(0.03, 0.9, TDR(2 ** 10, 0.03, 10), voltage_2, 0.98, constant, name="_6"))
+    horde.add_learner(learner=OnPolicyGVF(0.03, 0.9, TDR(2 ** 10, 0.03, 10), temperature_2, 0.98, constant, name="_7"))
+    horde.add_learner(learner=OnPolicyGVF(0.03, 0.9, TDR(2 ** 10, 0.03, 10), command, 0.98, constant, name="_8"))
+    horde.add_learner(learner=OnPolicyGVF(0.03, 0.9, TDR(2 ** 10, 0.03, 10), load_2, 0.98, constant, name="_9"))
 
     rospy.init_node('on_policy_listener', anonymous=True)  # anon means that multiple can subscribe to the same topic
     rospy.Subscriber('robot_observations', servo_state,
