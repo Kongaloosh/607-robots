@@ -3,7 +3,7 @@
 from pysrc.algorithms.tdprediction.onpolicy.tdr import TDR
 from pysrc.algorithms.tdprediction.onpolicy.tdbd import TDBD
 from pysrc.utilities.tiles import loadTiles, getTiles
-from pysrc.utilities.verifier import OnlineVerifier
+from pysrc.utilities.verifier import OnlineVerifier, UDE, RUPEE
 import rospy
 import numpy as np
 from beginner_tutorials.msg import servo_state, verifier, gvf
@@ -24,6 +24,8 @@ class OnPolicyPredictor(object):
             active_features=self.num_tilings
         )
         self.verifier = OnlineVerifier(rlGamma=self.gamma)
+        self.ude = UDE(0.01)
+        self.rupee = RUPEE(2**10, 0.01 * 5, 0.001)
 
         self.verifier_publisher = rospy.Publisher('load_verifier', verifier, queue_size=10)
         self.gvf_publisher = rospy.Publisher('load_predictor', gvf, queue_size=10)
@@ -80,21 +82,21 @@ class OnPolicyPredictor(object):
                 self.verifier.update_reward(reward)
                 self.verifier.update_prediction(prediction)  # update the prediction
                 self.verifier.update_gamma(self.gamma)
+                delta = delta = reward + gnext * self.learner.estimate(phi_next) - self.learner.estimate(self.phi)
+                ude_error = self.ude.update(delta)
+                rupee_error = self.rupee(delta, self.tdr.z, self.phi)
                 self.verifier_publisher.publish(  # publish the verifier's info (offset by horizon)
-                                                  self.verifier.synced_prediction(),
-                                                  self.verifier.calculate_currente_return(),
-                                                  abs(self.verifier.calculate_current_error())
+                      self.verifier.synced_prediction(),
+                      self.verifier.calculate_currente_return(),
+                      abs(self.verifier.calculate_current_error()),
+                      ude_error,
+                      rupee_error
                                                   )
-            except TypeError:
+            except IndexError:
                 pass
-            try:
-                self.gvf_publisher.publish(  # publish the most recent predictions
-                                             prediction,
-                                             prediction / (1. / (1. - self.gamma))
-                                             # prediction normalized by the timescale of the horizon
-                                             )
-            except:
-                pass
+            self.gvf_publisher.publish(
+                 prediction,
+                 prediction / (1. / (1. - self.gamma)))
         self.phi = phi_next  # update phi
         self.gamma = gnext
         self.last_load = data.load_2
