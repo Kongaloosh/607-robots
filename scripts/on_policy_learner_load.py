@@ -84,7 +84,7 @@ class OnPolicyPredictor(object):
                 self.verifier.update_gamma(self.gamma)
                 delta = delta = reward + gnext * self.tdr.estimate(phi_next) - self.tdr.estimate(self.phi)
                 ude_error = self.ude.update(delta)
-                rupee_error = self.rupee(delta, self.tdr.z, self.phi)
+                rupee_error = self.rupee.update(delta, self.tdr.z, self.phi)
                 self.verifier_publisher.publish(  # publish the verifier's info (offset by horizon)
                       self.verifier.synced_prediction(),
                       self.verifier.calculate_currente_return(),
