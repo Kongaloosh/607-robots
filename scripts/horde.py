@@ -158,7 +158,17 @@ class OffPolicyGVF(GVF):
 def listener():
     horde = RobotHorde()
     horde.add_learner(learner=OnPolicyGVF(0.3, 0.9, TDR(2 ** 10, 0.3, 10), angle_2, 0.98, constant, name="_0"))
-    horde.add_learner(learner=OffPolicyGVF(0.3, 0.9, GTDR(2 ** 10, 0.3, moving_left_1, 10), angle_2, 0.9, constant, name="_1"))
+    horde.add_learner(learner=OffPolicyGVF(0.3, 0.9, GTDR(2 ** 10, 0.3, moving_left_1, 10), angle_2, 0.99, constant, name="_1"))
+    horde.add_learner(learner=OffPolicyGVF(0.3, 0.9, GTDR(2 ** 10, 0.3, moving_right_1, 10), angle_2, 0.5, constant, name="_2"))
+    horde.add_learner(learner=OffPolicyGVF(0.3, 0.9, GTDR(2 ** 10, 0.3, moving_left_2, 10), angle_2, 0.9, constant, name="_3"))
+    horde.add_learner(learner=OnPolicyGVF(0.3, 0.9, TDR(2 ** 10, 0.3, 10), is_moving_2, 0.98, constant, name="_4"))
+    horde.add_learner(learner=OnPolicyGVF(0.3, 0.9, TDR(2 ** 10, 0.3, 10), poisiton_2, 0.98, constant, name="_5"))
+    horde.add_learner(learner=OnPolicyGVF(0.3, 0.9, TDR(2 ** 10, 0.3, 10), voltage_2, 0.98, constant, name="_6"))
+    horde.add_learner(learner=OnPolicyGVF(0.3, 0.9, TDR(2 ** 10, 0.3, 10), temperature_2, 0.98, constant, name="_7"))
+    horde.add_learner(learner=OnPolicyGVF(0.3, 0.9, TDR(2 ** 10, 0.3, 10), command, 0.98, constant, name="_8"))
+    horde.add_learner(learner=OnPolicyGVF(0.3, 0.9, TDR(2 ** 10, 0.3, 10), load_2, 0.98, constant, name="_9"))
+
+
     rospy.init_node('on_policy_listener', anonymous=True)  # anon means that multiple can subscribe to the same topic
     rospy.Subscriber('robot_observations', servo_state,
                      horde.update)  # subscribes to chatter and calls the callback
