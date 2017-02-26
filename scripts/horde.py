@@ -80,8 +80,8 @@ class OnPolicyGVF(GVF):
         super(OnPolicyGVF, self).__init__(step_size, elegibility_lambda, gamma, learner)
         self.reward_factory = reward_factory
         self.gamma_factory = gamma_factory
-        self.gvf_publisher = rospy.Publisher('off_policy_predictor' + name, gvf, queue_size=10)
-        self.gvf_verifier_publisher = rospy.Publisher('off_policy_verifier' + name, verifier, queue_size=10)
+        self.gvf_publisher = rospy.Publisher('on_policy_predictor' + name, gvf, queue_size=10)
+        self.gvf_verifier_publisher = rospy.Publisher('on_policy_verifier' + name, verifier, queue_size=10)
         self.verfier = OnlineVerifier(self.gamma)
     def update(self, data):
         # get the new gamma
