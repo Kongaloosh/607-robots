@@ -70,9 +70,9 @@ class OnPolicyPredictor(object):
                 self.lmbda,
                 self.gamma
             )
-            delta = delta = reward + self.gamma * self.learner.estimate(phi_next) - self.learner.estimate(self.phi)
+            delta = delta = reward + self.gamma * self.tdr.estimate(phi_next) - self.tdr.estimate(self.phi)
             ude_error = self.ude.update(delta)
-            rupee_error = self.rupee(delta, self.tdr.z, self.phi)
+            rupee_error = self.rupee.update(delta, self.tdr.z, self.phi)
             prediction = self.tdr.estimate(self.phi)
             self.verifier.update_reward(reward)
             self.verifier.update_prediction(prediction)  # update the prediction
@@ -82,13 +82,14 @@ class OnPolicyPredictor(object):
                 self.verifier_publisher.publish(  # publish the verifier's info (offset by horizon)
                                                   self.verifier.synced_prediction(),
                                                   self.verifier.calculate_currente_return(),
-                                                  abs(self.verifier.calculate_current_error())
-
+                                                  abs(self.verifier.calculate_current_error()),
+						  ude_error,
+						  rupee_error
                                                   )
             except IndexError:
                 pass
 
-                self.gvf_publisher.publish(  # publish the most recent predictions
+            self.gvf_publisher.publish(  # publish the most recent predictions
                                              prediction,
                                              prediction / (1. / (1. - self.gamma))
                                              # prediction normalized by the timescale of the horizon
