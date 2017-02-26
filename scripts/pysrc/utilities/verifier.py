@@ -28,10 +28,16 @@ class UDE(object):
     def __init__(self, beta):
         self.delta_bar = 0
         self.beta = self.beta
+        self.mean = 0
+        self.time = 1
+        self.variance = 0
+
 
     def update(self, delta):
-        self.delta_bar = delta + self.delta_bar * self.beta
-        return np.abs(self.delta_bar / np.var(np.sqrt(delta)))
+        self.delta_bar = delta * self.beta + self.delta_bar * (1 - self.beta)
+        self.mean += (delta-self.mean)/self.time
+        self.time += 1
+        return np.abs(self.delta_bar / (np.var(np.sqrt(delta)) + 0.001))
 
 
 class OnlineVerifier(object):

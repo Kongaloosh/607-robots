@@ -1,3 +1,6 @@
+__author__ = 'kongaloosh'
+
+
 #!/usr/bin/env python
 
 import sys
@@ -22,9 +25,20 @@ def robot_command_client(x, y, command):
         print "Service call failed: %s" % e
 
 
+def pavlovs_bell(data):
+    if data.ude > threshold:
+        robot_command_client(x, y, 3)
+        pub.publish(4, 3)
 
 
 if __name__ == "__main__":
+    pub = rospy.Publisher('robot_obeservation', robot_command_state, queue_size=10)     # publishing to
+    rospy.init_node('robot_command_talker', anonymous=True)                             # initializes node with name
+    rospy.init_node('pavlovian_listener', anonymous=True)  # anon means that multiple can subscribe to the same topic
+    rospy.Subscriber('robot_observations', servo_state, pavlovs_bell)  # subscribes to chatter and calls the callback
+    rospy.spin()  # keeps python from exiting until this node is stopped
+
+    threshold = 4
     x = 0
     y = 0
     command = 0
