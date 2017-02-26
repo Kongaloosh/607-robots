@@ -2,7 +2,7 @@
 
 from pysrc.algorithms.tdprediction.onpolicy.tdr import TDR
 from pysrc.algorithms.tdprediction.offpolicy.gtd import GTD, GTDR
-from pysrc.algorithms.tdprediction.offpolicy.policy import Policy
+from pysrc.algorithms.tdprediction.offpolicy.policy import *
 from pysrc.utilities.tiles import loadTiles, getTiles
 from pysrc.utilities.verifier import OnlineVerifier
 import rospy
@@ -20,11 +20,10 @@ class OffPolicyPredictor(object):
         self.lmbda = 0.99
         self.gamma = 0.95
         self.phi = None
-        self.behavior_policy = Policy(self.memory_size, 2)
         self.tdr = GTDR(
             number_of_features=self.memory_size,
             step_size=0.01,
-            target_policy=None,
+            target_policy=moving_right_1,
             number_of_active_features=self.num_tilings
         )
         self.gvf_publisher = rospy.Publisher('position_predictor', gvf, queue_size=10)
@@ -66,7 +65,6 @@ class OffPolicyPredictor(object):
 
         if self.phi is not None:
             reward = data.position_2
-            self.behavior_policy.action_state_update(data.command, self.phi)
             self.tdr.step(
                 self.phi,
                 reward,
@@ -74,7 +72,6 @@ class OffPolicyPredictor(object):
                 self.gamma,
                 self.lmbda,
                 self.gamma,
-                self.behavior_policy,
                 data.command
             )
             prediction = self.tdr.estimate(self.phi)
