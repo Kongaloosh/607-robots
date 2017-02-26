@@ -27,7 +27,7 @@ class UDE(object):
 
     def __init__(self, beta):
         self.delta_bar = 0
-        self.beta = self.beta
+        self.beta = beta
         self.mean = 0
         self.time = 1
         self.variance = 0
