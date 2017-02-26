@@ -7,7 +7,6 @@ import numpy as np
 
 
 class RUPEE(object):
-
     def __init__(self, number_of_features, beta, alpha):
         self.h = np.zeros(number_of_features)
         self.beta = beta
@@ -18,13 +17,12 @@ class RUPEE(object):
     def update(self, delta, e, phi):
         self.tao = (1 - self.beta) * self.tao + self.beta
         self.beta /= self.tao
-        self.delta_e = (1-self.beta)*self.delta_e + self.beta * e * delta
+        self.delta_e = (1 - self.beta) * self.delta_e + self.beta * e * delta
         self.h += self.alpha * (delta * e - np.dot(self.h, phi) * phi)
-        return np.sqrt(np.abs(np.dot(self.h, self.delta_e))**self.beta)
+        return np.sqrt(np.abs(np.dot(self.h, self.delta_e)) ** self.beta)
 
 
 class UDE(object):
-
     def __init__(self, beta):
         self.delta_bar = 0.
         self.beta = beta
@@ -32,29 +30,23 @@ class UDE(object):
         self.time = 1.
         self.s = 0.
 
-
     def update(self, delta):
-        self.delta_bar = (delta * (1-self.beta)) + (self.delta_bar * self.beta)
-        self.mean += (delta-self.mean)/self.time
-        self.s += (delta)**2
-	try:
-		variance = (self.s - (self.time * self.mean**2))/(self.time-1) 
-	except ZeroDivisionError:
-		variance = 0
-	self.time += 1 
-#	print ("delta_bar, ", self.delta_bar, variance )
-#	print ("mean, ",  self.mean)
-#	print ("variance, ", variance)
-#	print ("time, ", self.time)
+        self.delta_bar = (delta * (1 - self.beta)) + (self.delta_bar * self.beta)
+        self.mean += (delta - self.mean) / self.time
+        self.s += (delta) ** 2
+        try:
+            variance = (self.s - (self.time * self.mean ** 2)) / (self.time - 1)
+        except ZeroDivisionError:
+            variance = 0
+        self.time += 1
         return np.abs(self.delta_bar / (np.sqrt(variance) + 0.001))
-#	print self.beta
-#	return self.beta
+
 
 class OnlineVerifier(object):
     """Calculates the true return"""
 
     def __init__(self, rlGamma):
-        self.rlGamma = list()# todo: make gamma a function
+        self.rlGamma = list()  # todo: make gamma a function
         self.rewardHistory = list()  # a list of rewards we use to calculate true return
         self.predictionHistory = list()  # a list of predictions to sync our error calculation
         precision = 0.01
@@ -70,8 +62,9 @@ class OnlineVerifier(object):
                 if idx == 0:
                     returnValue += self.rewardHistory[idx]
                 else:
-                # returnValue += self.rewardHistory[idx] * (self.rlGamma[idx]) ** (((len(self.rewardHistory) - 1)) - idx)
-                    returnValue += self.rewardHistory[idx] * reduce(lambda x, y: x*y, reversed(self.rlGamma[idx-1:]))
+                    # returnValue += self.rewardHistory[idx] * (self.rlGamma[idx]) ** (((len(self.rewardHistory) - 1)) - idx)
+                    returnValue += self.rewardHistory[idx] * reduce(lambda x, y: x * y,
+                                                                    reversed(self.rlGamma[idx - 1:]))
             return returnValue
         return None
 
@@ -100,14 +93,15 @@ class OnlineVerifier(object):
     def calculate_current_error(self):
         """Gets the difference between the calculated return and the prediction"""
         try:
-	    return self.calculate_currente_return() - self.synced_prediction()
-	except TypeError:
-	    return 0
+            return self.calculate_currente_return() - self.synced_prediction()
+        except TypeError:
+            return 0
 
     def update_all(self, gamma, reward, prediction):
         self.update_gamma(gamma)
         self.update_reward(reward)
         self.update_prediction(prediction)
+
 
 def calculate_discounted_return_backwards(config, obs, reward_calculator):
     """

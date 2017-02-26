@@ -82,7 +82,7 @@ class OnPolicyPredictor(object):
                 self.verifier.update_reward(reward)
                 self.verifier.update_prediction(prediction)  # update the prediction
                 self.verifier.update_gamma(self.gamma)
-                delta = delta = reward + gnext * self.learner.estimate(phi_next) - self.learner.estimate(self.phi)
+                delta = delta = reward + gnext * self.tdr.estimate(phi_next) - self.tdr.estimate(self.phi)
                 ude_error = self.ude.update(delta)
                 rupee_error = self.rupee(delta, self.tdr.z, self.phi)
                 self.verifier_publisher.publish(  # publish the verifier's info (offset by horizon)
