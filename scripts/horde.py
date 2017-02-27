@@ -83,6 +83,7 @@ class OnPolicyGVF(GVF):
         self.gvf_publisher = rospy.Publisher('on_policy_predictor' + name, gvf, queue_size=10)
         self.gvf_verifier_publisher = rospy.Publisher('on_policy_verifier' + name, verifier, queue_size=10)
         self.verfier = OnlineVerifier(self.gamma)
+	self.rupee = RUPEE(self.memory_size, self.step_size * 5, 0.001)
 
     def update(self, data):
         # get the new gamma
@@ -98,7 +99,8 @@ class OnPolicyGVF(GVF):
             self.verfier.update_all(gamma=gnext, reward=reward, prediction=self.last_estimate)
             delta = reward + gnext * self.learner.estimate(phinext) - self.learner.estimate(self.phi)
             ude_error = self.ude.update(delta)
-            # todo: you could factor all of this out
+            rupee_error = self.rupee.update(self.learner.z, delta, phinext)
+	    # todo: you could factor all of this out
             self.gvf_publisher.publish(
                 self.last_estimate,
                 self.last_estimate / (1. / (1. - gnext))
@@ -109,7 +111,8 @@ class OnPolicyGVF(GVF):
                     self.verfier.synced_prediction(),
                     self.verfier.calculate_currente_return(),
                     abs(self.verfier.calculate_current_error()),
-                    ude_error
+                    ude_error,
+		    rupee_error
                 )
             except IndexError:
                 pass
