@@ -52,6 +52,7 @@ add_message_files(
    robot_command_state.msg
    verifier.msg
    gvf.msg
+   state.msg
  )
 
 ## Generate services in the 'srv' folder

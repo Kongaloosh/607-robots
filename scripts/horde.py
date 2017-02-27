@@ -10,7 +10,7 @@ from pysrc.algorithms.tdprediction.reward_functions import *
 from pysrc.utilities.verifier import OnlineVerifier, UDE, RUPEE
 import rospy
 import numpy as np
-from beginner_tutorials.msg import servo_state, verifier, gvf
+from beginner_tutorials.msg import servo_state, verifier, gvf, state
 
 __author__ = 'kongaloosh'
 
@@ -18,6 +18,8 @@ __author__ = 'kongaloosh'
 class Horde(object):
     def __init__(self):
         self.predictors = []
+        self.state_publisher = rospy.Publisher('horde_state', verifier, queue_size=10)
+
 
     def add_learner(self, learner):
         # each should have a v
@@ -54,6 +56,7 @@ class RobotHorde(Horde):
         ]
         for learner in self.predictors:
             data.append(learner.last_estimate)
+        self.state_publisher.publish(data)
         return data
 
 
@@ -178,6 +181,7 @@ def listener():
     rospy.init_node('on_policy_listener', anonymous=True)  # anon means that multiple can subscribe to the same topic
     rospy.Subscriber('robot_observations', servo_state,
                      horde.update)  # subscribes to chatter and calls the callback
+
     rospy.spin()  # keeps python from exiting until this node is stopped
 
 
