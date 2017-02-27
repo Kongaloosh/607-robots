@@ -9,6 +9,7 @@ from beginner_tutorials.srv import robot_command
 from beginner_tutorials.msg import robot_command_state
 import random
 import time
+from beginner_tutorials.msg import servo_state, verifier, gvf
 
 __author__ = 'kongaloosh'
 
@@ -26,16 +27,23 @@ def robot_command_client(x, y, command):
 
 
 def pavlovs_bell(data):
-    if data.ude > threshold:
+    if data.prediction_normalized > threshold:
+        x = -2,
+        y = -2
         robot_command_client(x, y, 3)
         pub.publish(4, 3)
+    else:
+        x = 2
+        y = 0
+        robot_command_client(x,y, 4)
+
 
 
 if __name__ == "__main__":
-    pub = rospy.Publisher('robot_obeservation', robot_command_state, queue_size=10)     # publishing to
     rospy.init_node('robot_command_talker', anonymous=True)                             # initializes node with name
-    rospy.init_node('pavlovian_listener', anonymous=True)  # anon means that multiple can subscribe to the same topic
-    rospy.Subscriber('robot_observations', servo_state, pavlovs_bell)  # subscribes to chatter and calls the callback
+    pub = rospy.Publisher('robot_obeservation', robot_command_state, queue_size=10)     # publishing to
+    rospy.Subscriber('position_predictior', gvf, pavlovs_bell)  # subscribes to chatter and calls the callback
+
     rospy.spin()  # keeps python from exiting until this node is stopped
 
     threshold = 4
