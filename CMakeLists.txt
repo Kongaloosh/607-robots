@@ -53,6 +53,7 @@ add_message_files(
    verifier.msg
    gvf.msg
    state.msg
+   td_control_msg.msg
  )
 
 ## Generate services in the 'srv' folder
