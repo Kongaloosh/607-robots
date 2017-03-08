@@ -36,16 +36,3 @@ class TD(TDPrediction):
         delta = r + gnext*np.dot(phinext, self.th) - np.dot(phi, self.th)
         self.z = g*l*self.z + phi
         self.th += self.alpha*delta*self.z
-
-    def quick_step(self, params):
-        """ STEP WHICH LEVERAGES SPARSITY """
-        phi = params['phi']
-        R = params['R']
-        phinext = params['phinext']
-        g = params['g']
-        l = params['l']
-        gnext = params['gnext']
-
-        delta = R + gnext*sp.dot(sp(phinext), self.th) - sp.dot(sp(phi), self.th)
-        self.z = g*l*self.z*(phi == 0.) + (phi != 0.)*phi
-        self.th += self.alpha*delta*self.z
