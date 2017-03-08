@@ -7,7 +7,7 @@ __author__ = 'kongaloosh'
 class ActorCritic(TDControl):
     """ TD REPLACING TRACES """
 
-    def __init__(self, number_of_features, number_of_actions, step_size, active_features=1):
+    def __init__(self, number_of_features, number_of_actions, step_size_critic, step_size_actor, step_size_reward, active_features=1):
         """Constructor"""
         super(ActorCritic, self).__init__(number_of_features, number_of_actions)
         self.z = np.zeros(self.number_of_actions, self.number_of_features)
@@ -15,9 +15,9 @@ class ActorCritic(TDControl):
         self.e_actor = np.zeros()
         self.th_critic = np.zeros(self.number_of_actions, self.number_of_features)
         self.th_actor = np.zeros(self.number_of_actions, self.number_of_features)
-        self.step_size_actor
-        self.step_size_critic
-        self.step_size = step_size / active_features
+        self.step_size_actor = step_size_actor   / active_features
+        self.step_size_critic = step_size_critic / active_features
+        self.step_size_reward = step_size_reward / active_features
         self._last_estimate = None
         self.reaward_avg = 0.
 
@@ -26,33 +26,43 @@ class ActorCritic(TDControl):
         self.e_u = np.zeros(self.e_u.shape)
         self.e_v = np.zeros(self.e_v.shape)
 
-    def actor_step(self, gamma, lmbda, phi, phi_next, critic_delta):
-        """Updates the """
-        self.actor_elegibility = gamma * lmbda * self.actor_elegibility + phi[]
-        self.actor_weights += self.actor_step_size * critic_delta * self.actor_elegibility
-
     def step(self, phi, reward, phi_next, gamma, lmda, gamma_next):
         critic_delta = self.critic_step(phi, reward, phi_next, gamma, lmda, gamma_next)
-        return self.actor_step(phi, phi_next, gamma, lmda, gamma_next, critic_delta)
+        action = self.actor_step(phi, phi_next, gamma, lmda, gamma_next, critic_delta)
+        self.action = action
+        return action
 
     def critic_step(self, phi, reward, phi_next):
         """
         :returns the critic's delta
         """
-        action_next = np.argmax(self.np.dot(self.th_actor[L,], self.phinext))
-        delta = reward  - self.average_reward + self.gamma * np.dot(self.th_critic[:,self.action], phi_next) - np.dot(self.th_critic[], phi)
-        self.avg_reward += self.step_size_critic * delta
-        self.e_critic   = self.e_critic * self.lmbda * self.gnext  + phi
-        self.th_critic  += self.step_size_critic * delta * self.th_critic
+        action_next = self.get_action(phi_next)
+        delta = reward - self.average_reward + \
+            self.gamma * np.dot(self.th_critic[:, action_next], phi_next) - \
+            np.dot(self.th_critic[:, self.action], phi)
+
+        self.avg_reward += self.step_size_reward * delta
+        self.e_critic[:, self.action] = self.e_critic[:, self.action] * self.lmbda * self.gnext + phi
+        self.th_critic[:, self.action] += self.step_size_critic * delta * self.th_critic[:, self.action]
         return delta
 
+    def actor_step(self, gamma, lmbda, phi, phi_next, critic_delta):
+        """Updates the """
+        action_next = self.softmax(phi_next)
+        self.actor_elegibility[:,self.action] = gamma * lmbda * self.actor_elegibility[:,self.action] + phi
+        self.actor_weights[:,self.action] += self.actor_step_size * critic_delta * self.actor_elegibility[:, self.action]
+        return action_next
 
-    def softmax(self, action):
+    def softmax(self, phi):
         """for a given action, returns the softmax prob"""
-        pass
+        values = np.dot(self.th_actor, phi)
+        return np.argmax(map(lambda v: v/sum(values), values))
 
     def last_estimate(self):
         return self._last_estimate
+
+    def get_action(self, phi):
+        return self.softmax(phi)
 
 
 class ContinuousActorCritic(TDControl):
@@ -95,7 +105,7 @@ class ContinuousActorCritic(TDControl):
         mean = np.dot(self.th_mean, phi)         # last step's mean
         sigma = np.dot(self.th_sigma, phi)       # last step's deviation
 
-        gradient_mean = ((self.action - mean)) * phi                # gradients wrt mean and deviation
+        gradient_mean = (self.action - mean) * phi                # gradients wrt mean and deviation
         gradient_sigma = ((self.action - mean) - sigma**2) * phi
         # mean update
         self.e_mean = self.e_mean * self.lmbd + gradient_mean
@@ -103,8 +113,9 @@ class ContinuousActorCritic(TDControl):
         # deviation update
         self.e_sigma = self.e_sigma * lmbda * gamma_next + gradient_sigma
         self.th_sigma += self.step_size_deviation * self.e_sigma * critic_delta
+        return mean,sigma
 
-        mean = np.argmax(np.dot(self.th_mean, phi_next))
-        sigma = np.argmax(np.dot(self.th_sigma, phi_next))
-
-        return np.random.normal(mean,sigma)
+    def get_action(self, phi):
+        mean = np.argmax(np.dot(self.th_mean, phi))
+        sigma = np.argmax(np.dot(self.th_sigma, phi))
+        np.random.normal(mean, sigma)
