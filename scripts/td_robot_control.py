@@ -10,6 +10,7 @@ from pysrc.algorithms.tdprediction.discount_rates import *
 from pysrc.algorithms.tdprediction.reward_functions import *
 from beginner_tutorials.msg import servo_state, verifier, gvf, state, td_control_msg
 from pysrc.utilities.kanerva_coding import BaseKanervaCoder
+from pysrc.algorithms.tdcontrol.onpolicy.sarsa import SARSA
 
 __author__ = 'kongaloosh'
 
@@ -184,7 +185,8 @@ class TDRobot_continuous(object):
 
 
 if __name__ == "__main__":
-    robot = TDRobot()
+    sarsa = SARSA(2**10, 2, 0.3, 10)
+    robot = TDRobot(0.3, 0.4, sarsa, load_2, 0.9, constant, name="sarsa")
     rospy.init_node('on_policy_listener', anonymous=True)  # anon means that multiple can subscribe to the same topic
     rospy.Subscriber('robot_observations', servo_state, robot.step)  # subscribes to chatter and calls the callback
 
