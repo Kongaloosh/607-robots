@@ -58,15 +58,14 @@ class ActorCritic(TDControl):
 class ContinuousActorCritic(TDControl):
     """"""
 
-    def __init__(self, number_of_features, number_of_actions, step_size_mean, step_size_deviation, active_features):
+    def __init__(self, number_of_features, step_size_mean, step_size_deviation, step_size_reward, active_features):
         """"""
 
-        self.step_size_critic = self.step_size_critic
         self.step_size_mean = step_size_mean
         self.step_size_deviation = step_size_deviation
+        self.ste_size_reward = step_size_reward
         self.active_features = active_features
         self.number_of_features = number_of_features
-        self.number_of_actions = number_of_actions
 
         self.e_critic    = np.zeros(self.number_of_features)
         self.th_critic   = np.zeros(self.number_of_features)
@@ -84,7 +83,7 @@ class ContinuousActorCritic(TDControl):
         :returns the critic's delta
         """
         delta = reward  - self.average_reward + self.gamma * np.dot(self.th_critic, phi_next) - np.dot(self.th_critic, phi)
-        self.avg_reward += self.step_size_critic * delta
+        self.avg_reward += self.step_size_reward * delta
         self.e_critic   = self.e_critic * self.lmbda * self.gnext  + phi
         self.th_critic  += self.step_size_critic * delta * self.th_critic
         return delta
