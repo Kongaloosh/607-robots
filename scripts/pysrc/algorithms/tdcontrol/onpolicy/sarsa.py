@@ -30,8 +30,14 @@ class SARSA(TDControl):
         self.action = action_next
         return self.action
 
+    def softmax(self, phi):
+        """for a given action, returns the softmax prob"""
+        values = np.dot(self.th_actor, phi)
+        return np.argmax(map(lambda v: v/sum(values), values))
+
     def last_estimate(self):
         return self._last_estimate
 
     def get_action(self, phi):
-        return np.argmax(np.dot(self.th, phi))
+        return self.softmax(phi)
+
