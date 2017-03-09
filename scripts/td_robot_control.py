@@ -45,6 +45,8 @@ class TDRobot(object):
         action_next = self.control.get_action(phi_next)
         if self.phi is not None:
            self.control.step(self.phi, reward, phi_next, self.gamma, self.lmbda, gnext)
+	else:
+	   self.control.action = self.control.get_action(phi_next)
         self.phi = phi_next
         self.action = action_next
         self.gamma = gnext
@@ -169,9 +171,10 @@ class TDRobot_continuous(object):
 if __name__ == "__main__":
     #    continuous_actor_critic = ContinuousActorCritic(2**10, 0.005,0.005, 0.0005, 1)
     #    robot = TDRobot_continuous(0.4,continuous_actor_critic,load_2,1,constant,"_continuous_actor_critic")
-    #    actor_critic = ActorCritic(2**10, 2, 0.3, 10)
-    sarsa = SARSA(2**10, 2, 0.3, 10)
-    robot = TDRobot(0.3, 0.4, sarsa, load_2, 0.9, constant, name="_sarsa")
+    actor_critic = ActorCritic(2**10, 2, 0.005, 0.005, 0.0005, 1)
+    robot = TDRobot(0.3, 0.4, actor_critic, load_2, 0.9, constant, name="_sarsa")
+    #sarsa = SARSA(2**10, 2, 0.3, 10)
+    #robot = TDRobot(0.3, 0.4, sarsa, load_2, 0.9, constant, name="_sarsa")
 
     rospy.init_node('on_policy_listener', anonymous=True)  # anon means that multiple can subscribe to the same topic
     rospy.Subscriber('robot_observations', servo_state, robot.step)  # subscribes to chatter and calls the callback
