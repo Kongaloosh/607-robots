@@ -1,6 +1,4 @@
-__author__ = 'kongaloosh'
-
-from pysrc.algorihtms.tdcontrol.tdcontrol import TDControl
+from pysrc.algorithms.tdcontrol.tdcontrol import TDControl
 import numpy as np
 
 __author__ = 'kongaloosh'
