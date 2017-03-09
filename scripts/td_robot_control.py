@@ -38,7 +38,7 @@ class TDRobot(object):
 
     def step(self, data):
         data = self.construct_obs(data)
-        gnext = self.gamma_factory(data, self.gamma)
+        gnext = self.gamma_factory(self.gamma, data)
         reward = self.reward_factory(data)
         phi_next = self.kanerva.get_features(data)
         action_next = self.control.get_action(phi_next)
@@ -118,7 +118,7 @@ class TDRobot_continuous(object):
         # rospy.init_node('robot_command_talker', anonymous=True)                             # initializes node with name
 
     def step(self, data):
-        gnext = self.gamma_factory(data, self.gamma)
+        gnext = self.gamma_factory(self.gamma, data)
         reward = self.reward_factory(data)
         phi_next = self.kanerva.get_features(self.construct_obs(data))
         action_next = self.control.get_action(phi_next)

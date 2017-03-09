@@ -28,7 +28,7 @@ class ActorCritic(TDControl):
 
     def step(self, phi, reward, phi_next, gamma, lmda, gamma_next):
         action = critic_delta = self.critic_step(phi, reward, phi_next, gamma, lmda, gamma_next)
-        action = self.actor_step(phi, phi_next, gamma, lmda, gamma_next, critic_delta)
+        action = self.actor_step(phi, phi_next, gamma, lmda, critic_delta)
         self.action = action
         return action
 
@@ -37,8 +37,8 @@ class ActorCritic(TDControl):
         :returns the critic's delta
         """
         action_next = self.get_action(phi_next)
+	print(gamma)
 	print(
-	    gamma,
 	    action_next,
 	    reward - self.average_reward,
             np.dot(self.th_critic[:, action_next], phi_next), 
@@ -48,16 +48,16 @@ class ActorCritic(TDControl):
             gamma * np.dot(self.th_critic[:, action_next], phi_next) - \
             np.dot(self.th_critic[:, self.action], phi)
 
-        self.reward_average += self.step_size_reward * delta
-        self.e_critic[:, self.action] = self.e_critic[:, self.action] * self.lmbda * self.gnext + phi
+        self.average_reward += self.step_size_reward * delta
+        self.e_critic[:, self.action] = self.e_critic[:, self.action] * lmda * gamma_next + phi
         self.th_critic[:, self.action] += self.step_size_critic * delta * self.th_critic[:, self.action]
         return delta
 
-    def actor_step(self, gamma, lmbda, phi, phi_next, critic_delta):
+    def actor_step(self, phi, phi_next, gamma, lmbda, critic_delta):
         """Updates the """
         action_next = self.softmax(phi_next)
-        self.actor_elegibility[:, self.action] = gamma * lmbda * self.actor_elegibility[:, self.action] + phi
-        self.actor_weights[:, self.action] += self.actor_step_size * critic_delta * self.actor_elegibility[:, self.action]
+        self.e_actor[:, self.action] = gamma * lmbda * self.e_actor[:, self.action] + phi
+        self.th_actor[:, self.action] += self.step_size_actor * critic_delta * self.e_actor[:, self.action]
         return action_next
 
     def softmax(self, phi):
@@ -101,7 +101,7 @@ class ContinuousActorCritic(TDControl):
         """
         delta = reward  - self.average_reward + gamma * np.dot(self.th_critic, phi_next) - np.dot(self.th_critic, phi)
         self.avg_reward += self.step_size_reward * delta
-        self.e_critic   = self.e_critic * self.lmbda * self.gnext  + phi
+        self.e_critic   = self.e_critic * lmbda * gnext  + phi
         self.th_critic  += self.step_size_critic * delta * self.th_critic
         return delta
 
