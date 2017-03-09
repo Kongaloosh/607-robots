@@ -58,43 +58,43 @@ class TDRobot(object):
         self.command(action_next)
 
 
-@staticmethod
-def command(action):
-    print(action)
-    rospy.wait_for_service('robot_controller')
-    if action == 1:
-        x = 1
-        y = 1
-    else:
-        x = -1
-        y = 1
-    try:
-        command_service = rospy.ServiceProxy('robot_controller', robot_command)
-        resp1 = command_service(x, y, action)
-    except rospy.ServiceException, e:
-        print "Service call failed: %s" % e
+    @staticmethod
+    def command(action):
+        print(action)
+        rospy.wait_for_service('robot_controller')
+        if action == 1:
+            x = 1
+            y = 1
+        else:
+            x = -1
+            y = 1
+        try:
+            command_service = rospy.ServiceProxy('robot_controller', robot_command)
+            resp1 = command_service(x, y, action)
+        except rospy.ServiceException, e:
+            print "Service call failed: %s" % e
 
 
-@staticmethod
-def construct_obs(data):
-    data = [
-        data.load_2,
-        data.temperature_2,
-        data.voltage_2,
-        data.is_moving_2,
-        data.position_2,
-        data.angle_2,
-        data.vel_command_2,
-        data.load_3,
-        data.temperature_3,
-        data.voltage_3,
-        data.is_moving_3,
-        data.position_3,
-        data.angle_3,
-        data.vel_command_3,
-        data.command,
-    ]
-    return data
+    @staticmethod
+    def construct_obs(data):
+        data = [
+            data.load_2,
+            data.temperature_2,
+            data.voltage_2,
+            data.is_moving_2,
+            data.position_2,
+            data.angle_2,
+            data.vel_command_2,
+            data.load_3,
+            data.temperature_3,
+            data.voltage_3,
+            data.is_moving_3,
+            data.position_3,
+            data.angle_3,
+            data.vel_command_3,
+            data.command,
+        ]
+        return data
 
 
 class TDRobot_continuous(object):
