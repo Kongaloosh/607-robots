@@ -71,15 +71,6 @@ class TDRobot(object):
         except rospy.ServiceException, e:
             print "Service call failed: %s" % e
 
-    @staticmethod
-    def robot_command_client(command):
-        #todo: command factories
-        rospy.wait_for_service('robot_controller')
-        try:
-            command_service = rospy.ServiceProxy('robot_controller', robot_command)
-            resp1 = command_service(x, y, command)
-        except rospy.ServiceException, e:
-            print "Service call failed: %s" % e
 
     @staticmethod
     def construct_obs(data):
@@ -153,15 +144,6 @@ class TDRobot_continuous(object):
         except rospy.ServiceException, e:
             print "Service call failed: %s" % e
 
-    @staticmethod
-    def robot_command_client(command):
-        #todo: command factories
-        rospy.wait_for_service('robot_controller')
-        try:
-            command_service = rospy.ServiceProxy('robot_controller', robot_command)
-            resp1 = command_service(x, y, command)
-        except rospy.ServiceException, e:
-            print "Service call failed: %s" % e
 
     @staticmethod
     def construct_obs(data):
@@ -186,11 +168,17 @@ class TDRobot_continuous(object):
 
 
 if __name__ == "__main__":
+
+    # continuous actor_critic_example
     continuous_actor_critic = ContinuousActorCritic(2**10, 0.005,0.005, 0.0005, 1)
     robot = TDRobot_continuous(0.4,continuous_actor_critic,load_2,1,constant,"_continuous_actor_critic")
+    # discrete actor critic example
     actor_critic = ActorCritic(2**10, 2, 0.3, 10)
+    robot = TDRobot_continuous(0.4,continuous_actor_critic,load_2,1,constant,"_continuous_actor_critic")
+    # continuous actor critic
     sarsa = SARSA(2**10, 2, 0.3, 10)
-    robot = TDRobot(0.3, 0.4, sarsa, load_2, 0.9, constant, name="sarsa")
+    robot = TDRobot(0.3, 0.4, sarsa, load_2, 0.9, constant, name="_sarsa")
+
     rospy.init_node('on_policy_listener', anonymous=True)  # anon means that multiple can subscribe to the same topic
     rospy.Subscriber('robot_observations', servo_state, robot.step)  # subscribes to chatter and calls the callback
 

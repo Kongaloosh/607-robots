@@ -10,11 +10,12 @@ from beginner_tutorials.msg import servo_state, verifier, gvf
 
 __author__ = 'kongaloosh'
 
-pub = rospy.Publisher('robot_obeservation', robot_command_state, queue_size=10)     # publishing to
-rospy.init_node('robot_command_talker', anonymous=True)                             # initializes node with name
+pub = rospy.Publisher('robot_obeservation', robot_command_state, queue_size=10)  # publishing to
+rospy.init_node('robot_command_talker', anonymous=True)  # initializes node with name
 
 threshold_a = 700
 threshold_b = 400
+
 
 def robot_command_client(x, y, command):
     rospy.wait_for_service('robot_controller')
@@ -24,37 +25,37 @@ def robot_command_client(x, y, command):
     except rospy.ServiceException, e:
         print "Service call failed: %s" % e
 
-
 x_b = 2
 y_b = 2
 
+
 def pavlovs_bell(data):
-    global x_b; global y_b
+    global x_b;
+    global y_b
     print data.normalized_prediction
     if data.normalized_prediction > threshold_a:
         print("left")
-	x = -2
+        x = -2
         y = -2
         robot_command_client(x, y, 3)
         pub.publish(4, 3)
-	x_b = x
-	y_b = y
+        x_b = x
+        y_b = y
     elif data.normalized_prediction < threshold_b:
         print("right")
-	x = 2
+        x = 2
         y = 2
-        robot_command_client(x,y, 2)
-    	x_b = x
-	y_b = y
+        robot_command_client(x, y, 2)
+        x_b = x
+        y_b = y
     else:
-	print("unsure")
-	robot_command_client(x_b,y_b,4)
-
+        print("unsure")
+        robot_command_client(x_b, y_b, 4)
 
 
 if __name__ == "__main__":
-    rospy.init_node('robot_command_talker', anonymous=True)                             # initializes node with name
-    pub = rospy.Publisher('robot_obeservation', robot_command_state, queue_size=10)     # publishing to
+    rospy.init_node('robot_command_talker', anonymous=True)  # initializes node with name
+    pub = rospy.Publisher('robot_obeservation', robot_command_state, queue_size=10)  # publishing to
     rospy.Subscriber('position_predictor', gvf, pavlovs_bell)  # subscribes to chatter and calls the callback
 
     rospy.spin()

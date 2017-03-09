@@ -49,8 +49,8 @@ class ActorCritic(TDControl):
     def actor_step(self, gamma, lmbda, phi, phi_next, critic_delta):
         """Updates the """
         action_next = self.softmax(phi_next)
-        self.actor_elegibility[:,self.action] = gamma * lmbda * self.actor_elegibility[:,self.action] + phi
-        self.actor_weights[:,self.action] += self.actor_step_size * critic_delta * self.actor_elegibility[:, self.action]
+        self.actor_elegibility[:, self.action] = gamma * lmbda * self.actor_elegibility[:, self.action] + phi
+        self.actor_weights[:, self.action] += self.actor_step_size * critic_delta * self.actor_elegibility[:, self.action]
         return action_next
 
     def softmax(self, phi):
