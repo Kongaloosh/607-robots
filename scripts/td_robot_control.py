@@ -35,14 +35,15 @@ class TDRobot(object):
             _dimensions=1,
             _numActiveFeatures=self.active_features)
         self.control = td_control
-        rospy.init_node('robot_command_talker', anonymous=True)                             # initializes node with name
+        #rospy.init_node('robot_command_talker', anonymous=True)                             # initializes node with name
 
     def step(self, data):
+	data = self.construct_obs(data)
         gnext = self.gamma_factory(data, self.gamma)
         reward = self.reward_factory(data)
-        phi_next = self.kanerva.get_features(self.construct_obs(data))
+        phi_next = self.kanerva.get_features(data)
         action_next = self.control.get_action(phi_next)
-        if self.phi and self.action:
+        if self.phi is not None:
            self.control.step(self.phi, reward, phi_next, self.gamma, self.lmbda, gnext)
         self.phi = phi_next
         self.robot_command_client(self.action)
@@ -57,6 +58,7 @@ class TDRobot(object):
 
     @staticmethod
     def command(action):
+ 	print(action)
         rospy.wait_for_service('robot_controller')
         if action == 1:
             x = 1
@@ -112,7 +114,7 @@ class TDRobot_continuous(object):
             _dimensions=1,
             _numActiveFeatures=self.active_features)
         self.control = td_control
-        rospy.init_node('robot_command_talker', anonymous=True)                             # initializes node with name
+        #rospy.init_node('robot_command_talker', anonymous=True)                             # initializes node with name
 
     def step(self, data):
         gnext = self.gamma_factory(data, self.gamma)
@@ -175,4 +177,5 @@ if __name__ == "__main__":
 
     rospy.init_node('on_policy_listener', anonymous=True)  # anon means that multiple can subscribe to the same topic
     rospy.Subscriber('robot_observations', servo_state, robot.step)  # subscribes to chatter and calls the callback
+    rospy.spin()
 

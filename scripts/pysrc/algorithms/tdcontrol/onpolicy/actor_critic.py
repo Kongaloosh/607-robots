@@ -10,11 +10,11 @@ class ActorCritic(TDControl):
     def __init__(self, number_of_features, number_of_actions, step_size_critic, step_size_actor, step_size_reward, active_features=1):
         """Constructor"""
         super(ActorCritic, self).__init__(number_of_features, number_of_actions)
-        self.z = np.zeros(self.number_of_actions, self.number_of_features)
-        self.e_critic = np.zeros()
-        self.e_actor = np.zeros()
-        self.th_critic = np.zeros(self.number_of_actions, self.number_of_features)
-        self.th_actor = np.zeros(self.number_of_actions, self.number_of_features)
+        self.z = np.zeros((self.number_of_features,self.number_of_actions))
+        self.e_critic = np.zeros((self.number_of_features,self.number_of_actions))
+        self.e_actor = np.zeros((self.number_of_features,self.number_of_actions))
+        self.th_critic = np.zeros((self.number_of_features,self.number_of_actions))
+        self.th_actor = np.zeros((self.number_of_features,self.number_of_actions))
         self.step_size_actor = step_size_actor   / active_features
         self.step_size_critic = step_size_critic / active_features
         self.step_size_reward = step_size_reward / active_features
