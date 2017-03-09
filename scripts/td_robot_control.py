@@ -46,11 +46,10 @@ class TDRobot(object):
         if self.phi is not None:
            self.control.step(self.phi, reward, phi_next, self.gamma, self.lmbda, gnext)
         self.phi = phi_next
-        self.robot_command_client(self.action)
         self.action = action_next
         self.gamma = gnext
         # need a bottleneck to throttle things
-        self.controller_publisher.Publish(
+        self.controller_publisher.publish(
             reward,
             action_next
         )
@@ -67,8 +66,8 @@ class TDRobot(object):
             x = -1
             y = 1
         try:
-            command_service = rospy.ServiceProxy('robot_controller', robot_command)
-            resp1 = command_service(x, y, command)
+            command_service = rospy.ServiceProxy('robot_controller', robot_command)    
+	    resp1 = command_service(x, y, action)
         except rospy.ServiceException, e:
             print "Service call failed: %s" % e
 
@@ -124,11 +123,10 @@ class TDRobot_continuous(object):
         if self.phi and self.action:
            self.control.step(self.phi, reward, phi_next, self.gamma, self.lmbda, gnext)
         self.phi = phi_next
-        self.robot_command_client(self.action)
         self.action = action_next
         self.gamma = gnext
         # need a bottleneck to throttle things
-        self.sigma_publisher_publisher.Publish(
+        self.sigma_publisher_publisher.publish(
             reward,
             action_next
         )
