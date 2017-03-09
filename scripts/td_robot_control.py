@@ -12,7 +12,6 @@ from beginner_tutorials.msg import servo_state, verifier, gvf, state, td_control
 from pysrc.utilities.kanerva_coding import BaseKanervaCoder
 from pysrc.algorithms.tdcontrol.onpolicy.sarsa import SARSA
 from pysrc.algorithms.tdcontrol.onpolicy.actor_critic import ActorCritic, ContinuousActorCritic
-from pysrc.
 
 __author__ = 'kongaloosh'
 
@@ -168,14 +167,9 @@ class TDRobot_continuous(object):
 
 
 if __name__ == "__main__":
-
-    # continuous actor_critic_example
-    continuous_actor_critic = ContinuousActorCritic(2**10, 0.005,0.005, 0.0005, 1)
-    robot = TDRobot_continuous(0.4,continuous_actor_critic,load_2,1,constant,"_continuous_actor_critic")
-    # discrete actor critic example
-    actor_critic = ActorCritic(2**10, 2, 0.3, 10)
-    robot = TDRobot_continuous(0.4,continuous_actor_critic,load_2,1,constant,"_continuous_actor_critic")
-    # continuous actor critic
+    #    continuous_actor_critic = ContinuousActorCritic(2**10, 0.005,0.005, 0.0005, 1)
+    #    robot = TDRobot_continuous(0.4,continuous_actor_critic,load_2,1,constant,"_continuous_actor_critic")
+    #    actor_critic = ActorCritic(2**10, 2, 0.3, 10)
     sarsa = SARSA(2**10, 2, 0.3, 10)
     robot = TDRobot(0.3, 0.4, sarsa, load_2, 0.9, constant, name="_sarsa")
 

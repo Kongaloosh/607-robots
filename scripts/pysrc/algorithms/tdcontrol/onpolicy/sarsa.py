@@ -1,6 +1,4 @@
-__author__ = 'kongaloosh'
-
-from pysrc.algorihtms.tdcontrol.tdcontrol import TDControl
+from pysrc.algorithms.tdcontrol.tdcontrol import TDControl
 import numpy as np
 
 __author__ = 'kongaloosh'
@@ -11,7 +9,7 @@ class SARSA(TDControl):
 
     def __init__(self, number_of_features, number_of_actions, step_size, active_features=1):
         """Constructor"""
-        super(TDControl, self).__init__(number_of_features, number_of_actions)
+        super(SARSA, self).__init__(number_of_features, number_of_actions)
         self.z = np.zeros(self.number_of_actions, self.number_of_features)
         self.step_size = step_size / active_features
         self._last_estimate = None
