@@ -18,7 +18,7 @@ __author__ = 'kongaloosh'
 class Horde(object):
     def __init__(self):
         self.predictors = []
-        self.state_publisher = rospy.Publisher('horde_state', verifier, queue_size=10)
+        self.state_publisher = rospy.Publisher('horde_state', state, queue_size=10)
 
 
     def add_learner(self, learner):
