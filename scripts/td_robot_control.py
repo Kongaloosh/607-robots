@@ -118,17 +118,23 @@ class TDRobot_continuous(object):
         # rospy.init_node('robot_command_talker', anonymous=True)                             # initializes node with name
 
     def step(self, data):
+	print("step")
+	data = self.construct_obs(data)
         gnext = self.gamma_factory(self.gamma, data)
         reward = self.reward_factory(data)
-        phi_next = self.kanerva.get_features(self.construct_obs(data))
+        phi_next = self.kanerva.get_features(data)
         action_next = self.control.get_action(phi_next)
-        if self.phi and self.action:
+        print("stuff", self.phi, action_next, self.action)
+        if self.phi is not None and self.action:
+	    print("everytime I see you in the world, you always step to my girl")
             self.control.step(self.phi, reward, phi_next, self.gamma, self.lmbda, gnext)
+	else:
+	    self.control.action = action_next
+	self.action = action_next
         self.phi = phi_next
-        self.action = action_next
         self.gamma = gnext
         # need a bottleneck to throttle things
-        self.sigma_publisher_publisher.publish(
+        self.sigma_publisher.publish(
             reward,
             action_next
         )
@@ -168,13 +174,12 @@ class TDRobot_continuous(object):
 
 
 if __name__ == "__main__":
-    #    continuous_actor_critic = ContinuousActorCritic(2**10, 0.005,0.005, 0.0005, 1)
-    #    robot = TDRobot_continuous(0.4,continuous_actor_critic,load_2,1,constant,"_continuous_actor_critic")
-    actor_critic = ActorCritic(2 ** 10, 2, 0.005, 0.005, 0.0005, 1)
-    robot = TDRobot(0.3, 0.4, actor_critic, load_2, 0.9, constant, name="_sarsa")
-    # sarsa = SARSA(2**10, 2, 0.3, 10)
+    continuous_actor_critic = ContinuousActorCritic(2**10, 0.005,0.005, 0.005, 0.0005, 1)
+    robot = TDRobot_continuous(0.4,continuous_actor_critic,load_2,1,constant,"_continuous_actor_critic")
+    #actor_critic = ActorCritic(2 ** 10, 2, 0.005, 0.005, 0.0005, 1)
+    #robot = TDRobot(0.3, 0.4, actor_critic, load_2, 0.9, constant, name="_sarsa")
+    #sarsa = SARSA(2**10, 2, 0.3, 10)
     # robot = TDRobot(0.3, 0.4, sarsa, load_2, 0.9, constant, name="_sarsa")
-
     rospy.init_node('on_policy_listener', anonymous=True)  # anon means that multiple can subscribe to the same topic
     rospy.Subscriber('robot_observations', servo_state, robot.step)  # subscribes to chatter and calls the callback
     rospy.spin()

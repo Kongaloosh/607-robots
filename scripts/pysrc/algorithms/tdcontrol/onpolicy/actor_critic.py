@@ -37,13 +37,6 @@ class ActorCritic(TDControl):
         :returns the critic's delta
         """
         action_next = self.get_action(phi_next)
-	print(gamma)
-	print(
-	    action_next,
-	    reward - self.average_reward,
-            np.dot(self.th_critic[:, action_next], phi_next), 
-            np.dot(self.th_critic[:, self.action], phi)
-        )
         delta = reward - self.average_reward + \
             gamma * np.dot(self.th_critic[:, action_next], phi_next) - \
             np.dot(self.th_critic[:, self.action], phi)
@@ -75,12 +68,13 @@ class ActorCritic(TDControl):
 class ContinuousActorCritic(TDControl):
     """"""
 
-    def __init__(self, number_of_features, step_size_mean, step_size_deviation, step_size_reward, active_features):
+    def __init__(self, number_of_features, step_size_mean, step_size_deviation, step_size_critic, step_size_reward, active_features):
         """"""
 
         self.step_size_mean = step_size_mean
         self.step_size_deviation = step_size_deviation
-        self.ste_size_reward = step_size_reward
+	self.step_size_critic = step_size_critic
+        self.step_size_reward = step_size_reward
         self.active_features = active_features
         self.number_of_features = number_of_features
 
@@ -89,20 +83,24 @@ class ContinuousActorCritic(TDControl):
         self.e_mean      = np.zeros(self.number_of_features)
         self.e_sigma     = np.zeros(self.number_of_features)
         self.th_mean     = np.zeros(self.number_of_features)
-        self.th_sigma    = np.zeros(self.number_of_features)
+        self.th_sigma    = np.ones(self.number_of_features)
+	
+	self.average_reward = 0.
 
     def step(self, phi, reward, phi_next, gamma, lmda, gamma_next):
         critic_delta = self.critic_step(phi, reward, phi_next, gamma, lmda, gamma_next)
+	print("critic", critic_delta)
         return self.actor_step(phi, phi_next, gamma, lmda, gamma_next, critic_delta)
 
-    def critic_step(self, phi, reward, phi_next):
+    def critic_step(self, phi, reward, phi_next, gamma, lmda, gnext):
         """
         :returns the critic's delta
         """
         delta = reward  - self.average_reward + gamma * np.dot(self.th_critic, phi_next) - np.dot(self.th_critic, phi)
-        self.avg_reward += self.step_size_reward * delta
-        self.e_critic   = self.e_critic * lmbda * gnext  + phi
+        self.average_reward += self.step_size_reward * delta
+        self.e_critic   = self.e_critic * lmda * gnext  + phi
         self.th_critic  += self.step_size_critic * delta * self.th_critic
+	print(self.th_critic)
         return delta
 
     def actor_step(self, phi, phi_next, gamma, lmbda, gamma_next, critic_delta):
@@ -111,11 +109,10 @@ class ContinuousActorCritic(TDControl):
         """
         mean = np.dot(self.th_mean, phi)         # last step's mean
         sigma = np.dot(self.th_sigma, phi)       # last step's deviation
-
         gradient_mean = (self.action - mean) * phi                # gradients wrt mean and deviation
         gradient_sigma = ((self.action - mean) - sigma**2) * phi
         # mean update
-        self.e_mean = self.e_mean * self.lmbd + gradient_mean
+        self.e_mean = self.e_mean * lmbda + gradient_mean
         self.th_mean += self.step_size_mean * self.e_mean * critic_delta
         # deviation update
         self.e_sigma = self.e_sigma * lmbda * gamma_next + gradient_sigma
@@ -123,6 +120,9 @@ class ContinuousActorCritic(TDControl):
         return mean,sigma
 
     def get_action(self, phi):
-        mean = np.argmax(np.dot(self.th_mean, phi))
-        sigma = np.argmax(np.dot(self.th_sigma, phi))
-        np.random.normal(mean, sigma)
+        mean = np.dot(self.th_mean, phi)
+        sigma = np.exp(np.dot(self.th_sigma, phi))
+	if sigma == 0:
+	    sigma = 0.2
+	print(mean, sigma)
+	return np.random.normal(mean, sigma)
