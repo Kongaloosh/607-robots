@@ -35,14 +35,15 @@ class TDRobot(object):
             _startingPrototypes=self.memory_size,
             _dimensions=1,
         )
+	self.kanerva.numClosest = self.active_features
         self.control = td_control
 
     def step(self, data):
         data = self.construct_obs(data)
         gnext = self.gamma_factory(self.gamma, data)
         reward = self.reward_factory(data)
-        phi_next = np.put(np.zeros(self.memory_size), (self.kanerva.GetFeatures(data)),1)
-        print np.where(phi_next >= 1)
+        phi_next = np.zeros(self.memory_size)
+        np.put(phi_next, (self.kanerva.GetFeatures(data)),[1])
         action_next = self.control.get_action(phi_next)
         if self.phi is not None:
             self.control.step(self.phi, reward, phi_next, self.gamma, self.lmbda, gnext)
@@ -57,6 +58,7 @@ class TDRobot(object):
             reward,
             action_next
         )
+	self.kanerva.updatePrototypes()
         self.command(action_next)
 
     @staticmethod
@@ -125,17 +127,25 @@ class TDRobot_continuous(object):
             _dimensions=1,
             # _distanceMeasure='euclidean'
         )
+	self.kanerva.numClosest = self.active_features
         self.control = td_control
 
     def step(self, data):
+	print("meh")
         data = self.construct_obs(data)
         gnext = self.gamma_factory(self.gamma, data)
         reward = self.reward_factory(data)
-        phi_next = np.put(np.zeros(self.memory_size), (self.kanerva.GetFeatures(data)),1)
-        action_next = self.control.get_action(phi_next)
+        phi_next = np.zeros(self.memory_size)
+	np.put(phi_next, (self.kanerva.GetFeatures(data)),[1])
+        print (self.kanerva.GetFeatures(data))
+
+	print phi_next
+	action_next = self.control.get_action(phi_next)
         print("stuff", self.phi, action_next, self.action)
         if self.phi is not None and self.action:
-            print(np.where(phi_next >= 1), np.where(self.phi > 1))
+            if(np.where(phi_next >= 1)[0] == np.where(self.phi >= 1)[0]):
+		print("no")
+		exit(1)
             self.control.step(self.phi, reward, phi_next, self.gamma, self.lmbda, gnext)
         else:
             self.control.action = action_next
@@ -147,6 +157,7 @@ class TDRobot_continuous(object):
             reward,
             action_next
         )
+	self.kanerva.updatePrototypes()
         self.command(action_next)
 
     @staticmethod
@@ -185,11 +196,11 @@ class TDRobot_continuous(object):
             self.max = np.maximum(self.max, data)
             data = (data + np.abs(self.min)) / (np.abs(self.min) + self.max)
             data = np.nan_to_num(data)
-            return data * 10
+            return data
         else:
             self.min = data
             self.max = data
-            return np.ones(len(data)) * 10
+            return np.ones(len(data))
 
 
 if __name__ == "__main__":
