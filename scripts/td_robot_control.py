@@ -32,9 +32,9 @@ class TDRobot(object):
         self.action = None
         self.controller_publisher = rospy.Publisher('control_publisher' + name, td_control_msg, queue_size=10)
         self.kanerva = KanervaCoder(
-            _numPrototypes=self.memory_size,
+            _startingPrototypes=self.memory_size,
             _dimensions=1,
-            _distanceMeasure='euclidean'
+#            _distanceMeasure='euclidean'
         )
         self.control = td_control
 
@@ -42,7 +42,7 @@ class TDRobot(object):
         data = self.construct_obs(data)
         gnext = self.gamma_factory(self.gamma, data)
         reward = self.reward_factory(data)
-        phi_next = self.kanerva.get_features(data)
+        phi_next = self.kanerva.GetFeatures(data)
         print np.where(phi_next >= 1)
         action_next = self.control.get_action(phi_next)
         if self.phi is not None:
@@ -122,9 +122,9 @@ class TDRobot_continuous(object):
         self.mean_publisher = rospy.Publisher('mean_publisher' + name, td_control_msg, queue_size=10)
         self.sigma_publisher = rospy.Publisher('sigma_publisher' + name, td_control_msg, queue_size=10)
         self.kanerva = KanervaCoder(
-            _numPrototypes=self.memory_size,
+            _startingPrototypes=self.memory_size,
             _dimensions=1,
-            _distanceMeasure='euclidean'
+            #_distanceMeasure='euclidean'
         )
         self.control = td_control
 
@@ -132,7 +132,8 @@ class TDRobot_continuous(object):
         data = self.construct_obs(data)
         gnext = self.gamma_factory(self.gamma, data)
         reward = self.reward_factory(data)
-        phi_next = self.kanerva.get_features(data)
+        phi_next = self.kanerva.GetFeatures(data)
+	print phi_next
         action_next = self.control.get_action(phi_next)
         print("stuff", self.phi, action_next, self.action)
         if self.phi is not None and self.action:
