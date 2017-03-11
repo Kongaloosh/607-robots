@@ -1,128 +1,96 @@
 import random
 import math
-import operator
 import numpy as np
-import struct
+from VisitCounterKanerva import VisitCounterKanerva
 
-class KanervaCoder:
-    distanceMeasure = 'euclidian'
-    numPrototypes = 50
-    dimensions = 1
-    threshold = 0.02
-    numClosest = 10
-    prototypes = None
-    visitCounts = None
-    updatePrototypes = None
-    minNumberVisited = 50
 
-    updateFunc = None
-
-    activationRadii = 0
-    beenAroundTheBlock = False # set to true once a single prototype has been visited the minNumberVisited
-
-    def __init__(self, _numPrototypes, _dimensions, _distanceMeasure):
-        if _distanceMeasure != 'hamming' and _distanceMeasure != 'euclidian':
-            raise AssertionError('Unknown distance measure ' + str(_distanceMeasure) + '. Use hamming or euclidian.')
-            return
-        if _numPrototypes < 0:
-            raise AssertionError('Need more than 2 prototypes. ' + str(_numPrototypes) + ' given. If 0 given, 50 prototpyes are used by default.')
-            return
-
-        self.dimensions = _dimensions
-        self.distanceMeasure = _distanceMeasure
-        self.numPrototypes = _numPrototypes
-        self.prototypes = np.array([np.random.rand(self.dimensions) for i in range(self.numPrototypes)])
-
-        self.visitCounts = np.zeros(self.numPrototypes)
+class VisitCounterCorrelationKanerva(VisitCounterKanerva):
+    def __init__(self, _startingPrototypes, _dimensions):
+        VisitCounterKanerva.__init__(self, _startingPrototypes, _dimensions)
+        self.prototypePairVisits = np.zeros((self.numPrototypes, self.numPrototypes))
+        self.maxCorrelatedPair = []
+        self.maxCorrelation = 0
+        self.minNumberVisited = self.numPrototypes * 5
+        self.minPrototypes = 100
+        self.maxVisit = 0
+        self.addedPrototypes = []
         self.updatedPrototypes = []
-        self.minNumberVisited = self.numPrototypes/2
-        self.updateFunc = 1
-        self.activationRadii = .1
-        self.caseStudyN = 5
+        self.deletedPrototypes = []
 
-    def floatToBits(self,f):
-        s = struct.pack('>f', f)
-        return hex(struct.unpack('>l', s)[0])
+    def GetFeatures(self, data, update=True):
 
-    def computeHamming(self, data, i):
-        """Calculate the Hamming distance between two bit strings"""
-        prototype = self.prototypes[i]
-        count = 0
-        for j in range(self.dimensions):
-            z = int(self.floatToBits(data[j]),16) & int(prototype[j],16)
-            while z:
-                count += 1
-                z &= z-1 # magic!
-        return count
+        tempArr = np.array([[i, np.linalg.norm(data - self.prototypes[i])] for i in range(len(self.prototypes))])
 
-    def GetFeatures(self, data, update):
-        if self.distanceMeasure == 'euclidian':
-            if self.updateFunc == 0: # XGame Paper
+        closestPrototypesIndxs = [int(x[0]) for x in sorted(tempArr, key=lambda x: x[1])[:self.numClosest]]
 
-                tempArr = np.array([[i, np.linalg.norm(data - self.prototypes[i])] for i in range(len(self.prototypes))])
+        if update:
+            for i in closestPrototypesIndxs:
+                self.visitCounts[i] += 1
+                for correlatedIndex in closestPrototypesIndxs:
+                    if correlatedIndex != i:
+                        self.prototypePairVisits[i][correlatedIndex] += 1
+            self.maxCorrelatedPair = np.unravel_index(self.prototypePairVisits.argmax(), self.prototypePairVisits.shape)
 
-                closestPrototypesIndxs = [int(x[0]) for x in sorted(tempArr, key = lambda x: x[1])[:self.numClosest]]
+            if self.beenAroundTheBlock == False:  # use this so we dont have to calculated the max every time
+                tempMaxVisit = max(self.visitCounts)
+                if self.maxVisit < tempMaxVisit:
+                    self.maxVisit = tempMaxVisit
+                if self.maxVisit > self.minNumberVisited:
+                    self.beenAroundTheBlock = True
 
-                if update:
+            if self.beenAroundTheBlock:
+                print('Updating')
+                self.updatePrototypes()
+        return closestPrototypesIndxs
 
-                    print('Updating XGame')
-                    for i in closestPrototypesIndxs:
-                        self.visitCounts[i] += 1
-
-                    if self.beenAroundTheBlock == False: # use this so we dont have to calculated the max every time
-                        maxVisit = max(self.visitCounts)
-                        print('Max visit: ' + str(maxVisit))
-                        if maxVisit > self.minNumberVisited:
-                            self.beenAroundTheBlock = True
-
-                    if self.beenAroundTheBlock:
-                        self.updatePrototypesXGame()
-
-            elif self.updateFunc == 1: # Case Studies
-
-                closestPrototypesIndxs = []
-                data = np.array(data)
-                for prototype in range(self.numPrototypes):
-                    diffArr = abs(data - self.prototypes[prototype])
-                    #closestPrototypesIndxs.append(min([1 - diff/self.activationRadii if diff <= self.activationRadii else 0 for diff in diffArr]))
-                    u = min([1 - diff/self.activationRadii if diff <= self.activationRadii else 0 for diff in diffArr])
-                    if u > 0:
-                        closestPrototypesIndxs.append(prototype)
-
-                if update:
-                    print('Updating Case Studies')
-                # if len(closestPrototypesIndxs) < self.caseStudyN:
-                # 	for i in range(self.caseStudyN - len(closestPrototypesIndxs)):
-
-            return closestPrototypesIndxs
-
-        else:
-            # fuzzy
-            tempArr =  np.array([1 if self.computeHamming(data,i) < self.threshold else 0 for i in range(len(self.prototypes))])
-
-            return np.where(tempArr == 1)[0]
-
-
-
-    def updatePrototypesXGame(self):
+    def updatePrototypes(self):
+        self.addedPrototypes = []
         self.updatedPrototypes = []
-        mostVisitedPrototypeIndexs = [i[0] for i in sorted(enumerate(self.visitCounts), key=lambda x:x[1])]
+        self.deletedPrototypes = []
+
+        mostVisitedPrototypeIndexs = [i[0] for i in sorted(enumerate(self.visitCounts), key=lambda x: x[1])]
         count = 0
+
+        self.numPrototypes = len(self.prototypes)
+        print('Num Prototypes before update: ' + str(self.numPrototypes))
+
         for prototype in range(self.numPrototypes):
-            if math.exp(-self.visitCounts[prototype]) > random.random(): # remove with probability e^-m (Equation 4)
+            if math.exp(-self.visitCounts[prototype]) > random.random():  # remove with probability e^-m (Equation 4)
                 self.visitCounts[prototype] = 0
-                replacementPrototypeIndex = mostVisitedPrototypeIndexs[-(count+1)]
-                self.prototypes[prototype] = self.prototypes[replacementPrototypeIndex] # add another prototype
-
+                replacementPrototypeIndex = mostVisitedPrototypeIndexs[-(count + 1)]
+                self.prototypes[prototype] = self.prototypes[replacementPrototypeIndex]  # add another prototype
 
                 for dimension in range(self.dimensions):
-                    randOffset = (random.random() - .5)/(self.numPrototypes^-self.dimensions)
-                    self.prototypes[prototype][dimension] += randOffset # change every dimension to something close by
+                    randOffset = (random.random() - .5) / (self.numPrototypes ^ -self.dimensions)
+                    self.prototypes[prototype][dimension] += randOffset  # change every dimension to something close by
 
                 self.updatedPrototypes.append([prototype, self.prototypes[prototype], replacementPrototypeIndex])
                 count += 1
 
+        self.numPrototypes = len(self.prototypes)
+        print('Num Prototypes after update: ' + str(self.numPrototypes))
+
+        if self.numPrototypes > self.minPrototypes:
+            print('Adding new prototype to an array of prototypes of length: ' + str(len(self.prototypes)))
+            newPrototype = np.array(
+                (self.prototypes[self.maxCorrelatedPair[0]] + self.prototypes[self.maxCorrelatedPair[1]]) / 2.0)
+            print('New prototype: ' + str(newPrototype))
+            self.addedPrototypes.append(newPrototype)
+            print('numprototypes just before add: ' + str(len(self.prototypes)))
+            self.prototypes = np.append(self.prototypes, np.array([newPrototype]), axis=0)
+            print('Added a new prototype. Array is now length: ' + str(len(self.prototypes)))
+
+            self.deletedPrototypes = sorted(self.maxCorrelatedPair, reverse=True)
+            self.prototypes = np.delete(self.prototypes, self.deletedPrototypes[0], axis=0)
+            self.prototypes = np.delete(self.prototypes, self.deletedPrototypes[1], axis=0)
+
+        self.numPrototypes = len(self.prototypes)
+        print('NumPrototypes after add/delete: ' + str(self.numPrototypes))
         self.visitCounts = np.zeros(self.numPrototypes)
         self.beenAroundTheBlock = False
+        self.maxVisit = 0
 
-        print('Done updatedPrototypes: updatedPrototypes: ' + str(self.updatedPrototypes))
+    def EmptyArrays(self):
+        self.addedPrototypes = []
+        self.updatedPrototypes = []
+        self.deletedPrototypes = []

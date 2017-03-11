@@ -9,7 +9,7 @@ import time
 from pysrc.algorithms.tdprediction.discount_rates import *
 from pysrc.algorithms.tdprediction.reward_functions import *
 from beginner_tutorials.msg import servo_state, verifier, gvf, state, td_control_msg
-from pysrc.utilities.kanerva import KanervaCoder
+from pysrc.utilities.kanerva import VisitCounterCorrelationKanerva as KanervaCoder
 from pysrc.algorithms.tdcontrol.onpolicy.sarsa import SARSA
 from pysrc.algorithms.tdcontrol.onpolicy.actor_critic import ActorCritic, ContinuousActorCritic
 
