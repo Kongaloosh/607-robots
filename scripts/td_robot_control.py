@@ -34,7 +34,6 @@ class TDRobot(object):
         self.kanerva = KanervaCoder(
             _startingPrototypes=self.memory_size,
             _dimensions=1,
-#            _distanceMeasure='euclidean'
         )
         self.control = td_control
 
@@ -42,7 +41,7 @@ class TDRobot(object):
         data = self.construct_obs(data)
         gnext = self.gamma_factory(self.gamma, data)
         reward = self.reward_factory(data)
-        phi_next = self.kanerva.GetFeatures(data)
+        phi_next = np.put(np.zeros(self.memory_size), (self.kanerva.GetFeatures(data)),1)
         print np.where(phi_next >= 1)
         action_next = self.control.get_action(phi_next)
         if self.phi is not None:
@@ -124,7 +123,7 @@ class TDRobot_continuous(object):
         self.kanerva = KanervaCoder(
             _startingPrototypes=self.memory_size,
             _dimensions=1,
-            #_distanceMeasure='euclidean'
+            # _distanceMeasure='euclidean'
         )
         self.control = td_control
 
@@ -132,8 +131,7 @@ class TDRobot_continuous(object):
         data = self.construct_obs(data)
         gnext = self.gamma_factory(self.gamma, data)
         reward = self.reward_factory(data)
-        phi_next = self.kanerva.GetFeatures(data)
-	print phi_next
+        phi_next = np.put(np.zeros(self.memory_size), (self.kanerva.GetFeatures(data)),1)
         action_next = self.control.get_action(phi_next)
         print("stuff", self.phi, action_next, self.action)
         if self.phi is not None and self.action:
