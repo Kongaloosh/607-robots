@@ -1,8 +1,7 @@
 import random
 import math
 import numpy as np
-from VisitCounterKanerva import VisitCounterKanerva
-
+from pysrc.utilities.visit_counter_kanerva import VisitCounterKanerva
 
 class VisitCounterCorrelationKanerva(VisitCounterKanerva):
     def __init__(self, _startingPrototypes, _dimensions):
