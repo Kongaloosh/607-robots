@@ -40,8 +40,6 @@ class BaseKanervaCoder:
 
     def update_prototypes(self, obs, alpha, delta, phi, th):
 
-        #self.g = self.g * (np.ones(self.g.shape) - self.g * alpha * phi) + self.F.T * self.alpha * (self.ones*delta - th) + self.F
-
         self.calculate_f(obs)
         partA = self.g * np.ones(self.g.shape) - (self.g.T * (alpha * phi)).T
         partB = self.F.T * (1 + alpha * (np.ones(th.shape)*delta - th))
@@ -54,7 +52,3 @@ class BaseKanervaCoder:
 
         for i in range(self.dimensions):
             tempPrototypes[i] += partA*tempG[i]
-
-        self.prototypes += tempPrototypes.T
-        
-            # self.prototypes[i][j] += alpha[i]*delta*(phi[i]*g[i][j] + phi[i]*self.F[i][j])

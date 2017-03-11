@@ -9,7 +9,7 @@ import time
 from pysrc.algorithms.tdprediction.discount_rates import *
 from pysrc.algorithms.tdprediction.reward_functions import *
 from beginner_tutorials.msg import servo_state, verifier, gvf, state, td_control_msg
-from pysrc.utilities.kanerva_coding import BaseKanervaCoder
+from pysrc.utilities.kanerva import KanervaCoder
 from pysrc.algorithms.tdcontrol.onpolicy.sarsa import SARSA
 from pysrc.algorithms.tdcontrol.onpolicy.actor_critic import ActorCritic, ContinuousActorCritic
 
@@ -31,27 +31,23 @@ class TDRobot(object):
         self.last_estimate = 0
         self.action = None
         self.controller_publisher = rospy.Publisher('control_publisher' + name, td_control_msg, queue_size=10)
-        self.kanerva = BaseKanervaCoder(
-            _startingPrototypes=self.memory_size,
+        self.kanerva = KanervaCoder(
+            _numPrototypes=self.memory_size,
             _dimensions=1,
-            _numActiveFeatures=self.active_features)
+            _distanceMeasure='euclidean'
+        )
         self.control = td_control
-        # rospy.init_node('robot_command_talker', anonymous=True)                             # initializes node with name
 
     def step(self, data):
-        #	print("steppy stepp")
         data = self.construct_obs(data)
-        #	print (data,  np.where(self.kanerva.get_features(data)>=1), np.where(self.kanerva.get_features(np.random.rand((1,12)))))
-        #	print(data)
-        #  	print np.where(self.kanerva.get_features(data)>=1)
         gnext = self.gamma_factory(self.gamma, data)
         reward = self.reward_factory(data)
         phi_next = self.kanerva.get_features(data)
         print np.where(phi_next >= 1)
         action_next = self.control.get_action(phi_next)
         if self.phi is not None:
-            #	    print(np.where(phi_next>=1), np.where(self.phi>=1))
             self.control.step(self.phi, reward, phi_next, self.gamma, self.lmbda, gnext)
+            self.kanerva.update_prototypes(self.phi, 0.3, delta, self.phi, self.con)
         else:
             self.control.action = self.control.get_action(phi_next)
         self.phi = phi_next
@@ -62,7 +58,7 @@ class TDRobot(object):
             reward,
             action_next
         )
-        print(action_next)
+        self.kanerva.updatePrototypesXGame()
         self.command(action_next)
 
     @staticmethod
@@ -126,10 +122,11 @@ class TDRobot_continuous(object):
         self.action = None
         self.mean_publisher = rospy.Publisher('mean_publisher' + name, td_control_msg, queue_size=10)
         self.sigma_publisher = rospy.Publisher('sigma_publisher' + name, td_control_msg, queue_size=10)
-        self.kanerva = BaseKanervaCoder(
-            _startingPrototypes=self.memory_size,
+        self.kanerva = KanervaCoder(
+            _numPrototypes=self.memory_size,
             _dimensions=1,
-            _numActiveFeatures=self.active_features)
+            _distanceMeasure='euclidean'
+        )
         self.control = td_control
 
     def step(self, data):
@@ -152,6 +149,7 @@ class TDRobot_continuous(object):
             reward,
             action_next
         )
+        self.kanerva.updatePrototypesXGame()
         self.command(action_next)
 
     @staticmethod
