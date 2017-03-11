@@ -58,7 +58,6 @@ class TDRobot(object):
             reward,
             action_next
         )
-        self.kanerva.updatePrototypesXGame()
         self.command(action_next)
 
     @staticmethod
@@ -149,7 +148,6 @@ class TDRobot_continuous(object):
             reward,
             action_next
         )
-        self.kanerva.updatePrototypesXGame()
         self.command(action_next)
 
     @staticmethod
