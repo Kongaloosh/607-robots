@@ -1,5 +1,9 @@
 #!/usr/bin/env python
+<<<<<<< HEAD
 import numpy as np
+=======
+
+>>>>>>> ea86d2c15533517ab6c5b331e2b02d69bfcbcb56
 import sys
 import rospy
 from beginner_tutorials.srv import robot_command
@@ -113,9 +117,7 @@ class TDRobot(object):
 	else:
 		self.min = data
 		self.max = data
-		return np.ones(len(data)) * 10
-
-
+		return np.ones(len(data)) *10
 
 class TDRobot_continuous(object):
     def __init__(self, elegibility_lambda, td_control, reward_factory, gamma, gamma_factory, name=""):
@@ -194,12 +196,12 @@ class TDRobot_continuous(object):
 
 
 if __name__ == "__main__":
-    #continuous_actor_critic = ContinuousActorCritic(2**10, 0.005,0.005, 0.005, 0.0005, 1)
-    #robot = TDRobot_continuous(0.4,continuous_actor_critic,load_2,1,constant,"_continuous_actor_critic")
-    actor_critic = ActorCritic(2 ** 10, 2, 0.005/10, 0.005/10, 0.0005/10, 1)
-    robot = TDRobot(0.3, 0.4, actor_critic, load_2, 0.9, constant, name="_sarsa")
+    continuous_actor_critic = ContinuousActorCritic(2**10, 0.005,0.005, 0.005, 0.0005, 1)
+    robot = TDRobot_continuous(0.4,continuous_actor_critic,load_2,1,constant,"_continuous_actor_critic")
+    #actor_critic = ActorCritic(2 ** 10, 2, 0.005, 0.005, 0.0005, 1)
+    #robot = TDRobot(0.3, 0.4, actor_critic, load_2, 0.9, constant, name="_sarsa")
     #sarsa = SARSA(2**10, 2, 0.3, 10)
-    #robot = TDRobot(0.3, 0.4, sarsa, load_2, 0.9, constant, name="_sarsa")
+    # robot = TDRobot(0.3, 0.4, sarsa, load_2, 0.9, constant, name="_sarsa")
     rospy.init_node('on_policy_listener', anonymous=True)  # anon means that multiple can subscribe to the same topic
     rospy.Subscriber('robot_observations', servo_state, robot.step)  # subscribes to chatter and calls the callback
     rospy.spin()
