@@ -194,11 +194,11 @@ class TDRobot_continuous(object):
 
 if __name__ == "__main__":
     continuous_actor_critic = ContinuousActorCritic(2 ** 10, 0.005, 0.005, 0.005, 0.0005, 1)
-    robot = TDRobot_continuous(0.4, continuous_actor_critic, load_2, 1, constant, "_continuous_actor_critic")
+    robot = TDRobot_continuous(0.4, continuous_actor_critic, poisiton_2_closeness, 1, constant, "_continuous_actor_critic")
     # actor_critic = ActorCritic(2 ** 10, 2, 0.005, 0.005, 0.0005, 1)
-    # robot = TDRobot(0.3, 0.4, actor_critic, load_2, 0.9, constant, name="_sarsa")
+    # robot = TDRobot(0.3, 0.4, actor_critic, poisiton_2_closeness, 0.9, constant, name="_sarsa")
     # sarsa = SARSA(2**10, 2, 0.3, 10)
-    # robot = TDRobot(0.3, 0.4, sarsa, load_2, 0.9, constant, name="_sarsa")
+    # robot = TDRobot(0.3, 0.4, sarsa, poisiton_2_closeness, 0.9, constant, name="_sarsa")
     rospy.init_node('on_policy_listener', anonymous=True)  # anon means that multiple can subscribe to the same topic
     rospy.Subscriber('robot_observations', servo_state, robot.step)  # subscribes to chatter and calls the callback
     rospy.spin()

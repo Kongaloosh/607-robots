@@ -2,6 +2,8 @@
 A collection of reward functions.
 """
 
+import numpy as np
+
 __author__ = 'kongaloosh'
 
 
@@ -63,3 +65,6 @@ def vel_command_3(data):
 
 def command(data):
     return data[14]
+
+def poisiton_2_closeness(data, position=100):
+    return np.negative(np.exp(np.abs(data-position)))
