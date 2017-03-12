@@ -10,8 +10,8 @@ class ActorCritic(TDControl):
     def __init__(self, number_of_features, number_of_actions, step_size_critic, step_size_actor, step_size_reward,
                  active_features=1):
         """Constructor"""
-	self.action = None
         super(ActorCritic, self).__init__(number_of_features, number_of_actions)
+        self.action = None
         self.z = np.zeros((self.number_of_actions, self.number_of_features))
         self.e_critic = np.zeros((self.number_of_features))
         self.e_actor = np.zeros((self.number_of_features, self.number_of_actions))
@@ -29,19 +29,17 @@ class ActorCritic(TDControl):
         self.e_v = np.zeros(self.e_v.shape)
 
     def step(self, phi, reward, phi_next, gamma, lmda, gamma_next):
-        action = critic_delta = self.critic_step(phi, reward, phi_next, gamma, lmda, gamma_next)
-        action = self.actor_step(phi, phi_next, gamma, lmda, critic_delta)
-        self.action = action
-        return action
+        critic_delta = self.critic_step(phi, reward, phi_next, gamma, lmda, gamma_next)
+        self.action = self.actor_step(phi, phi_next, gamma, lmda, critic_delta)
+        return self.action
 
     def critic_step(self, phi, reward, phi_next, gamma, lmda, gamma_next):
         """
         :returns the critic's delta
         """
-        action_next = self.get_action(phi_next)
         delta = reward - self.average_reward + \
-                gamma * np.dot(self.th_critic[:, action_next], phi_next) - \
-                np.dot(self.th_critic[:, self.action], phi)
+                gamma * np.dot(self.th_critic, phi_next) - \
+                np.dot(self.th_critic, phi)
 
         self.average_reward += self.step_size_reward * delta
         self.e_critic = self.e_critic * lmda * gamma_next + phi
@@ -50,22 +48,22 @@ class ActorCritic(TDControl):
 
     def actor_step(self, phi, phi_next, gamma, lmbda, critic_delta):
         """Updates the """
-        action_next = self.softmax(phi_next)
+        action_next = self.get_action(phi_next)
         self.e_actor[:, self.action] = gamma * lmbda * self.e_actor[:, self.action] + phi
         self.th_actor[:, self.action] += self.step_size_actor * critic_delta * self.e_actor[:, self.action]
-        return action_next
+        return action_next 
 
     def softmax(self, phi):
         """for a given action, returns the softmax prob"""
-	if self.action:
-		values = np.dot(phi, self.th_actor)
-		print values
-        	softmax = map(lambda v: v / sum(values), values)
-        	#return np.random.choice(len(softmax), softmax)
-		print(softmax)
-        	return 0
-	else:
-		return np.random.choice(len(np.dot(phi, self.th_actor)))
+        if self.action:
+            values = np.dot(phi, self.th_actor)
+            print values
+            softmax = map(lambda v: v / sum(values), values)
+            # return np.random.choice(len(softmax), softmax)
+            print(softmax)
+            return 0
+        else:
+            return np.random.choice(len(np.dot(phi, self.th_actor)))
 
     def last_estimate(self):
         return self._last_estimate
