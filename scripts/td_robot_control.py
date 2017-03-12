@@ -48,8 +48,7 @@ class TDRobot(object):
         if self.phi is not None:
             self.control.step(self.phi, reward, phi_next, self.gamma, self.lmbda, gnext)
             self.kanerva.update_prototypes(self.phi, 0.3, delta, self.phi, self.con)
-        else:
-            self.control.action = self.control.get_action(phi_next)
+
         self.phi = phi_next
         self.action = action_next
         self.gamma = gnext
@@ -118,6 +117,9 @@ class TDRobot_continuous(object):
         self.lmbda = elegibility_lambda
         self.gamma = gamma
         self.phi = None
+        self.vel_trace
+        self.position_trace
+        self.last_pos
         self.last_estimate = 0
         self.action = None
         self.mean_publisher = rospy.Publisher('mean_publisher' + name, td_control_msg, queue_size=10)
@@ -169,9 +171,13 @@ class TDRobot_continuous(object):
             print "Service call failed: %s" % e
 
     def construct_obs(self, data):
+        self.vel_trace = data.position_2 - self.las_pos + self.vel_trace * 0.8
+        self.position_trace = data.position_2 + self.position_trace * 0.8
+        self.last_pos = data.position_2
         data = np.array([
             data.position_2,
-            data.load_2,
+            self.position_trace,
+            self.vel_trace.,
             # data.temperature_2,
             # data.voltage_2,
             # data.is_moving_2,
@@ -197,6 +203,7 @@ class TDRobot_continuous(object):
             self.min = data
             self.max = data
             return np.ones(len(data))
+
 
 
 def poisiton_2_closeness(data, position=512):
