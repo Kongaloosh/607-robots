@@ -31,6 +31,9 @@ class TDRobot(object):
         self.phi = None
         self.num_tilings = 10
         self.last_estimate = 0
+        self.vel_trace = 0
+        self.last_pos = 0
+        self.position_trace = 0
         self.action = None
         self.controller_publisher = rospy.Publisher('control_publisher' + name, td_control_msg, queue_size=10)
         self.control = td_control
@@ -51,7 +54,7 @@ class TDRobot(object):
                 )
                 )
                 ,
-                [int(2 ** 10)]
+                int(2 ** 10)
             ),
             [1])
         action_next = self.control.get_action(phi_next)
@@ -84,35 +87,26 @@ class TDRobot(object):
         except rospy.ServiceException, e:
             print "Service call failed: %s" % e
 
-    def construct_obs(self, data):
-        data = np.array([
-            data.load_2,
-            data.temperature_2,
-            data.voltage_2,
-            data.is_moving_2,
-            data.position_2,
-            data.angle_2,
-            data.vel_command_2,
-            data.load_3,
-            data.temperature_3,
-            data.voltage_3,
-            data.is_moving_3,
-            data.position_3,
-            data.angle_3,
-            data.vel_command_3,
-            data.command,
-        ])
 
+    def construct_obs(self, data):
+        self.vel_trace = data.position_2 - self.last_pos + self.vel_trace * 0.8
+        self.position_trace = data.position_2 + self.position_trace * 0.8
+        self.last_pos = data.position_2
+        data = np.array([
+            data.position_2,
+            self.position_trace,
+            self.vel_trace,
+        ])
         if self.min is not None and self.max is not None:
             self.min = np.minimum(self.min, data)
             self.max = np.maximum(self.max, data)
             data = (data + np.abs(self.min)) / (np.abs(self.min) + self.max)
             data = np.nan_to_num(data)
-            return data * 10
+            return data
         else:
             self.min = data
             self.max = data
-            return np.ones(len(data)) * 10
+            return np.ones(len(data))
 
 
 class TDRobot_continuous(object):
@@ -219,11 +213,11 @@ def poisiton_2_closeness(data, position=512):
 
 
 if __name__ == "__main__":
-    continuous_actor_critic = ContinuousActorCritic(2 ** 10, 0.005, 0.005, 0.005, 0.0005, 1)
-    robot = TDRobot_continuous(0.4, continuous_actor_critic, poisiton_2_closeness, 1, constant,
-                               "_continuous_actor_critic")
-    # actor_critic = ActorCritic(2 ** 10, 2, 0.005, 0.005, 0.0005, 1)
-    # robot = TDRobot(0.3, 0.4, actor_critic, poisiton_2_closeness, 0.9, constant, name="_sarsa")
+    # continuous_actor_critic = ContinuousActorCritic(2 ** 10, 0.005, 0.005, 0.005, 0.0005, 1)
+    # robot = TDRobot_continuous(0.4, continuous_actor_critic, poisiton_2_closeness, 1, constant,
+    #                            "_continuous_actor_critic")
+    actor_critic = ActorCritic(2 ** 10, 2, 0.005, 0.005, 0.0005, 1)
+    robot = TDRobot(0.3, 0.4, actor_critic, poisiton_2_closeness, 0.9, constant, name="_discrete_AC")
     # sarsa = SARSA(2**10, 2, 0.3, 10)
     # robot = TDRobot(0.3, 0.4, sarsa, poisiton_2_closeness, 0.9, constant, name="_sarsa")
     rospy.init_node('on_policy_listener', anonymous=True)  # anon means that multiple can subscribe to the same topic
