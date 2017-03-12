@@ -201,7 +201,11 @@ class TDRobot_continuous(object):
 
 def poisiton_2_closeness(data, position=512):
     print(data[0] * 1024)
-    return np.negative(np.abs(data[4] * 1024 - position))
+    if np.abs(data[0]-512) < 100:
+	return 0
+    else:
+	return -1 
+    return np.negative(np.abs(data[0] * 1024 - position))
 
 
 if __name__ == "__main__":
