@@ -30,8 +30,7 @@ class ActorCritic(TDControl):
 
     def step(self, phi, reward, phi_next, gamma, lmda, gamma_next):
         critic_delta = self.critic_step(phi, reward, phi_next, gamma, lmda, gamma_next)
-	print("act", self.action)
-	self.action = self.actor_step(phi, phi_next, gamma, lmda, critic_delta)
+        self.action = self.actor_step(phi, phi_next, gamma, lmda, critic_delta)
         return self.action
 
     def critic_step(self, phi, reward, phi_next, gamma, lmda, gamma_next):
@@ -50,7 +49,7 @@ class ActorCritic(TDControl):
     def actor_step(self, phi, phi_next, gamma, lmbda, critic_delta):
         """Updates the """
         action_next = self.get_action(phi_next)
-	print(self.e_actor.shape, self.e_actor[:,0].shape, self.action, action_next)
+        print(self.e_actor.shape, self.e_actor[:, 0].shape, self.action, action_next)
         self.e_actor[:, self.action] = gamma * lmbda * self.e_actor[:, self.action] + phi
         self.th_actor[:, self.action] += self.step_size_actor * critic_delta * self.e_actor[:, self.action]
         return action_next
@@ -58,21 +57,21 @@ class ActorCritic(TDControl):
     def softmax(self, phi):
         """for a given action, returns the softmax prob"""
         if self.action:
-            values = np.dot(phi, self.th_actor)
-            print values
+            values = np.exp(np.dot(phi, self.th_actor))
             softmax = map(lambda v: v / sum(values), values)
-            # return np.random.choice(len(softmax), softmax)
-            print(softmax)
-            return 0
+            action = np.random.choice(len(softmax), softmax)
+            print("action", action)
+            return action
         else:
+            print("random")
             return np.random.choice(len(np.dot(phi, self.th_actor)))
 
     def last_estimate(self):
         return self._last_estimate
 
     def get_action(self, phi):
-	action = self.softmax(phi)
-	print action
+        action = self.softmax(phi)
+        print action
         return action
 
 
@@ -122,8 +121,6 @@ class ContinuousActorCritic(TDControl):
         sigma = np.dot(self.th_sigma, phi)  # last step's deviation
         gradient_mean = (self.action - mean) * phi  # gradients wrt mean and deviation
         gradient_sigma = ((self.action - mean) - sigma ** 2) * phi
-        print("checkup", self.action, self.action - mean, mean)
-        print("oh no", sigma)
         # mean update
         self.e_mean = self.e_mean * lmbda + gradient_mean
         self.th_mean += self.step_size_mean * self.e_mean * critic_delta
