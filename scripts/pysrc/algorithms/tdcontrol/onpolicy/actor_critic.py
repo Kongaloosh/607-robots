@@ -14,9 +14,9 @@ class ActorCritic(TDControl):
         self.action = None
         self.z = np.zeros((self.number_of_actions, self.number_of_features))
         self.e_critic = np.zeros((self.number_of_features))
-        self.e_actor = np.zeros((self.number_of_features, self.number_of_actions))
+        self.e_actor = np.zeros((self.number_of_actions, self.number_of_features))
         self.th_critic = np.zeros((self.number_of_features))
-        self.th_actor = np.zeros((self.number_of_features, self.number_of_actions))
+        self.th_actor = np.zeros((self.number_of_actions, self.number_of_features))
         self.step_size_actor = step_size_actor / active_features
         self.step_size_critic = step_size_critic / active_features
         self.step_size_reward = step_size_reward / active_features
@@ -51,7 +51,7 @@ class ActorCritic(TDControl):
         action_next = self.get_action(phi_next)
         self.e_actor[:, self.action] = gamma * lmbda * self.e_actor[:, self.action] + phi
         self.th_actor[:, self.action] += self.step_size_actor * critic_delta * self.e_actor[:, self.action]
-        return action_next 
+        return action_next
 
     def softmax(self, phi):
         """for a given action, returns the softmax prob"""
