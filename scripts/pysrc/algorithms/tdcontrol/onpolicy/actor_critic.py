@@ -102,7 +102,6 @@ class ContinuousActorCritic(TDControl):
         self.average_reward += self.step_size_reward * delta
         self.e_critic = self.e_critic * lmda * gnext + phi
         self.th_critic += self.step_size_critic * delta * self.e_critic
-        print(delta)
         return delta
 
     def actor_step(self, phi, phi_next, gamma, lmbda, gamma_next, critic_delta):
@@ -113,6 +112,7 @@ class ContinuousActorCritic(TDControl):
         sigma = np.dot(self.th_sigma, phi)  # last step's deviation
         gradient_mean = (self.action - mean) * phi  # gradients wrt mean and deviation
         gradient_sigma = ((self.action - mean) - sigma ** 2) * phi
+        print("checkup", self.action, self.action-mean)
         # mean update
         self.e_mean = self.e_mean * lmbda + gradient_mean
         self.th_mean += self.step_size_mean * self.e_mean * critic_delta
