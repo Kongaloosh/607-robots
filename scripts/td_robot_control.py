@@ -58,10 +58,10 @@ class TDRobot(object):
             ),
             [1])
         action_next = self.control.get_action(phi_next)
-        if self.phi is not None:
+        if self.phi is not None and self.action is not None:
             self.control.step(self.phi, reward, phi_next, self.gamma, self.lmbda, gnext)
-            self.kanerva.update_prototypes(self.phi, 0.3, delta, self.phi, self.con)
-
+        else:
+	    self.control.action = self.control.get_action(phi_next)
         self.phi = phi_next
         self.action = action_next
         self.gamma = gnext
@@ -150,12 +150,11 @@ class TDRobot_continuous(object):
             )
             , int(2 ** 10)),
         np.put(phi_next, active, [1])
-        action_next = self.control.get_action(phi_next)
         # print("stuff", self.phi, action_next, self.action)
         if self.phi is not None and self.action:
             (mean, sigma) = self.control.step(self.phi, reward, phi_next, self.gamma, self.lmbda, gnext)
         else:
-            self.control.action = action_next
+            self.control.action = self.control.get_action(phi_next)
         self.action = action_next
         self.phi = phi_next
         self.gamma = gnext
