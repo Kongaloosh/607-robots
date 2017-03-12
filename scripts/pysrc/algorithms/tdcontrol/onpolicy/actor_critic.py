@@ -112,8 +112,9 @@ class ContinuousActorCritic(TDControl):
         sigma = np.dot(self.th_sigma, phi)  # last step's deviation
         gradient_mean = (self.action - mean) * phi  # gradients wrt mean and deviation
         gradient_sigma = ((self.action - mean) - sigma ** 2) * phi
-        print("checkup", self.action, self.action-mean)
-        # mean update
+        print("checkup", self.action, self.action-mean, mean)
+        print("oh no", sigma)
+	# mean update
         self.e_mean = self.e_mean * lmbda + gradient_mean
         self.th_mean += self.step_size_mean * self.e_mean * critic_delta
         # deviation update
