@@ -10,11 +10,12 @@ class ActorCritic(TDControl):
     def __init__(self, number_of_features, number_of_actions, step_size_critic, step_size_actor, step_size_reward,
                  active_features=1):
         """Constructor"""
+	self.action = None
         super(ActorCritic, self).__init__(number_of_features, number_of_actions)
         self.z = np.zeros((self.number_of_actions, self.number_of_features))
-        self.e_critic = np.zeros((self.number_of_features, self.number_of_actions))
+        self.e_critic = np.zeros((self.number_of_features))
         self.e_actor = np.zeros((self.number_of_features, self.number_of_actions))
-        self.th_critic = np.zeros((self.number_of_features, self.number_of_actions))
+        self.th_critic = np.zeros((self.number_of_features))
         self.th_actor = np.zeros((self.number_of_features, self.number_of_actions))
         self.step_size_actor = step_size_actor / active_features
         self.step_size_critic = step_size_critic / active_features
@@ -43,8 +44,8 @@ class ActorCritic(TDControl):
                 np.dot(self.th_critic[:, self.action], phi)
 
         self.average_reward += self.step_size_reward * delta
-        self.e_critic[:, self.action] = self.e_critic[:, self.action] * lmda * gamma_next + phi
-        self.th_critic[:, self.action] += self.step_size_critic * delta * self.th_critic[:, self.action]
+        self.e_critic = self.e_critic * lmda * gamma_next + phi
+        self.th_critic += self.step_size_critic * delta * self.th_critic
         return delta
 
     def actor_step(self, phi, phi_next, gamma, lmbda, critic_delta):
@@ -56,9 +57,15 @@ class ActorCritic(TDControl):
 
     def softmax(self, phi):
         """for a given action, returns the softmax prob"""
-        values = np.dot(phi, self.th_actor)
-        softmax = map(lambda v: v / sum(values), values)
-        return np.random.choice(len(softmax), softmax)
+	if self.action:
+		values = np.dot(phi, self.th_actor)
+		print values
+        	softmax = map(lambda v: v / sum(values), values)
+        	#return np.random.choice(len(softmax), softmax)
+		print(softmax)
+        	return 0
+	else:
+		return np.random.choice(len(np.dot(phi, self.th_actor)))
 
     def last_estimate(self):
         return self._last_estimate
