@@ -57,7 +57,8 @@ class ActorCritic(TDControl):
     def softmax(self, phi):
         """for a given action, returns the softmax prob"""
         values = np.dot(phi, self.th_actor)
-        return np.argmax(map(lambda v: v / sum(values), values))
+        softmax = map(lambda v: v / sum(values), values)
+        return np.random.choice(len(softmax), softmax)
 
     def last_estimate(self):
         return self._last_estimate
