@@ -14,9 +14,9 @@ class ActorCritic(TDControl):
         self.action = None
         self.z = np.zeros((self.number_of_actions, self.number_of_features))
         self.e_critic = np.zeros((self.number_of_features))
-        self.e_actor = np.zeros((self.number_of_actions, self.number_of_features))
+        self.e_actor = np.zeros((self.number_of_features, self.number_of_actions))
         self.th_critic = np.zeros((self.number_of_features))
-        self.th_actor = np.zeros((self.number_of_actions, self.number_of_features))
+        self.th_actor = np.zeros((self.number_of_features, self.number_of_actions))
         self.step_size_actor = step_size_actor / active_features
         self.step_size_critic = step_size_critic / active_features
         self.step_size_reward = step_size_reward / active_features
