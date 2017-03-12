@@ -58,7 +58,7 @@ class TDRobot(object):
             reward,
             action_next
         )
-	self.kanerva.updatePrototypes()
+#	self.kanerva.updatePrototypes()
         self.command(action_next)
 
     @staticmethod
@@ -131,22 +131,20 @@ class TDRobot_continuous(object):
         self.control = td_control
 
     def step(self, data):
-	print("meh")
+	#print("meh")
         data = self.construct_obs(data)
         gnext = self.gamma_factory(self.gamma, data)
         reward = self.reward_factory(data)
-        phi_next = np.zeros(self.memory_size)
+        #print reward
+	phi_next = np.zeros(self.memory_size)
 	np.put(phi_next, (self.kanerva.GetFeatures(data)),[1])
-        print (self.kanerva.GetFeatures(data))
+        #print (self.kanerva.GetFeatures(data))
 
-	print phi_next
+	#print phi_next
 	action_next = self.control.get_action(phi_next)
-        print("stuff", self.phi, action_next, self.action)
+        #print("stuff", self.phi, action_next, self.action)
         if self.phi is not None and self.action:
-            if(np.where(phi_next >= 1)[0] == np.where(self.phi >= 1)[0]):
-		print("no")
-		exit(1)
-            self.control.step(self.phi, reward, phi_next, self.gamma, self.lmbda, gnext)
+            (mean,sigma) = self.control.step(self.phi, reward, phi_next, self.gamma, self.lmbda, gnext)
         else:
             self.control.action = action_next
         self.action = action_next
@@ -155,9 +153,13 @@ class TDRobot_continuous(object):
         # need a bottleneck to throttle things
         self.sigma_publisher.publish(
             reward,
-            action_next
+            sigma
         )
-	self.kanerva.updatePrototypes()
+	self.mean_publisher.publish(
+            reward,
+            mean * 1024
+        )
+	#self.kanerva.updatePrototypes()
         self.command(action_next)
 
     @staticmethod
@@ -165,7 +167,7 @@ class TDRobot_continuous(object):
         rospy.wait_for_service('robot_controller')
         x = np.clip(int(action), -5, 5)
         y = 1
-        print action
+        #print action
         try:
             command_service = rospy.ServiceProxy('robot_controller', robot_command)
             resp1 = command_service(x, y, -1)
@@ -181,14 +183,14 @@ class TDRobot_continuous(object):
             data.position_2,
             data.angle_2,
             data.vel_command_2,
-            data.load_3,
-            data.temperature_3,
-            data.voltage_3,
-            data.is_moving_3,
-            data.position_3,
-            data.angle_3,
-            data.vel_command_3,
-            data.command,
+            #data.load_3,
+            #data.temperature_3,
+            #data.voltage_3,
+            #data.is_moving_3,
+            #data.position_3,
+            #data.angle_3,
+            #data.vel_command_3,
+            #data.command,
         ])
 
         if self.min is not None and self.max is not None:
@@ -204,7 +206,7 @@ class TDRobot_continuous(object):
 
 
 if __name__ == "__main__":
-    continuous_actor_critic = ContinuousActorCritic(2 ** 10, 0.005, 0.005, 0.005, 0.0005, 1)
+    continuous_actor_critic = ContinuousActorCritic(2 ** 10, 0.00005, 0.00005, 0.00005, 0.000005, 1)
     robot = TDRobot_continuous(0.4, continuous_actor_critic, poisiton_2_closeness, 1, constant, "_continuous_actor_critic")
     # actor_critic = ActorCritic(2 ** 10, 2, 0.005, 0.005, 0.0005, 1)
     # robot = TDRobot(0.3, 0.4, actor_critic, poisiton_2_closeness, 0.9, constant, name="_sarsa")
