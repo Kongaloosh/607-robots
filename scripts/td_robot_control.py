@@ -12,7 +12,7 @@ from beginner_tutorials.msg import servo_state, verifier, gvf, state, td_control
 from pysrc.utilities.kanerva import VisitCounterCorrelationKanerva as KanervaCoder
 from pysrc.algorithms.tdcontrol.onpolicy.sarsa import SARSA
 from pysrc.algorithms.tdcontrol.onpolicy.actor_critic import ActorCritic, ContinuousActorCritic
-
+from pysrc.utilities.tiles import loadTiles, getTiles
 __author__ = 'kongaloosh'
 
 
@@ -28,14 +28,10 @@ class TDRobot(object):
         self.step_size = step_size
         self.gamma = gamma
         self.phi = None
+        self.num_tilings = 10
         self.last_estimate = 0
         self.action = None
         self.controller_publisher = rospy.Publisher('control_publisher' + name, td_control_msg, queue_size=10)
-        self.kanerva = KanervaCoder(
-            _startingPrototypes=self.memory_size,
-            _dimensions=1,
-        )
-        self.kanerva.numClosest = self.active_features
         self.control = td_control
 
     def step(self, data):
@@ -43,7 +39,20 @@ class TDRobot(object):
         gnext = self.gamma_factory(self.gamma, data)
         reward = self.reward_factory(data)
         phi_next = np.zeros(self.memory_size)
-        np.put(phi_next, (self.kanerva.GetFeatures(data)), [1])
+        phi_next = np.zeros(self.memory_size)
+        np.put(
+            phi_next,
+            np.concatenate(
+                np.array( getTiles(
+                    numtilings=self.num_tilings,  # the number of tilings in your tilecoder
+                    memctable=self.memory_size-1,  # the amount of memory for each tilecoder
+                    floats=data*10  # the observations from the robot
+                    )
+                    )
+                ,
+                [2**10]
+                ),
+            [1])
         action_next = self.control.get_action(phi_next)
         if self.phi is not None:
             self.control.step(self.phi, reward, phi_next, self.gamma, self.lmbda, gnext)
@@ -57,7 +66,6 @@ class TDRobot(object):
             reward,
             action_next
         )
-        #	self.kanerva.updatePrototypes()
         self.command(action_next)
 
     @staticmethod
@@ -112,6 +120,7 @@ class TDRobot_continuous(object):
         self.max = None
         self.memory_size = 2 ** 10
         self.active_features = 1
+        self.num_tilings = 10
         self.reward_factory = reward_factory
         self.gamma_factory = gamma_factory
         self.lmbda = elegibility_lambda
@@ -137,7 +146,18 @@ class TDRobot_continuous(object):
         gnext = self.gamma_factory(self.gamma, data)
         reward = self.reward_factory(data)
         phi_next = np.zeros(self.memory_size)
-        np.put(phi_next, (self.kanerva.GetFeatures(data)), [1])
+        np.put(
+            phi_next,
+            np.concatenate(
+                np.array( getTiles(
+                    numtilings=self.num_tilings,  # the number of tilings in your tilecoder
+                    memctable=self.memory_size-1,  # the amount of memory for each tilecoder
+                    floats=data*10  # the observations from the robot
+                    )
+                    )
+                ,[2**10]),
+            [1])
+
         action_next = self.control.get_action(phi_next)
         # print("stuff", self.phi, action_next, self.action)
         if self.phi is not None and self.action:
@@ -171,30 +191,14 @@ class TDRobot_continuous(object):
             print "Service call failed: %s" % e
 
     def construct_obs(self, data):
-        self.vel_trace = data.position_2 - self.las_pos + self.vel_trace * 0.8
+        self.vel_trace = data.position_2 - self.last_pos + self.vel_trace * 0.8
         self.position_trace = data.position_2 + self.position_trace * 0.8
         self.last_pos = data.position_2
         data = np.array([
             data.position_2,
             self.position_trace,
-            self.vel_trace.,
-
-            # data.load_2,
-            # data.temperature_2,
-            # data.voltage_2,
-            # data.is_moving_2,
-            # data.angle_2,
-            # data.vel_command_2,
-            # data.load_3,
-            # data.temperature_3,
-            # data.voltage_3,
-            # data.is_moving_3,
-            # data.position_3,
-            # data.angle_3,
-            # data.vel_command_3,
-            # data.command,
+            self.vel_trace,
         ])
-
         if self.min is not None and self.max is not None:
             self.min = np.minimum(self.min, data)
             self.max = np.maximum(self.max, data)
