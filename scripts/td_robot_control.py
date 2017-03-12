@@ -50,7 +50,7 @@ class TDRobot(object):
                     )
                     )
                 ,
-                [2**10]
+                [int(2**10)]
                 ),
             [1])
         action_next = self.control.get_action(phi_next)
@@ -126,9 +126,9 @@ class TDRobot_continuous(object):
         self.lmbda = elegibility_lambda
         self.gamma = gamma
         self.phi = None
-        self.vel_trace
-        self.position_trace
-        self.last_pos
+        self.vel_trace = 0
+        self.position_trace = 0
+        self.last_pos = 0
         self.last_estimate = 0
         self.action = None
         self.mean_publisher = rospy.Publisher('mean_publisher' + name, td_control_msg, queue_size=10)
@@ -146,18 +146,15 @@ class TDRobot_continuous(object):
         gnext = self.gamma_factory(self.gamma, data)
         reward = self.reward_factory(data)
         phi_next = np.zeros(self.memory_size)
-        np.put(
-            phi_next,
-            np.concatenate(
-                np.array( getTiles(
-                    numtilings=self.num_tilings,  # the number of tilings in your tilecoder
-                    memctable=self.memory_size-1,  # the amount of memory for each tilecoder
-                    floats=data*10  # the observations from the robot
+        active = np.concatenate(
+                	np.array( getTiles(
+                    	numtilings=self.num_tilings,  # the number of tilings in your tilecoder
+                    	memctable=self.memory_size-1,  # the amount of memory for each tilecoder
+                    	floats=data*10  # the observations from the robot
+                    	)
                     )
-                    )
-                ,[2**10]),
-            [1])
-
+                ,int(2**10)),
+        np.put(phi_next, active, [1])
         action_next = self.control.get_action(phi_next)
         # print("stuff", self.phi, action_next, self.action)
         if self.phi is not None and self.action:
@@ -222,7 +219,7 @@ def poisiton_2_closeness(data, position=512):
 
 
 if __name__ == "__main__":
-    continuous_actor_critic = ContinuousActorCritic(2 ** 10, 0.005, 0.005, 0.005, 0.0005, 1)
+    continuous_actor_critic = ContinuousActorCritic(2 ** 10, 0.0005/10, 0.0005/10, 0.0005/10, 0.00005/10, 1)
     robot = TDRobot_continuous(0.4, continuous_actor_critic, poisiton_2_closeness, 1, constant,
                                "_continuous_actor_critic")
     # actor_critic = ActorCritic(2 ** 10, 2, 0.005, 0.005, 0.0005, 1)
