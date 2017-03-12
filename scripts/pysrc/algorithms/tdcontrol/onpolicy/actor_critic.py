@@ -128,4 +128,5 @@ class ContinuousActorCritic(TDControl):
         if sigma == 0:
             sigma = 0.2
         print(mean, sigma)
-        return np.random.normal(mean, sigma)
+        self.action = np.random.normal(mean, sigma)
+        return self.action
