@@ -178,6 +178,8 @@ class TDRobot_continuous(object):
             data.position_2,
             self.position_trace,
             self.vel_trace.,
+
+            # data.load_2,
             # data.temperature_2,
             # data.voltage_2,
             # data.is_moving_2,
@@ -208,7 +210,7 @@ class TDRobot_continuous(object):
 
 def poisiton_2_closeness(data, position=512):
     print(data[0] * 1024)
-    if np.abs(data[0]-512) < 100:
+    if np.abs(data[0]*1024-512) < 100:
 	return 0
     else:
 	return -1 
@@ -216,7 +218,7 @@ def poisiton_2_closeness(data, position=512):
 
 
 if __name__ == "__main__":
-    continuous_actor_critic = ContinuousActorCritic(2 ** 10, 0.00005, 0.00005, 0.00005, 0.000005, 1)
+    continuous_actor_critic = ContinuousActorCritic(2 ** 10, 0.005, 0.005, 0.005, 0.0005, 1)
     robot = TDRobot_continuous(0.4, continuous_actor_critic, poisiton_2_closeness, 1, constant,
                                "_continuous_actor_critic")
     # actor_critic = ActorCritic(2 ** 10, 2, 0.005, 0.005, 0.0005, 1)
