@@ -13,6 +13,7 @@ from pysrc.utilities.kanerva import VisitCounterCorrelationKanerva as KanervaCod
 from pysrc.algorithms.tdcontrol.onpolicy.sarsa import SARSA
 from pysrc.algorithms.tdcontrol.onpolicy.actor_critic import ActorCritic, ContinuousActorCritic
 from pysrc.utilities.tiles import loadTiles, getTiles
+
 __author__ = 'kongaloosh'
 
 
@@ -43,15 +44,15 @@ class TDRobot(object):
         np.put(
             phi_next,
             np.concatenate(
-                np.array( getTiles(
+                np.array(getTiles(
                     numtilings=self.num_tilings,  # the number of tilings in your tilecoder
-                    memctable=self.memory_size-1,  # the amount of memory for each tilecoder
-                    floats=data*10  # the observations from the robot
-                    )
-                    )
+                    memctable=self.memory_size - 1,  # the amount of memory for each tilecoder
+                    floats=data * 10  # the observations from the robot
+                )
+                )
                 ,
-                [int(2**10)]
-                ),
+                [int(2 ** 10)]
+            ),
             [1])
         action_next = self.control.get_action(phi_next)
         if self.phi is not None:
@@ -120,7 +121,7 @@ class TDRobot_continuous(object):
         self.max = None
         self.memory_size = 2 ** 10
         self.active_features = 1
-        self.num_tilings = 10
+        self.num_tilings = 1
         self.reward_factory = reward_factory
         self.gamma_factory = gamma_factory
         self.lmbda = elegibility_lambda
@@ -147,13 +148,13 @@ class TDRobot_continuous(object):
         reward = self.reward_factory(data)
         phi_next = np.zeros(self.memory_size)
         active = np.concatenate(
-                	np.array( getTiles(
-                    	numtilings=self.num_tilings,  # the number of tilings in your tilecoder
-                    	memctable=self.memory_size-1,  # the amount of memory for each tilecoder
-                    	floats=data*10  # the observations from the robot
-                    	)
-                    )
-                ,int(2**10)),
+            np.array(getTiles(
+                numtilings=self.num_tilings,  # the number of tilings in your tilecoder
+                memctable=self.memory_size - 1,  # the amount of memory for each tilecoder
+                floats=data * 10  # the observations from the robot
+            )
+            )
+            , int(2 ** 10)),
         np.put(phi_next, active, [1])
         action_next = self.control.get_action(phi_next)
         # print("stuff", self.phi, action_next, self.action)
@@ -208,18 +209,17 @@ class TDRobot_continuous(object):
             return np.ones(len(data))
 
 
-
 def poisiton_2_closeness(data, position=512):
     print(data[0] * 1024)
-    if np.abs(data[0]*1024-512) < 100:
-	return 0
+    if np.abs(data[0] * 1024 - 512) < 100:
+        return 0
     else:
-	return -1 
+        return -1
     return np.negative(np.abs(data[0] * 1024 - position))
 
 
 if __name__ == "__main__":
-    continuous_actor_critic = ContinuousActorCritic(2 ** 10, 0.0005/10, 0.0005/10, 0.0005/10, 0.00005/10, 1)
+    continuous_actor_critic = ContinuousActorCritic(2 ** 10, 0.005, 0.005, 0.005, 0.0005, 1)
     robot = TDRobot_continuous(0.4, continuous_actor_critic, poisiton_2_closeness, 1, constant,
                                "_continuous_actor_critic")
     # actor_critic = ActorCritic(2 ** 10, 2, 0.005, 0.005, 0.0005, 1)
