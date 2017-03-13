@@ -49,7 +49,7 @@ class ActorCritic(TDControl):
     def actor_step(self, phi, phi_next, gamma, lmbda, critic_delta):
         """Updates the """
         action_next = self.get_action(phi_next)
-        print(self.e_actor.shape, self.e_actor[:, 0].shape, self.action, action_next)
+        print(self.e_actor.shape, self.e_actor[:, self.action].shape, self.th_actor[:,self.action], self.action, action_next)
         self.e_actor[:, self.action] = gamma * lmbda * self.e_actor[:, self.action] + phi
         self.th_actor[:, self.action] += self.step_size_actor * critic_delta * self.e_actor[:, self.action]
         return action_next
@@ -59,12 +59,12 @@ class ActorCritic(TDControl):
         if self.action:
             values = np.exp(np.dot(phi, self.th_actor))
             softmax = map(lambda v: v / sum(values), values)
-            action = np.random.choice(len(softmax), softmax)
+            action = np.random.choice(len(softmax), 1, p=softmax)[0]
             print("action", action)
             return action
         else:
-            print("random")
-            return np.random.choice(len(np.dot(phi, self.th_actor)))
+            self.action = np.random.choice(len(np.dot(phi, self.th_actor)),1)[0]
+            return self.action
 
     def last_estimate(self):
         return self._last_estimate
