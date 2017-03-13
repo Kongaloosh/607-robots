@@ -54,6 +54,7 @@ add_message_files(
    gvf.msg
    state.msg
    td_control_msg.msg
+   actor_critic_action_prob.msg
  )
 
 ## Generate services in the 'srv' folder

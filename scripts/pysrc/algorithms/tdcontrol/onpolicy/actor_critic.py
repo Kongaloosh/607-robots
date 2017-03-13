@@ -1,5 +1,6 @@
 from pysrc.algorithms.tdcontrol.tdcontrol import TDControl
 import numpy as np
+from beginner_tutorials.msg import actor_critic_action_prob
 
 __author__ = 'kongaloosh'
 
@@ -22,6 +23,8 @@ class ActorCritic(TDControl):
         self.step_size_reward = step_size_reward / active_features
         self._last_estimate = None
         self.average_reward = 0.
+        self.controller_publisher = rospy.Publisher('control_publisher', actor_critic_action_prob, queue_size=10)
+
 
     def initialize_episode(self):
         """Initialize the episode by killing the traces"""
@@ -61,6 +64,7 @@ class ActorCritic(TDControl):
             softmax = map(lambda v: v / sum(values), values)
             action = np.random.choice(len(softmax), softmax)
             print("action", action)
+            self.controller_publisher.publish(action, softmax[0], softmax[1])
             return action
         else:
             print("random")

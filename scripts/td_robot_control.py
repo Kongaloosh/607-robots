@@ -61,7 +61,7 @@ class TDRobot(object):
         if self.phi is not None and self.action is not None:
             self.control.step(self.phi, reward, phi_next, self.gamma, self.lmbda, gnext)
         else:
-	    self.control.action = self.control.get_action(phi_next)
+            self.control.action = self.control.get_action(phi_next)
         self.phi = phi_next
         self.action = action_next
         self.gamma = gnext
@@ -86,7 +86,6 @@ class TDRobot(object):
             resp1 = command_service(x, y, action)
         except rospy.ServiceException, e:
             print "Service call failed: %s" % e
-
 
     def construct_obs(self, data):
         self.vel_trace = data.position_2 - self.last_pos + self.vel_trace * 0.8

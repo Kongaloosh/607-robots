@@ -26,10 +26,9 @@ class OnPolicyPredictor(object):
         self.verifier = OnlineVerifier(rlGamma=self.gamma)
         self.ude = UDE(0.01)
         self.rupee = RUPEE(2**10, 0.01 * 5, 0.001)
-
         self.verifier_publisher = rospy.Publisher('load_verifier', verifier, queue_size=10)
         self.gvf_publisher = rospy.Publisher('load_predictor', gvf, queue_size=10)
-
+        self.controller_publisher = rospy.Publisher('control_publisher', td_control_msg, queue_size=10)
         self.position_trace = 0
         self.last_load = 0
 
