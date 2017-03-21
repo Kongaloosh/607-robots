@@ -132,11 +132,10 @@ class DaemonKiller(Horde):
             self.max = np.maximum(self.max, data)
             data = (data + np.abs(self.min)) / (np.abs(self.min) + self.max)
             data = np.nan_to_num(data)
-            return data
         else:
             self.min = data
             self.max = data
-            return np.ones(len(data))
+            data = np.ones(len(data))
 
         phi_next = np.zeros(self.memory_size)
         np.put(
@@ -153,6 +152,7 @@ class DaemonKiller(Horde):
             ),
             [1]
         )
+        return phi_next
 
     def update(self, data):
         obs = self.construct_obs(data)

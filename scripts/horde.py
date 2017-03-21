@@ -86,6 +86,8 @@ class OnPolicyGVF(GVF):
         self.gvf_verifier_publisher = rospy.Publisher('on_policy_verifier' + name, verifier, queue_size=10)
         self.verfier = OnlineVerifier(self.gamma)
         self.rupee = RUPEE(self.memory_size, self.step_size * 5, 0.001)
+        self.rupee_trace = 0
+        self.rupee_decay = 0.8
 
     def update(self, data):
         # get the new gamma
@@ -101,8 +103,8 @@ class OnPolicyGVF(GVF):
             self.verfier.update_all(gamma=gnext, reward=reward, prediction=self.last_estimate)
             delta = reward + gnext * self.learner.estimate(phinext) - self.learner.estimate(self.phi)
             ude_error = self.ude.update(delta)
-            rupee_error = self.rupee.update(self.learner.z, delta, phinext)
-            # todo: you could factor all of this out
+            rupee = self.rupee.update(self.learner.z, delta, phinext)
+            self.rupee_trace += rupee * self.rupee_decay
             self.gvf_publisher.publish(
                 self.last_estimate,
                 self.last_estimate / (1. / (1. - gnext))
@@ -130,7 +132,9 @@ class OffPolicyGVF(GVF):
         self.gamma_factory = gamma_factory
         self.gvf_publisher = rospy.Publisher('off_policy_predictor' + name, gvf, queue_size=10)
         self.gvf_verifier_publisher = rospy.Publisher('off_policy_verifier' + name, verifier, queue_size=10)
-        self.verfier = RUPEE(self.memory_size, self.step_size * 5, 0.001)
+        self.rupee = RUPEE(self.memory_size, self.step_size * 5, 0.001)
+        self.rupee_trace = 0
+        self.rupee_decay = 0.8
 
     def update(self, data):
         gnext = self.gamma_factory(self.gamma, data)
@@ -140,7 +144,8 @@ class OffPolicyGVF(GVF):
             self.learner.step(self.phi, reward, phinext, self.gamma, self.lmbda, gnext, data[14])
             prediction = self.learner.estimate(phinext)
             delta = reward + gnext * self.learner.estimate(phinext) - self.learner.estimate(self.phi)
-            rupee = self.verfier.update(self.learner.z, delta, phinext)
+            rupee = self.rupee.update(self.learner.z, delta, phinext)
+            self.rupee_trace += rupee * self.rupee_decay
             ude_error = self.ude.update(delta)
             self.gvf_publisher.publish(
                 prediction,

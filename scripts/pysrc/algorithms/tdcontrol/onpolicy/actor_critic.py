@@ -133,7 +133,7 @@ class ContinuousActorCritic(TDControl):
         self.th_sigma += self.step_size_deviation * self.e_sigma * critic_delta
         return mean, sigma
 
-    def get_action(self, phi):
+    def get_action(self, mean, sigma):
         mean = np.dot(self.th_mean, phi)
         sigma = np.exp(np.dot(self.th_sigma, phi))
         if sigma == 0:

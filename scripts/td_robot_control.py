@@ -154,6 +154,7 @@ class TDRobot_continuous(object):
             (mean, sigma) = self.control.step(self.phi, reward, phi_next, self.gamma, self.lmbda, gnext)
         else:
             self.control.action = self.control.get_action(phi_next)
+        action_next = self.control.get_action(mean,sigma)
         self.action = action_next
         self.phi = phi_next
         self.gamma = gnext
