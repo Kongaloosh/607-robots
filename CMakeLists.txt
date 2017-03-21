@@ -55,6 +55,7 @@ add_message_files(
    state.msg
    td_control_msg.msg
    actor_critic_action_prob.msg
+   daemon_killer.msg
  )
 
 ## Generate services in the 'srv' folder
