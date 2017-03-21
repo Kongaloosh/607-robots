@@ -1,6 +1,7 @@
 from pysrc.algorithms.tdcontrol.tdcontrol import TDControl
 import numpy as np
 from beginner_tutorials.msg import actor_critic_action_prob
+import rospy
 
 __author__ = 'kongaloosh'
 

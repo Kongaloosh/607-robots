@@ -20,6 +20,7 @@ class TDR(TDPrediction):
         self.z = np.zeros(self.number_of_features)
     
     def step(self, phi, reward, phi_next, gamma, lmda, gamma_next):
+	print(phi.shape, self.th.shape)
         delta = reward + gamma_next * np.dot(phi_next, self.th) - np.dot(phi, self.th)
         self.z = gamma_next * lmda * self.z * (phi == 0.) + (phi != 0.) * phi
         self.th += self.step_size * delta * self.z

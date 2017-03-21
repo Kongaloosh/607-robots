@@ -12,13 +12,12 @@ from pysrc.algorithms.tdprediction.offpolicy.policy import *
 from pysrc.algorithms.tdprediction.discount_rates import *
 from pysrc.algorithms.tdprediction.reward_functions import *
 from pysrc.utilities.verifier import OnlineVerifier, UDE, RUPEE
-from beginner_tutorials.msg import servo_state, verifier, gvf, stat, daemon_killer
+from beginner_tutorials.msg import servo_state, verifier, gvf, state, daemon_killer
 
 __author__ = 'kongaloosh'
 
 
 class OnPolicyGVF(GVF):
-
     def __init__(self, step_size, elegibility_lambda, learner, reward_factory, gamma, gamma_factory, name=""):
         super(OnPolicyGVF, self).__init__(step_size, elegibility_lambda, gamma, learner)
         self.reward_factory = reward_factory
@@ -30,7 +29,7 @@ class OnPolicyGVF(GVF):
         self.rupee_trace = 0
         self.rupee_decay = 0.8
 
-    def update(self, obs,data):
+    def update(self, obs, data):
         # get the new gamma
         gnext = self.gamma_factory(self.gamma, data)
         reward = self.reward_factory(data)
@@ -107,15 +106,15 @@ class OffPolicyGVF(GVF):
         self.phi = phinext
 
 
-
 class DaemonKiller(Horde):
-
     def __init__(self):
-        super(DaemonKiller).__init__()
+        super(DaemonKiller, self).__init__()
         self.vel_trace = 0
         self.position_trace = 0
+        self.min = 0
+        self.max = 0
         self.last_pos = 0
-        self.daemon_publisher = rospy.Publisher('daemon_killer_horde' , gvf, queue_size=10)
+        self.daemon_publisher = rospy.Publisher('daemon_killer_horde', daemon_killer, queue_size=10)
 
 
     def construct_obs(self, data):
@@ -154,6 +153,7 @@ class DaemonKiller(Horde):
         )
         return phi_next
 
+
     def update(self, data):
         obs = self.construct_obs(data)
         [learner.update(obs, data) for learner in self.predictors]
@@ -162,13 +162,15 @@ class DaemonKiller(Horde):
             self.calc_rupee()
         )
 
+
     def kill(self):
         mean_rupees = self.calc_rupee()
         kill = np.where(mean_rupees > self.kill_threshold)
 
+
     def calc_rupee(self):
         a = np.array([daemon.rupee_trace for daemon in self.predictors])
-        return a/np.sum(a)
+        return a / np.sum(a)
 
 
 def listener():
