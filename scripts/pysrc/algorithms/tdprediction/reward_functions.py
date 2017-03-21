@@ -8,15 +8,15 @@ __author__ = 'kongaloosh'
 
 
 def load_2(data):
-    return data.load_2
+    return (data.load_2 + 300)/600
 
 
 def temperature_2(data):
-    return data.temperature_2
+    return data.temperature_2/100
 
 
 def voltage_2(data):
-    return data.voltage_2
+    return data.voltage_2/50
 
 
 def is_moving_2(data):
@@ -24,15 +24,15 @@ def is_moving_2(data):
 
 
 def poisiton_2(data):
-    return data.position_2
+    return data.position_2/1024
 
 
 def angle_2(data):
-    return data.angle_2
+    return (data.angle_2 + 4)/8
 
 
 def vel_command_2(data):
-    return data.vel_command_2
+    return data.vel_command_2 /2
 
 
 def load_3(data):
