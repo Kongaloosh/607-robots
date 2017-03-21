@@ -8,61 +8,60 @@ __author__ = 'kongaloosh'
 
 
 def load_2(data):
-    return data[0]
+    return data.load_2
 
 
 def temperature_2(data):
-    return data[1]
+    return data.temperature_2
 
 
 def voltage_2(data):
-    return data[2]
+    return data.voltage_2
 
 
 def is_moving_2(data):
-    return data[3]
+    return data.is_moving_2
 
 
 def poisiton_2(data):
-    return data[4]
+    return data.position_2
 
 
 def angle_2(data):
-    return data[5]
+    return data.angle_2
 
 
 def vel_command_2(data):
-    return data[6]
+    return data.vel_command_2
 
 
 def load_3(data):
-    return data[7]
+    return data.load_3
 
 
 def temperature_3(data):
-    return data[8]
+    return data.temperature_3
 
 
 def voltage_3(data):
-    return data[9]
+    return data.voltage_3
 
 
-def moving_3(data):
-    return data[10]
+def is_moving_3(data):
+    return data.is_moving_3
 
 
 def poisiton_3(data):
-    return data[11]
+    return data.position_3
 
 
 def angle_3(data):
-    return data[12]
+    return data.angle_3
 
 
 def vel_command_3(data):
-    return data[13]
-
+    return data.vel_command_3
 
 def command(data):
-    return data[14]
+    return data.command
 
