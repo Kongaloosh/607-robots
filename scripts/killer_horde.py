@@ -12,7 +12,7 @@ from pysrc.algorithms.tdprediction.offpolicy.policy import *
 from pysrc.algorithms.tdprediction.discount_rates import *
 from pysrc.algorithms.tdprediction.reward_functions import *
 from pysrc.utilities.verifier import OnlineVerifier, UDE, RUPEE
-from beginner_tutorials.msg import servo_state, verifier, gvf, stat, daemon_killer
+from beginner_tutorials.msg import servo_state, verifier, gvf, state, daemon_killer
 
 __author__ = 'kongaloosh'
 
@@ -111,11 +111,13 @@ class OffPolicyGVF(GVF):
 class DaemonKiller(Horde):
 
     def __init__(self):
-        super(DaemonKiller).__init__()
+        super(DaemonKiller, self).__init__()
         self.vel_trace = 0
         self.position_trace = 0
+	self.min = 0
+	self.max = 0
         self.last_pos = 0
-        self.daemon_publisher = rospy.Publisher('daemon_killer_horde' , gvf, queue_size=10)
+        self.daemon_publisher = rospy.Publisher('daemon_killer_horde' , daemon_killer, queue_size=10)
 
 
     def construct_obs(self, data):
