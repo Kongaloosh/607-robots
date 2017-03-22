@@ -9,14 +9,15 @@ import numpy as np
 class RUPEE(object):
     def __init__(self, number_of_features, beta, alpha):
         self.h = np.zeros(number_of_features)
-        self.beta = beta
+        self.beta_naught = beta
+        self.beta = 0
         self.alpha = alpha
         self.tao = 0
         self.delta_e = 0
 
     def update(self, delta, e, phi):
-        self.tao = (1 - self.beta) * self.tao + self.beta
-        self.beta /= self.tao
+        self.tao = (1 - self.beta_naught) * self.tao + self.beta_naught
+        self.beta = self.beta_naught / self.tao
         self.delta_e = (1 - self.beta) * self.delta_e + self.beta * e * delta
         self.h += self.alpha * (delta * e - np.dot(self.h, phi) * phi)
         return np.sqrt(np.abs(np.dot(self.h, self.delta_e)) ** self.beta)
