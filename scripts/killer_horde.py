@@ -28,6 +28,7 @@ class OnPolicyGVF(GVF):
         self.rupee = RUPEE(self.memory_size, self.step_size * 5, 0.001)
         self.rupee_trace = 0
         self.rupee_decay = 0.8
+        self.age = 0
 
     def update(self, obs, data):
         # get the new gamma
@@ -63,6 +64,7 @@ class OnPolicyGVF(GVF):
 
         self.gamma = gnext
         self.phi = phinext
+        self.age += 1
 
 
 class OffPolicyGVF(GVF):
@@ -75,6 +77,7 @@ class OffPolicyGVF(GVF):
         self.rupee = RUPEE(self.memory_size, self.step_size * 5, 0.001)
         self.rupee_trace = 0
         self.rupee_decay = 0.8
+        self.age = 0
 
     def update(self, data, obs):
         gnext = self.gamma_factory(self.gamma, data)
@@ -104,7 +107,7 @@ class OffPolicyGVF(GVF):
 
         self.gamma = gnext
         self.phi = phinext
-
+        self.age += 1
 
 class DaemonKiller(Horde):
     def __init__(self):
@@ -115,7 +118,7 @@ class DaemonKiller(Horde):
         self.max = 0
         self.last_pos = 0
         self.daemon_publisher = rospy.Publisher('daemon_killer_horde', daemon_killer, queue_size=10)
-
+        self.age_threshold = 1000
 
     def construct_obs(self, data):
         self.vel_trace = data.position_2 - self.last_pos + self.vel_trace * 0.8
@@ -161,12 +164,13 @@ class DaemonKiller(Horde):
             [daemon.rupee_trace for daemon in self.predictors],
             self.calc_rupee()
         )
-
+        self.kill()
 
     def kill(self):
         mean_rupees = self.calc_rupee()
-        kill = np.where(mean_rupees > self.kill_threshold)
-
+        kill = np.argmax(mean_rupees)
+        if self.predictors[kill].age > self.age_threshold:
+            self.predictors.pop(kill)
 
     def calc_rupee(self):
         a = np.array([daemon.rupee_trace for daemon in self.predictors])
