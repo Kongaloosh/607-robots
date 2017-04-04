@@ -26,42 +26,39 @@ class OnPolicyGVF(GVF):
         self.gvf_verifier_publisher = rospy.Publisher('on_policy_verifier' + name, verifier, queue_size=10)
         self.verfier = OnlineVerifier(self.gamma)
         self.rupee = RUPEE(self.memory_size, self.step_size * 5, 0.001)
-        self.rupee_trace = 0
-        self.rupee_decay = 0.8
+        self.rupee_last = 0
         self.age = 0
+        self.dead = False
 
     def update(self, obs, data):
         # get the new gamma
         gnext = self.gamma_factory(self.gamma, data)
         reward = self.reward_factory(data)
         phinext = obs
-        # print np.where(phinext > 0)
-        # print reward
         if self.phi is not None:
             self.learner.step(self.phi, reward, phinext, self.gamma, self.lmbda, gnext)
             self.last_estimate = self.learner.last_estimate()
-            # print np.dot(self.learner.th, phinext)
             self.verfier.update_all(gamma=gnext, reward=reward, prediction=self.last_estimate)
             delta = reward + gnext * self.learner.estimate(phinext) - self.learner.estimate(self.phi)
             ude_error = self.ude.update(delta)
-            rupee = self.rupee.update(self.learner.z, delta, phinext)
-            self.rupee_trace += rupee * self.rupee_decay
+            self.rupee_last = self.rupee.update(self.learner.z, delta, phinext)
             self.gvf_publisher.publish(
                 self.last_estimate,
                 self.last_estimate / (1. / (1. - gnext))
             )
-
             try:
                 self.gvf_verifier_publisher.publish(
                     self.verfier.synced_prediction(),
                     self.verfier.calculate_currente_return(),
                     abs(self.verfier.calculate_current_error()),
                     ude_error,
-                    rupee
+                    self.rupee_last
                 )
             except IndexError:
                 pass
 
+            if self.dead:
+                self.rupee_last = -1
         self.gamma = gnext
         self.phi = phinext
         self.age += 1
@@ -75,20 +72,19 @@ class OffPolicyGVF(GVF):
         self.gvf_publisher = rospy.Publisher('off_policy_predictor' + name, gvf, queue_size=10)
         self.gvf_verifier_publisher = rospy.Publisher('off_policy_verifier' + name, verifier, queue_size=10)
         self.rupee = RUPEE(self.memory_size, self.step_size * 5, 0.001)
-        self.rupee_trace = 0
-        self.rupee_decay = 0.8
+        self.rupee_last = 0
         self.age = 0
+        self.dead = False
 
-    def update(self, data, obs):
+    def update(self, obs, data):
         gnext = self.gamma_factory(self.gamma, data)
         reward = self.reward_factory(data)
-        phinext = self.kanerva.get_features(data)
+        phinext = obs
         if self.phi is not None:
-            self.learner.step(self.phi, reward, phinext, self.gamma, self.lmbda, gnext, data[14])
+            self.learner.step(self.phi, reward, phinext, self.gamma, self.lmbda, gnext, data.command)
             prediction = self.learner.estimate(phinext)
             delta = reward + gnext * self.learner.estimate(phinext) - self.learner.estimate(self.phi)
-            rupee = self.rupee.update(self.learner.z, delta, phinext)
-            self.rupee_trace += rupee * self.rupee_decay
+            self.rupee_last = self.rupee.update(self.learner.z, delta, phinext)
             ude_error = self.ude.update(delta)
             self.gvf_publisher.publish(
                 prediction,
@@ -100,14 +96,17 @@ class OffPolicyGVF(GVF):
                     0,
                     0,
                     ude_error,
-                    rupee
+                    self.rupee_last
                 )
             except IndexError:
                 pass
 
+            if self.dead:
+                self.rupee_last = -1
         self.gamma = gnext
         self.phi = phinext
         self.age += 1
+
 
 class DaemonKiller(Horde):
     def __init__(self):
@@ -119,6 +118,8 @@ class DaemonKiller(Horde):
         self.last_pos = 0
         self.daemon_publisher = rospy.Publisher('daemon_killer_horde', daemon_killer, queue_size=10)
         self.age_threshold = 1000
+        self.memory_size = 2**10
+        self.num_tilings = 10
 
     def construct_obs(self, data):
         self.vel_trace = data.position_2 - self.last_pos + self.vel_trace * 0.8
@@ -156,47 +157,53 @@ class DaemonKiller(Horde):
         )
         return phi_next
 
-
     def update(self, data):
         obs = self.construct_obs(data)
         [learner.update(obs, data) for learner in self.predictors]
         self.daemon_publisher.publish(
-            [daemon.rupee_trace for daemon in self.predictors],
+            [daemon.rupee_last for daemon in self.predictors],
             self.calc_rupee()
         )
         self.kill()
 
     def kill(self):
-        mean_rupees = self.calc_rupee()
+        mean_rupees = self.fetch_rupee()
+        np.put(np.where(mean_rupees == 0), 1)
         kill = np.argmax(mean_rupees)
-        if self.predictors[kill].age > self.age_threshold:
-            self.predictors.pop(kill)
+        if self.predictors[kill].age > self.age_threshold and self.predictors[kill].rupee_last > 0.9:
+            print("Killed {0}".format(kill))
+            # self.predictors.pop(kill)
+            self.predictors[kill].dead = True
+
+    def fetch_rupee(self):
+        return np.array([daemon.rupee_last for daemon in self.predictors])
 
     def calc_rupee(self):
-        a = np.array([daemon.rupee_trace for daemon in self.predictors])
+        a = np.array([daemon.rupee_last for daemon in self.predictors])
         return a / np.sum(a)
 
 
 def listener():
     horde = DaemonKiller()
-    horde.add_learner(learner=OnPolicyGVF(0.03, 0.9, TDR(2 ** 10, 0.03, 10), angle_2, 0.98, constant, name="_0"))
+
+    step_size = 0.03/10
+
+    horde.add_learner(learner=OnPolicyGVF(step_size, 0.9, TDR(2 ** 10, 0.03, 10), poisiton_2, 0.98, constant, name="_0"))
     horde.add_learner(
-        learner=OffPolicyGVF(0.03, 0.9, GTDR(2 ** 10, 0.03, moving_left_1, 10), angle_2, 0.99, constant, name="_1"))
+        learner=OffPolicyGVF(0.03, 0.9, GTDR(2 ** 10, step_size, moving_left_1, 10), poisiton_2, 0.99, constant, name="_1"))
     horde.add_learner(
-        learner=OffPolicyGVF(0.03, 0.9, GTDR(2 ** 10, 0.03, moving_right_1, 10), angle_2, 0.5, constant, name="_2"))
+        learner=OffPolicyGVF(0.03, 0.9, GTDR(2 ** 10, step_size, moving_right_1, 10), poisiton_2, 0.5, constant, name="_2"))
     horde.add_learner(
-        learner=OffPolicyGVF(0.03, 0.9, GTDR(2 ** 10, 0.03, moving_left_2, 10), angle_2, 0.9, constant, name="_3"))
-    horde.add_learner(learner=OnPolicyGVF(0.03, 0.9, TDR(2 ** 10, 0.03, 10), is_moving_2, 0.98, constant, name="_4"))
-    horde.add_learner(learner=OnPolicyGVF(0.03, 0.9, TDR(2 ** 10, 0.03, 10), poisiton_2, 0.98, constant, name="_5"))
-    horde.add_learner(learner=OnPolicyGVF(0.03, 0.9, TDR(2 ** 10, 0.03, 10), voltage_2, 0.98, constant, name="_6"))
-    horde.add_learner(learner=OnPolicyGVF(0.03, 0.9, TDR(2 ** 10, 0.03, 10), temperature_2, 0.98, constant, name="_7"))
-    horde.add_learner(learner=OnPolicyGVF(0.03, 0.9, TDR(2 ** 10, 0.03, 10), command, 0.98, constant, name="_8"))
-    horde.add_learner(learner=OnPolicyGVF(0.03, 0.9, TDR(2 ** 10, 0.03, 10), load_2, 0.98, constant, name="_9"))
+        learner=OffPolicyGVF(0.03, 0.9, GTDR(2 ** 10, step_size, moving_left_2, 10), poisiton_2, 0.9, constant, name="_3"))
+    horde.add_learner(learner=OnPolicyGVF(step_size, 0.9, TDR(2 ** 10, 0.03, 10), is_moving_2, 0.98, constant, name="_4"))
+    horde.add_learner(learner=OnPolicyGVF(step_size, 0.9, TDR(2 ** 10, 0.03, 10), poisiton_2, 0.98, constant, name="_5"))
+    horde.add_learner(learner=OnPolicyGVF(step_size, 0.9, TDR(2 ** 10, 0.03, 10), voltage_2, 0.98, constant, name="_6"))
+    horde.add_learner(learner=OnPolicyGVF(step_size, 0.9, TDR(2 ** 10, 0.03, 10), temperature_2, 0.98, constant, name="_7"))
+    horde.add_learner(learner=OnPolicyGVF(step_size, 0.9, TDR(2 ** 10, 0.03, 10), command, 0.98, constant, name="_8"))
+    horde.add_learner(learner=OnPolicyGVF(step_size, 0.9, TDR(2 ** 10, 0.03, 10), load_2, 0.98, constant, name="_9"))
 
     rospy.init_node('on_policy_listener', anonymous=True)  # anon means that multiple can subscribe to the same topic
-    rospy.Subscriber('robot_observations', servo_state,
-                     horde.update)  # subscribes to chatter and calls the callback
-
+    rospy.Subscriber('robot_observations', servo_state, horde.update)  # subscribes to chatter and calls the callback
     rospy.spin()  # keeps python from exiting until this node is stopped
 
 
