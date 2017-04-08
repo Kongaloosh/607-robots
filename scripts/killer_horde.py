@@ -118,7 +118,7 @@ class DaemonKiller(Horde):
         self.max = 0
         self.last_pos = 0
         self.daemon_publisher = rospy.Publisher('daemon_killer_horde', daemon_killer, queue_size=10)
-        self.age_threshold = 1000
+        self.age_threshold = 20000
         self.memory_size = 2**10
         self.num_tilings = 10
 
@@ -165,13 +165,18 @@ class DaemonKiller(Horde):
             [daemon.rupee_last for daemon in self.predictors],
             self.calc_rupee()
         )
-        self.kill()
+        #self.kill()
 
     def kill(self):
         mean_rupees = self.fetch_rupee()
         np.put(mean_rupees, np.where(mean_rupees == 0), 1)
+<<<<<<< HEAD
         kill = np.argmax(mean_rupees)
         if self.predictors[kill].age > self.age_threshold and self.predictors[kill].rupee_last > 0.9:
+=======
+	kill = np.argmax(mean_rupees)
+	if self.predictors[kill].age > self.age_threshold and mean_rupees[kill] > 0.75:
+>>>>>>> d2aa1a7768301385da4e1cdbf923526955d594ca
             print("Killed {0}".format(kill))
             # self.predictors.pop(kill)
             self.predictors[kill].dead = True
@@ -318,8 +323,6 @@ def listener():
     horde.add_learner(learner=OnPolicyGVF(step_size, 0.9, TDR(2 ** 10, 0.03, 10), temperature_2, 0.98, constant, name="_7"))
     horde.add_learner(learner=OnPolicyGVF(step_size, 0.9, TDR(2 ** 10, 0.03, 10), command, 0.98, constant, name="_8"))
     horde.add_learner(learner=OnPolicyGVF(step_size, 0.9, TDR(2 ** 10, 0.03, 10), load_2, 0.98, constant, name="_9"))
-
-
     rospy.init_node('on_policy_listener', anonymous=True)  # anon means that multiple can subscribe to the same topic
     rospy.Subscriber('robot_observations', servo_state, horde.update)  # subscribes to chatter and calls the callback
     rospy.spin()  # keeps python from exiting until this node is stopped
