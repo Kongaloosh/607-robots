@@ -66,16 +66,21 @@ class TDBDR(TDPrediction):
         self.meta_step_size = meta_step_size               # todo: pull from config
         self.beta = np.ones(self.nf) * step_size
         self.alpha = np.exp(self.beta)
+	self._last_estimate = 0	
 
     def initepisode(self):
         self.z = np.zeros(self.nf)
 
     def step(self, phi, reward, phi_next, gamma, lmda, gamma_next):
         delta = reward + gamma_next * np.dot(phi_next, self.th) - np.dot(phi, self.th)
-        self.z = g * lmda * self.z * (phi == 0.) + (phi != 0.) * phi
+        self.z = gamma * lmda * self.z * (phi == 0.) + (phi != 0.) * phi
         self.beta += phi * self.meta_step_size * delta
         self.alpha = np.exp(self.beta)
         self.th += self.alpha * delta * self.z
         h_update = np.ones(self.nf) - self.alpha * phi**2
         self.h = map(updater, zip(h_update, self.h))
         self.h += self.alpha * delta * phi
+	self._last_estimate = np.dot(self.th,phi_next)
+
+    def last_estimate(self):
+        return self._last_estimate

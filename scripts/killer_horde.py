@@ -170,13 +170,8 @@ class DaemonKiller(Horde):
     def kill(self):
         mean_rupees = self.fetch_rupee()
         np.put(mean_rupees, np.where(mean_rupees == 0), 1)
-<<<<<<< HEAD
-        kill = np.argmax(mean_rupees)
-        if self.predictors[kill].age > self.age_threshold and self.predictors[kill].rupee_last > 0.9:
-=======
 	kill = np.argmax(mean_rupees)
 	if self.predictors[kill].age > self.age_threshold and mean_rupees[kill] > 0.75:
->>>>>>> d2aa1a7768301385da4e1cdbf923526955d594ca
             print("Killed {0}".format(kill))
             # self.predictors.pop(kill)
             self.predictors[kill].dead = True
@@ -239,7 +234,7 @@ class TIDBDOnPolicyGVF(GVF):
 class TIDBDDaemonKiller(Horde):
 
     def __init__(self):
-        super(DaemonKiller, self).__init__()
+        super(TIDBDDaemonKiller, self).__init__()
         self.vel_trace = 0
         self.position_trace = 0
         self.min = 0
@@ -305,7 +300,7 @@ class TIDBDDaemonKiller(Horde):
             self.predictors[kill].dead = True
 
     def fetch_alpha(self):
-        return np.array([np.mean(np.exp(daemon.beta)) for daemon in self.predictors])
+        return np.array([np.mean(np.exp(daemon.learner.beta)) for daemon in self.predictors])
 
     def calc_alpha(self):
         a = self.fetch_alpha()
@@ -337,6 +332,10 @@ def tidbd_listener():
     horde.add_learner(learner=OnPolicyGVF(step_size, 0.9, TDBDR(number_of_features=2**10, step_size=1, meta_step_size=0.009, active_features=10), temperature_2, 0.98, constant, name="_7"))
     horde.add_learner(learner=OnPolicyGVF(step_size, 0.9, TDBDR(number_of_features=2**10, step_size=1, meta_step_size=0.009, active_features=10), command, 0.98, constant, name="_8"))
     horde.add_learner(learner=OnPolicyGVF(step_size, 0.9, TDBDR(number_of_features=2**10, step_size=1, meta_step_size=0.009, active_features=10), load_2, 0.98, constant, name="_9"))
+    rospy.init_node('on_policy_listener', anonymous=True)  # anon means that mu$
+    rospy.Subscriber('robot_observations', servo_state, horde.update)  # subscr$
+    rospy.spin()  # keeps python from exiting until this node is stopped
+
 
 
 if __name__ == '__main__':
