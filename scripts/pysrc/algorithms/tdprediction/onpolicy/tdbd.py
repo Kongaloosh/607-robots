@@ -4,6 +4,14 @@ from pysrc.algorithms.tdprediction.tdprediction import TDPrediction
 __author__ = 'kongaloosh'
 
 
+def updater(vals):
+    h_update, h = vals
+    if h_update > 0:
+        return h * h_update
+    else:
+        return 0
+
+
 class TDBD(TDPrediction):
     """ classdocs """
 
@@ -56,7 +64,7 @@ class TDBDR(TDPrediction):
         self.beta = np.zeros(self.nf)
         self.h = np.zeros(self.nf)
         self.meta_step_size = meta_step_size               # todo: pull from config
-        self.beta = np.ones(self.ones) * step_size
+        self.beta = np.ones(self.nf) * step_size
         self.alpha = np.exp(self.beta)
 
     def initepisode(self):
@@ -64,12 +72,10 @@ class TDBDR(TDPrediction):
 
     def step(self, phi, reward, phi_next, gamma, lmda, gamma_next):
         delta = reward + gamma_next * np.dot(phi_next, self.th) - np.dot(phi, self.th)
-        self.z = gamma * lmda * self.z * (phi == 0.) + (phi != 0.) * phi
+        self.z = g * lmda * self.z * (phi == 0.) + (phi != 0.) * phi
         self.beta += phi * self.meta_step_size * delta
         self.alpha = np.exp(self.beta)
         self.th += self.alpha * delta * self.z
-        h_update = [1 - self.alpha * phi**2]
-        if h_update > 0:
-            self.h = self.h * h_update + self.alpha * delta * phi
-        else:
-            self.h = self.h * 0 + self.alpha * delta * phi
+        h_update = np.ones(self.nf) - self.alpha * phi**2
+        self.h = map(updater, zip(h_update, self.h))
+        self.h += self.alpha * delta * phi
