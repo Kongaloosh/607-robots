@@ -296,12 +296,14 @@ class TIDBDDaemonKiller(Horde):
         alphas = self.fetch_alpha()
         mean_rupees = self.calc_alpha()
         np.put(mean_rupees, np.where(mean_rupees == 0), 1)
+        np.nan_to_num(alphas)
+        np.nan_to_num(mean_rupees)
         kill = np.array(mean_rupees).argsort()[:10]                                             # get the 10 worst
-	step_size = alphas[int(len(alphas)/2)]/10                                               # new starting vals
+        step_size = alphas[int(len(alphas)/2)]/10                                               # new starting vals
         for i in kill:
             gamma = np.random.rand()
             lmbda = np.random.rand()
-	    reward_function = np.random.randint(len(reward_functions))
+            reward_function = np.random.randint(len(reward_functions))
             #reward_function = np.random.randint(high=len(reward_functions))
             self.predictors[i] =\
                 OnPolicyGVF(
