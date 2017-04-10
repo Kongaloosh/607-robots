@@ -297,11 +297,12 @@ class TIDBDDaemonKiller(Horde):
         mean_rupees = self.calc_alpha()
         np.put(mean_rupees, np.where(mean_rupees == 0), 1)
         kill = np.array(mean_rupees).argsort()[:10]                                             # get the 10 worst
-        step_size = alphas[int(len(alphas)/2)]/10                                               # new starting vals
+	step_size = alphas[int(len(alphas)/2)]/10                                               # new starting vals
         for i in kill:
             gamma = np.random.rand()
             lmbda = np.random.rand()
-            reward_function = np.random.randint(high=len(reward_functions))
+	    reward_function = np.random.randint(len(reward_functions))
+            #reward_function = np.random.randint(high=len(reward_functions))
             self.predictors[i] =\
                 OnPolicyGVF(
                     step_size,
@@ -365,10 +366,10 @@ def tidbd_listener():
 def random_listener():
     horde = TIDBDDaemonKiller()
     step_size = 0.1/10
-    for i in 100:
+    for i in range(100):
         gamma = np.random.rand()
         lmbda = np.random.rand()
-        reward_function = np.random.randint(high=len(reward_functions))
+        reward_function = np.random.randint(len(reward_functions))
         horde.add_learner(
             learner=OnPolicyGVF(
                 step_size,
@@ -391,4 +392,5 @@ def random_listener():
 
 if __name__ == '__main__':
     #listener()
-    tidbd_listener()
+    #tidbd_listener()
+    random_listener()
