@@ -300,7 +300,7 @@ class TIDBDDaemonKiller(Horde):
             self.predictors[kill].dead = True
 
     def fetch_alpha(self):
-        return np.array([np.mean(np.exp(daemon.learner.beta)) for daemon in self.predictors])
+        return np.array([np.sum(np.exp(daemon.learner.beta)) for daemon in self.predictors])
 
     def calc_alpha(self):
         a = self.fetch_alpha()
@@ -309,15 +309,21 @@ class TIDBDDaemonKiller(Horde):
 
 def listener():
     horde = DaemonKiller()
-    step_size = 1/10
+    step_size = 0.3/10
 
-    horde.add_learner(learner=OnPolicyGVF(step_size, 0.9, TDR(2 ** 10, 0.03, 10), poisiton_2, 0.98, constant, name="_0"))
-    horde.add_learner(learner=OnPolicyGVF(step_size, 0.9, TDR(2 ** 10, 0.03, 10), is_moving_2, 0.98, constant, name="_4"))
-    horde.add_learner(learner=OnPolicyGVF(step_size, 0.9, TDR(2 ** 10, 0.03, 10), poisiton_2, 0.98, constant, name="_5"))
-    horde.add_learner(learner=OnPolicyGVF(step_size, 0.9, TDR(2 ** 10, 0.03, 10), voltage_2, 0.98, constant, name="_6"))
-    horde.add_learner(learner=OnPolicyGVF(step_size, 0.9, TDR(2 ** 10, 0.03, 10), temperature_2, 0.98, constant, name="_7"))
-    horde.add_learner(learner=OnPolicyGVF(step_size, 0.9, TDR(2 ** 10, 0.03, 10), command, 0.98, constant, name="_8"))
-    horde.add_learner(learner=OnPolicyGVF(step_size, 0.9, TDR(2 ** 10, 0.03, 10), load_2, 0.98, constant, name="_9"))
+    horde.add_learner(learner=OnPolicyGVF(step_size, 0.6, TDR(2 ** 10, 0.03, 10), poisiton_2, 0.98, constant, name="_0"))
+    horde.add_learner(
+        learner=OffPolicyGVF(0.03, 0.9, GTDR(2 ** 10, 0.03, moving_left_1, 10), poisiton_2, 0.99, constant, name="_1"))
+    horde.add_learner(
+        learner=OffPolicyGVF(0.03, 0.9, GTDR(2 ** 10, 0.03, moving_right_1, 10), poisiton_2, 0.5, constant, name="_2"))
+    horde.add_learner(
+        learner=OffPolicyGVF(0.03, 0.9, GTDR(2 ** 10, 0.03, moving_left_2, 10), poisiton_2, 0.9, constant, name="_3"))
+    horde.add_learner(learner=OnPolicyGVF(step_size, 0.6, TDR(2 ** 10, 0.03, 10), is_moving_2, 0.98, constant, name="_4"))
+    horde.add_learner(learner=OnPolicyGVF(step_size, 0.6, TDR(2 ** 10, 0.03, 10), poisiton_2, 0.98, constant, name="_5"))
+    horde.add_learner(learner=OnPolicyGVF(step_size, 0.6, TDR(2 ** 10, 0.03, 10), voltage_2, 0.98, constant, name="_6"))
+    horde.add_learner(learner=OnPolicyGVF(step_size, 0.6, TDR(2 ** 10, 0.03, 10), temperature_2, 0.98, constant, name="_7"))
+    horde.add_learner(learner=OnPolicyGVF(step_size, 0.6, TDR(2 ** 10, 0.03, 10), command, 0.98, constant, name="_8"))
+    horde.add_learner(learner=OnPolicyGVF(step_size, 0.6, TDR(2 ** 10, 0.03, 10), load_2, 0.98, constant, name="_9"))
     rospy.init_node('on_policy_listener', anonymous=True)  # anon means that multiple can subscribe to the same topic
     rospy.Subscriber('robot_observations', servo_state, horde.update)  # subscribes to chatter and calls the callback
     rospy.spin()  # keeps python from exiting until this node is stopped
@@ -325,13 +331,13 @@ def listener():
 
 def tidbd_listener():
     horde = TIDBDDaemonKiller()
-    step_size = 1
-    horde.add_learner(learner=OnPolicyGVF(step_size, 0.9, TDBDR(number_of_features=2**10, step_size=1, meta_step_size=0.009, active_features=10), is_moving_2, 0.98, constant, name="_4"))
-    horde.add_learner(learner=OnPolicyGVF(step_size, 0.9, TDBDR(number_of_features=2**10, step_size=1, meta_step_size=0.009, active_features=10), poisiton_2, 0.98, constant, name="_5"))
-    horde.add_learner(learner=OnPolicyGVF(step_size, 0.9, TDBDR(number_of_features=2**10, step_size=1, meta_step_size=0.009, active_features=10), voltage_2, 0.98, constant, name="_6"))
-    horde.add_learner(learner=OnPolicyGVF(step_size, 0.9, TDBDR(number_of_features=2**10, step_size=1, meta_step_size=0.009, active_features=10), temperature_2, 0.98, constant, name="_7"))
-    horde.add_learner(learner=OnPolicyGVF(step_size, 0.9, TDBDR(number_of_features=2**10, step_size=1, meta_step_size=0.009, active_features=10), command, 0.98, constant, name="_8"))
-    horde.add_learner(learner=OnPolicyGVF(step_size, 0.9, TDBDR(number_of_features=2**10, step_size=1, meta_step_size=0.009, active_features=10), load_2, 0.98, constant, name="_9"))
+    step_size = 0.1/10
+    horde.add_learner(learner=OnPolicyGVF(step_size, 0.9, TDBDR(number_of_features=2**10, step_size=step_size, meta_step_size=0.015, active_features=10), is_moving_2, 0.98, constant, name="_4"))
+    horde.add_learner(learner=OnPolicyGVF(step_size, 0.9, TDBDR(number_of_features=2**10, step_size=step_size, meta_step_size=0.015, active_features=10), poisiton_2, 0.98, constant, name="_5"))
+    horde.add_learner(learner=OnPolicyGVF(step_size, 0.9, TDBDR(number_of_features=2**10, step_size=step_size, meta_step_size=0.015, active_features=10), voltage_2, 0.98, constant, name="_6"))
+    horde.add_learner(learner=OnPolicyGVF(step_size, 0.9, TDBDR(number_of_features=2**10, step_size=step_size, meta_step_size=0.015, active_features=10), temperature_2, 0.98, constant, name="_7"))
+    horde.add_learner(learner=OnPolicyGVF(step_size, 0.9, TDBDR(number_of_features=2**10, step_size=step_size, meta_step_size=0.015, active_features=10), command, 0.98, constant, name="_8"))
+    horde.add_learner(learner=OnPolicyGVF(step_size, 0.9, TDBDR(number_of_features=2**10, step_size=step_size, meta_step_size=0.015, active_features=10), load_2, 0.98, constant, name="_9"))
     rospy.init_node('on_policy_listener', anonymous=True)  # anon means that mu$
     rospy.Subscriber('robot_observations', servo_state, horde.update)  # subscr$
     rospy.spin()  # keeps python from exiting until this node is stopped
@@ -339,5 +345,5 @@ def tidbd_listener():
 
 
 if __name__ == '__main__':
-    # listener()
+    #listener()
     tidbd_listener()

@@ -64,8 +64,8 @@ class TDBDR(TDPrediction):
         self.beta = np.zeros(self.nf)
         self.h = np.zeros(self.nf)
         self.meta_step_size = meta_step_size               # todo: pull from config
-        self.beta = np.ones(self.nf) * step_size
-        self.alpha = np.exp(self.beta)
+        val = step_size
+        self.beta = np.ones(self.nf) * np.log(val)
 	self._last_estimate = 0	
 
     def initepisode(self):
