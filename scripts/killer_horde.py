@@ -17,6 +17,8 @@ from beginner_tutorials.msg import servo_state, verifier, gvf, state, daemon_kil
 
 __author__ = 'kongaloosh'
 
+reward_functions = [load_2, temperature_2, voltage_2, is_moving_2, poisiton_2, angle_2, vel_command_2, command]
+
 
 class OnPolicyGVF(GVF):
     def __init__(self, step_size, elegibility_lambda, learner, reward_factory, gamma, gamma_factory, name=""):
@@ -288,16 +290,33 @@ class TIDBDDaemonKiller(Horde):
             self.fetch_alpha(),
             self.calc_alpha()
         )
-        # self.kill()
+        self.kill()
 
     def kill(self):
-        mean_rupees = self.fetch_rupee()
+        alphas = self.fetch_alpha()
+        mean_rupees = self.calc_alpha()
         np.put(mean_rupees, np.where(mean_rupees == 0), 1)
-        kill = np.argmax(mean_rupees)
-        if self.predictors[kill].age > self.age_threshold and self.predictors[kill].rupee_last > 0.9:
-            print("Killed {0}".format(kill))
-            # self.predictors.pop(kill)
-            self.predictors[kill].dead = True
+        kill = np.array(mean_rupees).argsort()[:10]                                             # get the 10 worst
+        step_size = alphas[int(len(alphas)/2)]/10                                               # new starting vals
+        for i in kill:
+            gamma = np.random.rand()
+            lmbda = np.random.rand()
+            reward_function = np.random.randint(high=len(reward_functions))
+            self.predictors[i] =\
+                OnPolicyGVF(
+                    step_size,
+                    lmbda,
+                    TDBDR(
+                        number_of_features=2**10,
+                        step_size=step_size,
+                        meta_step_size=0.015,
+                        active_features=10
+                    ),
+                    reward_functions[reward_function],
+                    gamma,
+                    constant,
+                    name="_{0}".format(i)
+                )
 
     def fetch_alpha(self):
         return np.array([np.sum(np.exp(daemon.learner.beta)) for daemon in self.predictors])
@@ -343,6 +362,32 @@ def tidbd_listener():
     rospy.spin()  # keeps python from exiting until this node is stopped
 
 
+def random_listener():
+    horde = TIDBDDaemonKiller()
+    step_size = 0.1/10
+    for i in 100:
+        gamma = np.random.rand()
+        lmbda = np.random.rand()
+        reward_function = np.random.randint(high=len(reward_functions))
+        horde.add_learner(
+            learner=OnPolicyGVF(
+                step_size,
+                lmbda,
+                TDBDR(
+                    number_of_features=2**10,
+                    step_size=step_size,
+                    meta_step_size=0.015,
+                    active_features=10
+                ),
+                reward_functions[reward_function],
+                gamma,
+                constant,
+                name="_{0}".format(i)
+            )
+        )
+    rospy.init_node('on_policy_listener', anonymous=True)  # anon means that mu$
+    rospy.Subscriber('robot_observations', servo_state, horde.update)  # subscr$
+    rospy.spin()  # keeps python from exiting until this node is stopped
 
 if __name__ == '__main__':
     #listener()
