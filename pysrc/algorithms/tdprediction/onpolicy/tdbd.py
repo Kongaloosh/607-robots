@@ -48,9 +48,9 @@ class TDBD(TDPrediction):
         self.beta += phi * self.meta_step_size * delta
         self.alpha = np.exp(self.beta)
         self.th += self.alpha * delta * self.z
-        h_update = np.ones(self.nf) - self.alpha * phi**2
+        h_update = np.ones(self.nf) - self.alpha * phi * self.z
         self.h = map(updater, zip(h_update, self.h))
-        self.h += self.alpha * delta * phi
+        self.h += self.alpha * delta * self.z
 
 
 
@@ -76,7 +76,6 @@ class TDBDR(TDPrediction):
         print(self.alpha)
 
 
-
     def initepisode(self):
         self.z = np.zeros(self.nf)
 
@@ -92,6 +91,6 @@ class TDBDR(TDPrediction):
         self.beta += phi * self.meta_step_size * delta
         self.alpha = np.exp(self.beta)
         self.th += self.alpha * delta * self.z
-        h_update = np.ones(self.nf) - self.alpha * phi**2
+        h_update = np.ones(self.nf) - self.alpha * phi * self.z
         self.h = map(updater, zip(h_update, self.h))
-        self.h += self.alpha * delta * phi
+        self.h += self.alpha * delta * self.z
