@@ -126,8 +126,8 @@ def main():
         config['signal'] = signal                                           # adding the config so we can save results
         config['prediction'] = prediction
         config['error'] = np.array(config['return']) - prediction[:len(config['return'])]
-        # print "error", np.sum(np.abs(config['error']))
         pickle.dump(config, f, -1)
+        print "error", np.sum(np.abs(config['error']))
 
     f.close()
 
