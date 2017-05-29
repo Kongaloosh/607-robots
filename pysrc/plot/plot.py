@@ -10,6 +10,10 @@ import numpy
 subjects = ['s{i}'.format(i=i) for i in range(1, 5)]
 actions = numpy.concatenate((['a{i}'.format(i=i) for i in range(1, 4)], ['na{i}'.format(i=i) for i in range(1, 4)]))
 
+# colours = ['#000099', '#1a1aff', '#006600', '#00e600' , '#990000', '#ff1a1a', '#b36b00', '#ffad33' ]
+colours = ['#1a1aff', '#00e600', '#ff1a1a', '#ffad33' ]
+# colours = ['#000099', '#006600', '#990000', '#b36b00' ]
+
 
 def plot_performance_vs_lambda(parameters):
     plot_file_name = parameters['path_prefix'] + "ABS_error_data.pkl" # The file we store results in
@@ -39,14 +43,35 @@ def plot_data_process_prosthetic(parameters):
 
     plot_points = find_best_parameters(data)
 
-    pyplot.errorbar(
+    # pyplot.errorbar(
+    #     [x for (x, y, z) in plot_points],
+    #     [y for (x, y, z) in plot_points],
+    #     marker='o',
+    #     label=parameters['label'],
+    #
+    # )
+
+    # plot_points = [(z,y,2**30-1) if z == numpy.inf or numpy.nan_to_num(z) == 0 else (x,y,z) for (x, y, z) in plot_points]
+    # print [(x, y-z, y+z) for (x,y,z) in plot_points]
+
+    c = colours.pop()
+    pyplot.plot(
         [x for (x, y, z) in plot_points],
         [y for (x, y, z) in plot_points],
-        yerr=[z for (x, y, z) in plot_points],
         marker='o',
-        label=parameters['label']
+        label=parameters['label'],
+        color=c
     )
-    pyplot.legend(bbox_to_anchor=(1.11, 1))
+
+    pyplot.fill_between(
+        [x for (x, y, z) in plot_points],
+        [y-(z/numpy.sqrt(24)) for (x, y, z) in plot_points],
+        [y+(z/numpy.sqrt(24)) for (x, y, z) in plot_points],
+        alpha=0.2,
+        color=c
+    )
+
+    # pyplot.legend(bbox_to_anchor=(1.11, 1))
 
 
 def plot_all_alpha(data):
@@ -105,11 +130,11 @@ def find_best_parameters(data):
     plot_points = []
     comparison_values = data.keys()                                             # the values we wish to vary over
     for key_lambda in comparison_values:                                        # over all of our runs
-        best = None                                                             # the location of the current best
+        best = data[key_lambda].keys()[0]                                       # the location of the current best
         best_error = numpy.infty                                                # the error of the current best
         for key_alpha in data[key_lambda].keys():
             avg_error = data[key_lambda][key_alpha]['error']
-            if avg_error < best_error:
+            if avg_error <= best_error:
                 best_error = avg_error
                 best = key_alpha
 
@@ -171,8 +196,10 @@ def load_data_one_parameter(path):
                         try:
                             alpha = str(d['alpha'])
                         except KeyError:
-                            alpha = str(d['initalpha'])
-
+                            try:
+                                alpha = str(d['initalpha'])
+                            except KeyError:
+                                alpha = str(d['meta_step_size'])
                         trial_error = d['error']                  # /sum(d['return'])    # get normalized error
                         data.append(trial_error)
                 except EOFError:
@@ -186,75 +213,6 @@ def load_data_one_parameter(path):
     data['error'] = [ numpy.mean(collapsed[x]) for x in range(len(collapsed))]
     pickle.dump(data, open(path+"_data.pkl",'wb'))
     return data
-
-# def loaddata(path):
-#     """
-#      Takes in the number of runs---or, files we have---and looks for all the files
-#     for any given file, we load all of the results and find.
-#
-#     Remember, the results are going to be a collection of pickled items, each
-#     being one member of a sweep for a particular episode.
-#
-#     :param path: the prefix to where we want to find result file
-#
-#     :returns data: a multidimensional dic which contains the AVG MSE and STD for every alpha lambda combination
-#     """
-#     data = {}
-#     for a in actions:                                                       # for all actions
-#         print(a)
-#         for s in subjects:                                                  # for all subjects
-#             print(s)
-#             filepathname = path + "_{s}_{a}.dat" .format(s=s,a=a)           # point to data file
-#             try:
-#                 f = open(filepathname, 'rb')                                # load the file results are stored in
-#                 try:                                                        # we catch for the end of the file
-#                     i = 0
-#                     while True:                                             # until we break out of the reading loop
-#                         d = pickle.load(f)                                  # get a run
-#                         lmbda = str(d['lmbda'])                             # get the current lambda's error
-#                         try:
-#                             alpha = str(d['alpha'])
-#                         except KeyError:
-#                             alpha = str(d['initalpha'])
-#
-#                         trial_error = d['error']                            # get reported error
-#                         # /sum(d['return'])    # get normalized error
-#                         try:
-#                             data[lmbda][alpha].append(
-#                                 trial_error
-#                             )                                               # add the abs error
-#                         except KeyError:                                    # if this lambda is not in the dict yet
-#                             try:
-#                                 data[lmbda][alpha] = []                     # make a list for the key
-#                             except KeyError:
-#                                 data[lmbda] = {}
-#                                 data[lmbda][alpha] = []                     # make a list for the key
-#
-#                             data[lmbda][alpha].append(
-#                                 trial_error
-#                             )                                               # add the abs error
-#                         i += 1
-#                 except EOFError:
-#                     pass
-#             except IOError:
-#                 print "File doesn't exist " + path + "_{s}_{a}.dat" .format(s=s,a=a)
-#
-#     # truncate all of the errors over the max to ensure consistent time-steps:
-#     lmbda = data.keys()[0]
-#     alpha = data[lmbda].keys()[0]
-#
-#     # every parameter combination has all sessions,
-#     # so we just need to find the minimum for one combo and it will generalize
-#     truncate_at = min([len(trial) for trial in data[lmbda][alpha]])
-#     print(truncate_at)
-#     for key_lambda in data.keys():
-#         for key_alpha in data[key_lambda].keys():
-#             runs = [numpy.sum(run[:truncate_at] ** 2) for run in data[key_lambda][key_alpha]]   # cumu squared error
-#             data[key_lambda][key_alpha] = {}                                                    # dict for MSE and STD
-#             data[key_lambda][key_alpha]['error'] = numpy.mean(runs)                             # avg MSE
-#             data[key_lambda][key_alpha]['std'] = numpy.std(runs)                                # STD
-#     pickle.dump(data, open(path+"_data.pkl",'wb'))
-#     return data
 
 def loaddata(path):
     """
@@ -282,13 +240,19 @@ def loaddata(path):
                         d = pickle.load(f)                              # get a run
                         lmbda = str(d['lmbda'])                         # get the current lambda's error
                         try:
-                            alpha = str(d['alpha'])
+                            alpha = str(d['decay'])
                         except KeyError:
-                            alpha = str(d['initalpha'])
+                            try:
+                                alpha = str(d['alpha'])
+                            except KeyError:
+                                try:
+                                    alpha = str(d['initalpha'])
+                                except KeyError:
+                                    alpha = str(d['meta_step_size'])
 
                         # CUMU ABS ERROR
                         trial_error = numpy.sum(numpy.abs(d['error']))
-                        print(trial_error)
+                        # print(trial_error)
 
                         # MSE
                         # trial_error = numpy.mean(numpy.array(d['prediction'][:len(d['return'])]-d['return'])**2)
@@ -361,44 +325,79 @@ def main():
     path = "results/robot-experiments/totd/"                            # the path to the experiments
     #postfix = 'full_run'                                               # the name of the experiment run
     postfix = 'total_run'                                               # the name of the experiment run
-
+    pyplot.figure(0, figsize=(10, 10))
     pathfileprefix = path + "td/" + postfix
     print("TD")
     plot_performance_vs_lambda(
         {'path_prefix': pathfileprefix, 'compare': 'lmbda', 'label': 'TD'}
     )
 
-    pathfileprefix = path + "totd/" + postfix
-    print("TOTD")
-    plot_performance_vs_lambda(
-       {'path_prefix': pathfileprefix, 'compare': 'lmbda', 'label': 'TOTD'}
-    )
+    # pathfileprefix = path + "totd/" + postfix
+    # print("TOTD")
+    # plot_performance_vs_lambda(
+    #    {'path_prefix': pathfileprefix, 'compare': 'lmbda', 'label': 'TOTD'}
+    # )
 
-    pathfileprefix = path + "tdr/" + postfix
-    print("TDR")
-    plot_performance_vs_lambda(
-        {'path_prefix':pathfileprefix, 'compare': 'lmbda', 'label': 'TDR'}
-    )
+    # pathfileprefix = path + "tdr/" + postfix
+    # print("TDR")
+    # plot_performance_vs_lambda(
+    #    {'path_prefix':pathfileprefix, 'compare': 'lmbda', 'label': 'TDR'}
+    # )
+    
     #
+    # pathfileprefix = path + "autotd/" + postfix
+    # plot_performance_vs_lambda(
+    #     {'path_prefix': pathfileprefix, 'compare': 'lmbda', 'label':'AUTOTD'}
+    # )
+    #
+    # pathfileprefix = path + "dasautotd/" + postfix
+    # plot_performance_vs_lambda(
+    #     {'path_prefix': pathfileprefix, 'compare': 'lmbda', 'label':'DASAUOTD'}
+    # )
 
-    pathfileprefix = path + "autotd/" + postfix
+    pathfileprefix = path + "tdbd/" + postfix
     plot_performance_vs_lambda(
-        {'path_prefix': pathfileprefix, 'compare': 'lmbda', 'label':'AUTOTD'}
+        {'path_prefix': pathfileprefix, 'compare': 'lmbda', 'label':'TIDBD'}
+                              )
+
+    # pathfileprefix = path + "tdbdr/" + postfix
+    # plot_performance_vs_lambda(
+    # {'path_prefix': pathfileprefix, 'compare': 'lmbda', 'label':'TIDBD Replacing'}
+    # )
+
+    # pathfileprefix = path + "tdrrmsprop/" + postfix
+    # plot_performance_vs_lambda(
+    # {'path_prefix': pathfileprefix, 'compare': 'lmbda', 'label':'TD RMSProp Replacing'}
+    # )
+
+    pathfileprefix = path + "tdrmsprop/" + postfix
+    plot_performance_vs_lambda(
+    {'path_prefix': pathfileprefix, 'compare': 'lmbda', 'label':'TD RMSProp'}
     )
 
-    pathfileprefix = path + "dasautotd/" + postfix
+    # pathfileprefix = path + "alphaboundr/" + postfix
+    # plot_performance_vs_lambda(
+    #     {'path_prefix': pathfileprefix, 'compare': 'lmbda', 'label': 'AlphaBound Replaing'}
+    # )
+
+    pathfileprefix = path + "alphabound/" + postfix
     plot_performance_vs_lambda(
-        {'path_prefix': pathfileprefix, 'compare': 'lmbda', 'label':'DASAUOTD'}
+        {'path_prefix': pathfileprefix, 'compare': 'lmbda', 'label': 'AlphaBound'}
     )
 
-    pyplot.title("Average Abs Error \n Across All Users and Trials For Hand Position Predictions", fontsize=24, fontweight="bold")
+    # pyplot.title("Average Abs Error \n Across All Users and Trials For Hand Position Predictions", fontsize=24, fontweight="bold")
     ylabel = "AVG ABS Error Over All Trials and Subjects"
-    pyplot.ylabel(ylabel, fontsize=18)
-    pyplot.xlabel("Values of Lambda", fontsize=18)
+    # pyplot.ylabel(ylabel, fontsize=18)
+    # pyplot.xlabel("Values of Lambda", fontsize=18)
     pyplot.xlim([-0.1, 1.1])
+    pyplot.ylim([20000, 120000])
+    pyplot.tick_params(labelsize=18)
+    pyplot.legend()
+    pyplot.savefig("accumulating_traces.pdf")
 
-    pyplot.savefig('figs/everything.png')
     pyplot.show()
+#    pyplot.savefig('figs/everything.png')
+#    pyplot.show()
 
 if __name__ == '__main__':
     main()
